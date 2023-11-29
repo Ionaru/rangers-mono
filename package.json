@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "build": "nx build demo",
-    "e2e": "nx e2e demo-e2e"
+    "build": "nx build website",
+    "e2e": "nx e2e website-e2e"
   },
   "private": true,
   "devDependencies": {

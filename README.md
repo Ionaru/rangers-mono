@@ -49,7 +49,7 @@ Tell nx how to cache the build with the `nx` key in the package.json
 To add alias paths from the root level `tsconfig.base.json`, Nuxt recommends [using the `nuxt.config.ts` instead of a tsconfig for alias paths](https://nuxt.com/docs/guide/directory-structure/tsconfig).
 These paths are added to the auto-generated tsconfig by Nuxt.
 
-Here is an example of loaded the `tsconfig.base.json` paths. [See source file](./apps/demo/nuxt.config.ts)
+Here is an example of loaded the `tsconfig.base.json` paths. [See source file](./apps/website/nuxt.config.ts)
 
 ```ts
 import { defineNuxtConfig } from 'nuxt/config';

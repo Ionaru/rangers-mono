@@ -1,5 +1,5 @@
 {
-  "name": "demo",
+  "name": "website",
   "private": true,
   "scripts": {
     "build": "nuxt build",
@@ -18,10 +18,10 @@
       }
     },
     "tags": [
-      "scope:demo"
+      "scope:website"
     ],
     "implicitDependencies": [
-      "tag:scope:demo"
+      "tag:scope:website"
     ]
   }
 }
