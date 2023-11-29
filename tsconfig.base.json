@@ -15,8 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@nuxt-integrated/ui": ["libs/ui/src/index.ts"],
-      "@nuxt-integrated/utils": ["libs/utils/src/index.ts"]
+      "@7th-ranger/ui": ["libs/ui/src/index.ts"],
+      "@7th-ranger/utils": ["libs/utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

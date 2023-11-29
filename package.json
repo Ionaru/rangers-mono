@@ -1,5 +1,5 @@
 {
-  "name": "@nuxt-integrated/source",
+  "name": "@7th-ranger/source",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
@@ -28,4 +28,3 @@
   },
   "dependencies": {}
 }
-

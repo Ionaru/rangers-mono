@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Btn } from '@nuxt-integrated/ui';
+import { Btn } from '@7th-ranger/ui';
 
 const { data } = await useFetch('/api/greet?name=Nuxt');
 </script>
