@@ -1,0 +1,73 @@
+=== List of Formations ===
+{| class="wikitable" style=width:1000px;
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''Formation'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''Pros'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''Cons'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''Use When'''
+|-
+||
+<center>'''Wedge'''</center>[[File:Wedge.png|200px|center]]
+||
+* Good situational awareness
+* Flanks are secured
+* Good firepower towards the front
+* Good flexibility to change to other formations
+||
+* Concealment is limited, wide squad
+||
+* Default squad formation
+* Expect hostiles from ~180° arc in front of you
+* Being in the center of a platoon wedge
+|-
+||
+<center>'''Staggered Column'''</center>[[File:StaggeredColumn.png|50px|center]]
+||
+* Easy to establish
+* Very good flank security
+* Good concealment
+* Good flexibility to change to other formations
+* Good to cross difficult terrain
+||
+* Bad firepower to the front
+||
+* Used as Platoon Formation
+* Moving along a road while not expecting hostiles
+* Limited terrain
+|-
+||<center>'''Line'''</center>[[File:Line.png|200px|center]]
+||
+* Maximum firepower to the front
+* Ideal for popping up on ridge lines in ambush scenarios
+||
+* Bad firepower to the flanks
+* Limited maneuverability
+||
+* Attacking hostiles in front of you while not expecting hostiles in the flanks
+* Climbing on a elevation line to conduct an assault with hostiles in front
+* Being in a platoon line
+|-
+||
+<center>'''File'''</center>[[File:Column.png|200px|center]]
+||
+* Easy to establish
+* Good flank security
+* Very Good concealment
+* Good to cross difficult terrain
+||
+* Very bad firepower to the front
+* Bad maneuverability
+||
+* Very limited terrain
+* Moving through minefields
+|-
+||<center>'''Echelon (Right)'''</center>[[File:EchelonRight.png|200px|center]]
+||
+* Good firepower to the front
+* Flank Security to one side
+* Can switch to Line very easily
+||
+* Limited maneuverability to one flank (here: left)
+||
+* Intending to switch to line soon
+* Moving in a Platoon Wedge
+|}

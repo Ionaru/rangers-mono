@@ -1,6 +1,6 @@
-import { defineNuxtConfig } from 'nuxt/config';
-import { join } from 'path';
-import { workspaceRoot } from '@nx/devkit';
+import { defineNuxtConfig } from "nuxt/config";
+import { join } from "path";
+import { workspaceRoot } from "@nx/devkit";
 
 /**
  * Load tsconfig paths from a tsconfig file
@@ -14,16 +14,16 @@ function getMonorepoTsConfigPaths(tsConfigPath: string) {
   const alias: Record<string, string> = {};
   if (tsPaths) {
     for (const p in tsPaths) {
-      alias[p.replace(/\/\*$/, '')] = join(
+      alias[p.replace(/\/\*$/, "")] = join(
         workspaceRoot,
-        tsPaths[p][0].replace(/\/\*$/, '')
+        tsPaths[p][0].replace(/\/\*$/, ""),
       );
     }
   } else {
     console.warn(
-      'Root level tsconfig ',
+      "Root level tsconfig ",
       tsConfigPath,
-      ' does not contain any paths'
+      " does not contain any paths",
     );
   }
 
@@ -41,6 +41,42 @@ export default defineNuxtConfig({
    *
    * https://nuxt.com/docs/guide/directory-structure/tsconfig
    **/
-  alias: getMonorepoTsConfigPaths('../../tsconfig.base.json'),
+  alias: {
+    pinia: "../../node_modules/@pinia/nuxt/node_modules/pinia/dist/pinia.mjs",
+    ...getMonorepoTsConfigPaths("../../tsconfig.base.json"),
+  },
   devtools: { enabled: true },
+  build: {
+    transpile: ["@fortawesome/vue-fontawesome"],
+  },
+  modules: ["@pinia/nuxt", "@nuxt/content", "@nuxt/ui"],
+  css: [
+    "@fortawesome/fontawesome-svg-core/styles.css",
+    "~/assets/css/root.css",
+  ],
+  content: {
+    documentDriven: true,
+  },
+  router: {
+    options: {
+      scrollBehaviorType: "smooth",
+    },
+  },
+  nitro: {
+    // prerender: {
+    //   crawlLinks: true,
+    //   failOnError: true,
+    //   routes: ["/handbook"],
+    // },
+  },
+  routeRules: {
+    // "/": { prerender: true },
+    // "/handbook": { prerender: true },
+  },
+  // ssr: false,
+  content: {
+    experimental: {
+      clientDB: true,
+    },
+  },
 });

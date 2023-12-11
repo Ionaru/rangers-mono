@@ -1,0 +1,18 @@
+After the situation briefing happened, but before PL briefs the platoon about the battle plan, squad leaders have some time to prepare the squad for the OP. Note that you should also decide and implement your squad's loadout at this time, but that is not covered in this article. The decisions you make here will however have an impact on who takes which loadout in the squad.
+
+*Split squad into buddy teams
+** You may have up to one specialist (MAT, MMG, ...) per team
+** do not have more than one recruit per team
+* Establish Hierarchy
+** The most veteran squad member excluding the squad leader should become second in command
+** Each team has a team leader, with the second in command also being a team leader
+** The more specialised someone's role is, the lower in hierarchy he should be (MAT, MMG etc should not be team leaders or second in command)
+** If possible veteran members should be team leaders, which in combination with the previous point can have an impact on who takes which loadout
+* Make sure everyone knows what to do
+** Team leaders might need an explanation of what their job is
+** Remind everyone that in case they need to take over they should do so actively, avoiding a vacuum
+** Remind specialists of their job in this mission
+* Establish / Remind of ROE
+** Remind everyone of the default ROE to avoid misshaps
+* Decide on a default formation
+** You can also remind people of other standards, like performing 360 when static

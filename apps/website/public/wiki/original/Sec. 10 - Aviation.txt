@@ -1,0 +1,148 @@
+[[File:BFT_R1.png|right|100px]]
+[[File:AviationTeam.png|right|250px]]
+
+This page is intended as a supplement to the Rotary Wing Training. It will not work as a replacement for live training sessions.
+
+== Before joining your first training session ==
+=== For Copilots and Pilots ===
+If you wish to enrol in the rotary flight program you need to have full membership (meaning you need to have the infantryman qualification).
+
+Before joining the first flight training read up about the [https://www.7th-ranger.com/armaguide/m/40131059/page/Flight_models flight models] and configure your game accordingly. Those who only intend to do the copilots certification are strongly encouraged to use the basic flight model.
+
+If you wish to do so you can train on your own instead of joining the rotary training regularly. However, a requirement for taking the pilot's or copilot's certification test is having participated in at least one training session shortly before asking for the test (since they take quite some time and we want to make sure that you could pass it before trying).  The requirements for both the pilot's and copilot's certification are listed on the [https://www.7th-ranger.com/armaguide/m/40131059/page/Qualifications qualification page] of the handbook.
+
+=== For Copilots ===
+If you only intend to fill the copilot's seat during our operations the requirements are drastically lower than for pilots. Your main job will be assisting the pilot while he is doing his job, but there are also certain tasks only you can perform, such as operating the helicopter mounted camera for scouting and laser designating targets. You will also be learning how to perform the gunner's role in a combat helicopter.
+
+However, a copilot is also required to learn how to fly and land a helicopter. The requirements for both tasks are much below what is expected from a pilot. You will, for example, only be asked to make landings in open spaces while not under fire (which is what you would do if the pilot gets shot). You should be prepared to invest a bit of time between training sessions into training these fundamental skills.
+
+Copilots are usually certified during training sessions once they have proven the ability to perform their duties.
+
+=== For Pilots ===
+Learning how to fly helicopters is not easy. When flying in an operation you are responsible for the lives of your passengers. Flying in a dangerous way to impress passengers or due to lacking skill might cause the helicopter to crash and delay the operation for up to twenty minutes while everyone is respawning end setting up again. Deploying a helicopter's weapon systems in an unsafe, uncommunicated manner is similarly dangerous to ground units. This is why we require helicopter pilots to make their licence before being allowed a seat in the cockpit.
+
+Please remember that learning how to fly requires a significant investment of time from your side, and training only during the training sessions will not be sufficient. If you are a new pilot it is expected that you invest at least one additional hour each week into training on your own. If you can not make this kind of time investment you will probably not be able to learn how to fly and the training instructor and you yourself will just be wasting everyone's time.
+
+Certifications for Pilots are conducted on a 1-on-1 basis and will be scheduled once both you and the instructor feel that you are likely to pass.
+
+== Helicopter Crew ==
+Depending on the Helicopter and the Pilot the crew consists of up to two people.
+* <span style='color:#087b08'>'''Pilot'''</span> - Flies the Helicopter and generally in charge including his cargo. He is responsible of everything in regards of the helicopter from route planning, selection of landing zones and deployment of the guns unless he delegates duties to the Co-Pilot.
+* <span style='color:#087b08'>'''Co-Pilot'''</span> - Responsible of assisting the Pilot. Generally takes care of communication and operates the guns. Furthermore he assists with navigation and marks spotted targets.
+
+== Preflight Checklist ==
+# <span style='color:#087b08'>'''Destination'''</span> - Make sure to have a plan for ingress and know where you need to go.
+# <span style='color:#087b08'>'''Sensors and GPS'''</span> - Have your normal GPS, your MicroDAGR and your helicopter's sensory systems readied.
+# <span style='color:#087b08'>'''Copilot'''</span> - Release Controls if you have a copilot who has a rudimentary understanding of how to fly a helicopter.
+# <span style='color:#087b08'>'''Nightvision'''</span> - Check the clock, if it's going to be dark soon you will need to equip your NV-Goggles now as you can't in a vehicle.
+# <span style='color:#087b08'>'''Zero Collective'''</span> - Avoids dangerous sliding or unwanted liftoffs.
+# <span style='color:#087b08'>'''Engine on'''</span>
+# <span style='color:#087b08'>'''Transport Helicopter: Wait for passengers'''</span> - If you are transporting crew, wait until all are in. You need to wait for clearance from the senior ground leader on board.
+# <span style='color:#087b08'>'''Stable Rotor RPM'''</span> - All helicopters have an instrument that shows this, you can also hear it. Collective is still at zero.
+# <span style='color:#087b08'>'''In Formation: Request liftoff'''</span> - If in formation with other helicopters wait for the group leader to give clearance for liftoff.
+# <span style='color:#087b08'>'''Liftoff'''</span>
+
+== Navigation & Task==
+* <span style='color:#087b08'>'''General'''</span> - If navigation is offloaded to the Co-Pilot it is mostly handled by giving bearings and distances to upcoming waypoints, although landmarks to orientation can greatly increase the effectiveness. We use the MicroDAGR as a navigation tool ([https://ace3mod.com/wiki/feature/microdagr.html Guide for MicroDAGR]).
+** Terrain Concealment - Utilize the terrain to mask your approach and limit your exposure to enemy locations.
+** Exit Route - Always have an exit route to quickly leave the area to a safe zone.
+* <span style='color:#087b08'>'''Landing Zone'''</span> - Avoid enemy locations. Plan the route avoiding obstacles if possible and select the route with minimal chance of getting spotted by enemies.
+* <span style='color:#087b08'>'''Supply Drops'''</span> -  Same as Landing Zones, although due to the sling loaded supplies limiting the helicopter, you need to incorporate this factor in planning of a route.
+* <span style='color:#087b08'>'''Attack Runs'''</span> - Proper Ingress is vital to ensure an efficient attack run.
+** Use terrain as cover and ensure that you will be spotted only at the last point possible when it cannot be avoided.
+** Ensure there is enough time for the Co-Pilot to spot the target.
+** For a missle run, allign the helicopter with the target.
+** Preferably do not attack towards friendlies.
+** Chose an approriate Weapon for the target. Conserve heavier more limited weapons for the time they are most beneficial or if you have to refuel soon anyway.
+* <span style='color:#087b08'>'''Overwatch'''</span> - Circle above the ground teams and scan the area around them.
+* <span style='color:#087b08'>'''Scouting'''</span> - On request or whenever overwatch is not needed or possible, scout upcoming areas in advance of ground element arrival.
+
+== Communication ==
+* <span style='color:#087b08'>'''General'''</span> - [http://www.7th-ranger.com/armaguide/m/40131059/page/Sec._03_-_Communication Section 3 Communication] applies.
+* <span style='color:#087b08'>'''Requests'''</span> -  If the request by ground forces does not contain all desired information, do not hesitate to request the missing information.
+* <span style='color:#087b08'>'''Spotting'''</span> - When spotting enemy movements and positions mark them on the map and give a short report over the radio.
+* <span style='color:#087b08'>'''Reports'''</span> - Report fuel situation and weapon statuses before they become an issue. You should notify the ground elements before you have to return to base in advance.
+
+== Sling Loading ==
+The CH-47 is used as the lift helicopter capable of lifting supply crates and light vehicles. The following procedures and protocol must be observed when performing a sling load.
+* <span style='color:#087b08'>'''Altitude'''</span> - The flight altitude of the helicopter must take into account the ropes length as well as the size of the cargo.
+**An example of this for transporting a Humvee would be: 30m Combat Altitude + 10m Rope Length + 2m Height of the Humvee. Bringing the flight altitude to 42m.
+
+* <span style='color:#087b08'>'''Speed'''</span> - The flight speed of the helicopter must be not exceed 170m/s.
+**This will risk the sling loaded cargo striking the helicopter should the pilot necessitate maneuvers.
+**Helicopter movement must also take into consideration the movement of the sling loaded cargo.
+
+* <span style='color:#087b08'>'''Navigation'''</span> - The pilot may communicate with ground-based elements to guide the cargo into a safe drop zone
+
+==Fast Roping==
+When approaching a designated landing zone, the pilot has the option of deciding on a fast rope insertion, should the situation be appropriate. The following procedure must be followed when performing a fast rope insertion.
+*<span style='color:#087b08'>'''Before Takeoff'''</span> - The pilot must designate a crew chief that will perform the handling of the FRIES system. It is recommended to remind him of his role during a FRIES insertion. It needs to be communicated clearly that the last guy roping out of the helicopter needs to make a corresponding callout.
+*<span style='color:#087b08'>'''Before Arrival at DZ'''</span> - When at an appropriate distance from the insertion point, the pilot will alert the crew chief to prepare the FRIES system. This can happen as far out as ~1km.
+*<span style='color:#087b08'>'''Over DZ'''</span> - When the helicopter is in position and static, the pilot will then call for the crew chief to deploy the ropes. The Crewchief then makes the callout of "Go go go!" roughly one second after deploying ropes.
+*<span style='color:#087b08'>'''Egress'''</span> - Before waving off, the pilot must wait for the call from the last man to leave the helicopter. Give the last guy enough time to descend the ropes, then the pilot or copilot if available cut the ropes and leave the area.
+In regards to the methodology to performing a fast rope insertion, the following factors must be observed.
+*<span style='color:#087b08'>'''Speed'''</span> - A maximum speed of 10 km/h must be adhered to as this will risk a rope break. In general you should be completely static when deploying the ropes.
+*<span style='color:#087b08'>'''Altitude'''</span> - The maximum altitude for fast roping is 25m – 30m.
+
+== Approach to LZ and Formation Flight ==
+* <span style='color:#087b08'>'''Plan your approach'''</span>. Use terrain, memorise it beforehand, fly high or low depending on terrain and threat profile in the area. As lead pilot make sure all pilots know what to do. Also make sure that all other helicopters are ready before lifting off from base. Choose a formation beforehand (staggered column or echelon left / right). The order in formation should be so that the most skilled pilots lead, the least skilled trails.
+* <span style='color:#087b08'>'''Travel at Travel Speed'''</span> (>130km/h). Try to keep within 100-150m of the pilot in front of you and do not fly directly behind him. If you're lead make sure that strugglers can keep up (unless this would cause additional risks to you). Notify others of course changes at least one second before you make them. If anyone for whatever reason needs to break formation then do not try to re-establish original order, instead queue up at the rear. In general you should communicate a lot. Keep it brief and precise however.
+* <span style='color:#087b08'>'''Transition to Balanced State'''</span> (~90-130km/h) when approaching the LZ (depending on chopper and skill of pilots in the formation between 1km and 2km away). Announce that you will switch to Balanced State [i]before[/i] you do it. Scan the terrain and find your LZ, remember that other pilots need to land here as well.
+* <span style='color:#087b08'>'''Transition to Final Approach Phase'''</span> (~30km/h). This phase should be very short and only happen immediately before you land. Notify others. Land so that other pilots don't have to fly over you.
+* <span style='color:#087b08'>'''Land'''</span>. Disembark all units, communicate with ground team and lift off once you're empty. Don't wait any longer than necessary.
+* <span style='color:#087b08'>'''Leave the area'''</span> as quickly and safely as possible. Go to Travel Speed and try to re-establish the formation once you are out of the danger zone.
+== Rules of Engagement ==
+The Pilot can further restrict the RoE. Gunners only fire upon clearance from the Pilot or in order to fight an immediate danger to the Aircraft. Friendly Fire and Civilian Casualties are to be prevented at any time.
+* <span style='color:#087b08'>'''No Permission Required'''</span> - Situations the helicopter is free to engage with "inexpensive weapons" e.g. Gatling Guns, no Rockets.
+** Beyond 150m from ground teams.
+** Within 1000m of ground team (target is or will shortly become relevant to ground team e.g. in a position to attack or attacking)
+* <span style='color:#087b08'>'''Permission Required'''</span> - Situations the helicopter is free to engage after receiving permission from command.
+** Within 150m of ground teams.
+** Beyond 1000m of ground teams.
+** Deployment of "expensive weapons" e.g. rockets.
+** Targets within 250m of fragile objectives e.g. hostages.
+* <span style='color:#087b08'>'''Not to Engage'''</span> - Targets not allowed to be engaged.
+** Hospitals, Refugee Camps or any alike.
+** Medical Vehicles and Personnel.
+** Places of Worship (churches or mosques).
+** Within 50m of fragile objectives.
+** Within 50m of ground teams.
+** Historic Sites / Cultural Treasures / Safe Zones
+
+Any engagement call be called of by the command / ground teams at all time.
+
+==Emergency Procedures ==
+* <span style='color:#087b08'>'''General'''</span> - All Emergency Procedures have to be conducted in a short time frame. Immediate reaction by the Crew is required.
+* <span style='color:#087b08'>'''Main Engine Failure'''</span> - Helicopter will decent. Emergency Landing required.
+** Make distress call ("Mayday").
+** Perform Autoroation (read below).
+* <span style='color:#087b08'>'''Fuel Leak'''</span> - Helicopter is losing fuel at rapid rate, due to penetrated fuel tank.
+** Perform emergency landing somewhere close by.
+** If fuel runs out completely perform Autorotation (read below).
+** Once landed and fuel is still present try to return to base.
+* <span style='color:#087b08'>'''Tail Rotor Failure'''</span> - Loss of the tail rotor.
+** Phase 1:
+*** High Velocity (above 130 or at least 80) - Increase speed to reduce spinning.
+***Low Velocity (below 80) - Rapidly increase forward movement. Alternatively gain altitude while spinning before pulling the noose down to force rapid speed gain.
+** Phase 2: Find a safe landing zone. Maintain speed to limit spinning.
+** Phase 3: One of the following:
+*** Fly at safe altitude and slowly decelerate until spinning starts. Turn off engine and perform Autorotation (read below). Avoid spinning.
+*** Perform a Rolling Landing. Turn off wheel breaks and land with speed on a flat surface.
+*** Find the sweet spot when to rapidly decelerate the helicopter to hold while landing before it spins too fast.
+* <span style='color:#087b08'>'''Autorotation''' </span> - Landing manoeuvre without active engine.
+** Immediately put throttle to 0.
+** Find close proximity emergency landing zone.
+** Reach landing zone and reduce forward velocity.
+** Before impact put throttle to maximum to reduce vertical speed.
+
+== Glossary ==
+* Ingress - Approach to an Objective
+* Egress - Path away from the AO or Objective
+* RTB - Return to Base
+* WP - Waypoint
+* LZ - Landing Zone
+* DZ - Drop Zone
+* Travel Speed - State of the helicopter where it's behaviour resembles that of a plane (>130km/h)
+* Balanced State - Flight Behaviour of a helicopter below ~130km/h (depending on helicopter)
+* FRIES - Fast Rope Insertion & Extraction System
+[[Category:Handbook]]

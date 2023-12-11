@@ -1,0 +1,78 @@
+== Introduction ==
+More often than not our operations are conducted by a diverse force. While everything is centered around the Infantry Platoon as the core of our force, there can be a variety of support oriented units serving alongside it.
+
+All elements like Aviation, Reconnaissance, Armour or other Support Units are purely around to support and assist the Infantry Platoon. This section is describing the general relationship and responsibilities.
+
+== Platoon Sergeant / Forward Air Controller ==
+* <span style='color:#087b08'>'''Doctrine'''</span> - Connective tissue between the Infantry Platoon and its leader to the Support Elements.
+* <span style='color:#087b08'>'''Communication'''</span> - Equipped with a Long-Range-Radio he is responsible for the communication between the Infantry Platoon and Support Elements which are not in proximity of the Platoon.
+** '''Direct''' - When directing tasks and request fire support, he is responsible to ensure that no friendlies or civilians are being hurt.
+** '''Report''' - Reports status and upcoming actions by the Infantry Platoon and Support Units to keep all involved up to speed.
+** '''Review''' - Reviews and reports back effectiveness on support requests.
+* <span style='color:#087b08'>'''Coordination'''</span> - He coordinates the actions and assignments of the Support Elements in support of the Infantry Platoon.
+* <span style='color:#087b08'>'''Decisions'''</span> - He is authorized to make decisions in regards on how to deploy the Support Elements based on the directives given by the Platoon Leader.
+* <span style='color:#087b08'>'''Execution'''</span> - Platoon Leader has ultimate authority. Once the Platoon Leader issues an order on how he want to have Support Elements deployed, it is on the Platoon Sergeant to execute the order.
+* <span style='color:#087b08'>'''Advisement'''</span> - He may advice and suggest Support Element usage to the Platoon Leader. While he has room to make individual calls and deploys Support Elements alongside operational guidelines.
+
+The Callsign for the Platoon Sergeant on the Command Net is "Central" in order to prevent confusion with the Platoon Leader himself.
+
+== Echo Platoon Support ==
+* <span style='color:#087b08'>'''Embedded'''</span> - Echo is embedded in the main Platoon. They are handled as a regular squad, but with a special set of purpose and capabilities.
+* <span style='color:#087b08'>'''Backline Support'''</span> - Echo is not a direct frontline units, although in certain situations the might be used as such. They carry heavy weaponry aimed at providing fire support and flank support. In addition the Combat Engineer may be called individually if needed.
+* <span style='color:#087b08'>'''Holding a Sector'''</span> - Echo is often used to hold a sector reliably due to their heavy weaponry.
+* <span style='color:#087b08'>'''Punching Through'''</span> - If Echo is Motorized or Mechanized they might be used in certain situations to punch through which will put them ahead of everyone else. This is a situational decision.
+
+Detail about Armour can be found in [https://www.7th-ranger.com/armaguide/m/40131059/page/Sec._09_-_Echo_Platoon_Support Section 9 - Echo Platoon Support].
+
+== Aviation ==
+* <span style='color:#087b08'>'''On Station / Overwatch'''</span> - Aviation Unit is in proximity of the AO ready to respond to request.
+** Default Aviation behaviour.
+** Aviation may carefully scout while taking minimal risk.
+** FAC may direct focus on certain areas for overwatch.
+* <span style='color:#087b08'>'''Scouting'''</span> - Same as overwatch but specifically requested.
+** Aviation may take more risk.
+** On request by FAC to get intel on specific areas.
+* <span style='color:#087b08'>'''RTB'''</span> - Return to Base (RTB) should always be coordinated between Aviation Unit and FAC.
+** Critical damage may force RTB.
+** Coordination with FAC in order to ensure availability at critical times.
+** May an early RTB for refueling or rearming gets requested.
+* <span style='color:#087b08'>'''Pickup and Transportation'''</span> - The transportation of units whether insertion, reinforcements or relocation.
+** Requested for by FAC.
+** Coordination of Landing Zones.
+** Alternate Landing Zones may be assigned.
+** FAC may inspects Landing Zones to ensure their viability.
+** Further coordination in regards of timing, approach and marking.
+* <span style='color:#087b08'>'''Supply Drops'''</span> - Usually sling loaded supply crates.
+** See Pickup and Transportation.
+* <span style='color:#087b08'>'''CAS'''</span> - Close Air Support.
+** Requested by FAC.
+** Aviation may requests permission from FAC to engage targets without a prior CAS request.
+** FAC and Aviation share responsibility of avoiding friendly fire and civilian casualties.
+** Check Aviation ROE for further details.
+
+Details on how to request certain action can be found in [https://www.7th-ranger.com/armaguide/m/40131059/page/Sec._03_-_Communication Section 03 - Communication]. Further details about Aviation including ROE can be found in [https://www.7th-ranger.com/armaguide/m/40131059/page/Sec._10_-_Aviation Section 10 - Aviation].
+
+== Reconnaissance ==
+* <span style='color:#087b08'>'''General'''</span> - SGT may not have authority to issue orders by himself and only handles communication between Infantry Platoon and Reconnaissance Units.
+* <span style='color:#087b08'>'''Scouting'''</span> - The Reconnaissance Team is scouting an assigned area and reports intel.
+** Default task for Reconnaissance.
+* <span style='color:#087b08'>'''Overwatch'''</span> - The Reconnaissance Team is overwatching and covering the approach of Infantry Platoon Elements.
+* <span style='color:#087b08'>'''Direct Target Elimination'''</span> - The Reconnaissance Team is engaging specific target or areas.
+** Unless in self defence require permission by Command.
+* <span style='color:#087b08'>'''Indirect Target Elimination'''</span> - The Reconnaissance Team is providing critical target information utilized by another Element to engage the target.
+** SGT coordinates the joint effort of the Elements.
+
+Detail about Reconnaissance can be found in [https://www.7th-ranger.com/armaguide/m/40131059/page/Sec._11_-_Reconnaissance  Section 11 - Reconnaissance].
+
+== Armour ==
+* <span style='color:#087b08'>'''General'''</span> - SGT may not have authority to issue orders by himself and only handles communication between Infantry Platoon and Armoured Units.
+* <span style='color:#087b08'>'''Communication'''</span> - Armoured Units might be embedded in Platoon Net and directly communicate and coordinate with Infantry Platoon Elements.
+* <span style='color:#087b08'>'''Pickup and Transport'''</span> - Mechanized Units may transport Infantry Platoon Elements.
+* <span style='color:#087b08'>'''Movement'''</span> - Mechanized Units and Infantry Movements operate in close proximity.
+* <span style='color:#087b08'>'''Fire Support'''</span> - Infantry Platoon Elements request fire support on designated targets.
+* <span style='color:#087b08'>'''Overwatch'''</span> - Armour is overwatching and covering the approach of Infantry Platoon Elements.
+** Alternatively Armour may overwatch an assigned area denying enemy movement.
+* <span style='color:#087b08'>'''Push'''</span> - The Armour might act as a moving shield in a coordinated push with the Infantry.
+
+Detail about Armour can be found in [https://www.7th-ranger.com/armaguide/m/40131059/page/Sec._12_-_Armour  Section 12 - Armour].
+[[Category:Handbook]]

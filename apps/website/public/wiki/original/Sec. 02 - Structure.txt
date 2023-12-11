@@ -1,0 +1,125 @@
+== Organisation (Outside of the game) ==
+* <span style='color:#087b08'> '''Recruit''' </span> - New member of the 7th Rangers.
+* <span style='color:#087b08'> '''Member''' </span> - Basic rank for a member of the 7th Rangers.
+* <span style='color:#087b08'> '''NCO''' </span> - Both management and staff involved in managing and administrating the 7th Rangers.
+* <span style='color:#087b08'> '''Officer''' </span> - Mangement of the 7th Rangers.
+
+== Platoon ==
+The platoon is the entity organising all other elements on the battlefield. It is the center piece of all our deployed units. This makes the platoon leader in charge of the entire operation.
+
+=== Structure ===
+* <span style='color:#087b08'> '''Platoon Element''' </span> - Leadership and supportive element of the platoon, generally operating in a second line behind the frontline.
+* <span style='color:#087b08'> '''Squad Elements''' </span> - A platoon consists out of up to three squads (Alpha, Bravo & Charlie). Squads are generally the frontline elements and the main element of our platoon.
+* <span style='color:#087b08'> '''Support Elements''' </span> - There are various possible support elements such as combat engineers, weapons teams, reconnaissance teams, mechanized or armoured teams. Support elements have generally more freedom and are under less strict control of the platoon leadership. Their main task is to support the squad elements and help them succeed with their tasks. Their freedom enables them to apply their special abilities to their fullest potential.
+
+
+[[File:PL_Struc2.png|250px]]
+
+=== Platoon Element Roles ===
+* <span style='color:#087b08'> '''Platoon Leader''' </span> - The Platoon Leader is in charge of the Platoon and the entire operation.
+* <span style='color:#087b08'> '''Platoon Sergeant''' </span> - The Platoon Sergeant is the 2nd in command of the Platoon and generally is an engineer.
+* <span style='color:#087b08'> '''Platoon Medic''' </span> - The Platoon Medic is in charge of any triage station and generally is responsible to respond to casualties.
+* <span style='color:#087b08'> '''Platoon Operators''' </span> - Operators attached to the Platoon to protect and support the Platoon Leader, Sergeant and Medic.
+
+Regulary the Platoon Element splits into two teams. The Platoon Leader and Medic assume a more passive role, while the Sergeant is taking a more aggressive role. In these cases the Platoon Leader and Medic will remain in the second line supporting Squads in need of assistance, while the Sergeant Element, in addition to supporting other squads, may protect the flanks of the Platoon, scout ahead or provide overwatch.
+Furthermore the Platoon Leader may delegate leadership responsibilities to the sergeat regarding the execution of general orders. Although the Platoon Leader will always define the objects of the Platoon. The Platoon Sergeant can also act as a runner for the Platoon Leader. It has to be noted that no individual ever operates alone.
+
+=== Command Line of Succession ===
+# Platoon Leader
+# Platoon Sergeant
+# Squad Leaders (Alpha to Charlie) or whoever their successor within the squad / if a squad is combat ineffective another squad leader of a combat effective squad may take command breaking the succession from (Alpha to Charlie) in advantage of keeping momentum.
+
+The mission shall be continued. The death of the Platoon Leader shall not impact the overall objective neither the general decision-making regarding the mission. If the original first in command is part of a reinforcement wave he may take control from his successor. The successor has to hand over command as soon the situation allows and the original commander is in a position to do so, meaning he is back in the vicinity of the active units in the area of operations.
+
+=== Special Weapons ===
+Special Weapons e.g. MMG or MAT will be assigned by the Platoon Leader. Generally Medium or Heavy Anti-Tank Weaponry should be assigned to smaller Elements such as a smaller Squad, Support Element or the Platoon Element itself to allow for a more flexible deployment in the field while fullsize Squads remain versatile.
+
+== Squad ==
+A squad consists of one Squad Leader, 6 Operators, and one Combat Medic. Usually the squad splits itself into three Fire Teams. Thre Operators each form a Fire Team Blue and Red. The Squad Leader and Combat Medic form the Command Element. Although they might split up and move with one of the Fire Teams each. Squad cohesion is essential to ensure a combat effective and working unit.
+* <span style='color:#087b08'> '''Cohesion''' </span> - Stick together at all times. Move in appropriate intervals and maintain formation.
+* <span style='color:#087b08'> '''Communication''' </span> - Maintain communication. Confirm orders. Relay and receive important information.
+* <span style='color:#087b08'> '''Order''' </span> - Maintain the Chain of Command. Makes sure there is always somebody assigned to take command, if the current Leader is unable to e.g. unconscious. Follow the orders regardless of whether they seem reasonable to you or not.
+* <span style='color:#087b08'> '''Sector Security''' </span> - Ensure a 360° Security at all time. All Sectors must to be covered.
+* <span style='color:#087b08'> '''2nd in Command''' </span> - The 2IC is responsible to enforce the order given by the Squad Leader and ensure their timely and proper execution.
+
+[[File:Untitled+drawing.png|750px]]
+
+== Fire Team ==
+Fire Teams ensure that every person will always look out and operate closely with at least another person at all times.
+* <span style='color:#087b08'> '''Leadership and Succession''' </span> - Both Blue and Red have an appointed Fire Team Leader. Those FTLs are successors of the Squad Leader.
+* <span style='color:#087b08'> '''Cohesion''' </span> - Stick together at all times. Maintaining Talking Distance and Line of Sight.
+* <span style='color:#087b08'> '''Communication''' </span> - Communicate your actions so your Fire Team can support you e.g. call when you move, so he can cover. The FTL will communicate on behalf of the Fire Team on squad net. Generally every member should evaluate whether a message needs to relayed on the radio or can be shared in proximity.
+* <span style='color:#087b08'> '''Responsibility''' </span> - You are responsible for each other, that includes covering each others backs. Recover him if wounded. Share ammunition and equipment.
+* <span style='color:#087b08'> '''Accountability''' </span> - Ensure that you inform your buddy when switching position or moving. He needs to be able to rely on you. Never leave a buddy behind.
+
+
+== Support Elements ==
+Support Elements can be Ground Support Elements like Recon Units or any ground based Vehicle Units. Furthermore there are Air Units, mainly Rotary, which can either serve logistical or fire support roles. All of these elements have the task of supporting the main element.
+{| class="wikitable" style=width:350px;
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Call-signs'''
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Unit Type'''
+|-
+| Sierra || Recon / Sniper Team
+|-
+| Echo || Platoon Support / Combat Engineers
+|-
+| Foxtrot || Armoured / Mechanized Unit
+|-
+| Rodeo || Aviation Unit (Rotary)
+|-
+| Sergeant || Platoon Sergeant
+|-
+| FAC || Forward Air Controller
+|-
+| Whiskey || Aviation Unit (Fixed-Wing)
+|}
+
+More details can be found in their Handbook Sections.
+
+== Roles & Loadouts ==
+This section is outlining the available roles & loadouts deployed in our unit. We use various sets of loadouts resembling several military units from different countries. Sets are categorized in three categories.
+
+=== Loadout Tiers ===
+* <span style='color:#087b08'> '''Tier 3''' </span> - Basic military unit with basic gear and equipment.
+* <span style='color:#087b08'> '''Tier 2''' </span> - More advanced military unit with more advanced gear such as UAVs.
+* <span style='color:#087b08'> '''Tier 1''' </span> - Special Forces unit with related gear and equipment profile.
+* <span style='color:#087b08'> '''Tier 0''' </span> - Near-future (vanilla) gear and equipment.
+
+A Lists of the loadout sets and the different units can be found [https://docs.google.com/spreadsheets/d/1n35gWWpEyXhJDm3nVUvsxjJHThSSJgwXwH_gZGxaMxs/edit?usp=sharing here].
+
+=== Platoon Level Loadouts ===
+* <span style='color:#087b08'> '''Platoon Leader (PL)''' </span> - The Platoon Leader carries a carbine with grenade launcher as well as colored smoke to mark positions.
+* <span style='color:#087b08'> '''Platoon Engineer (PE)''' </span> - The Platoon Engineer carries a battlerifle in addition to his engineer equipment (engineer specialisation loadouts are outlined below)
+* <span style='color:#087b08'> '''Platoon Medic (PM)''' </span> - The Platoon Medic carries a carbine and a substantial amount of medical gear.
+* <span style='color:#087b08'> '''Forward Air Controller (FAC)''' </span> - The Forward Air Controller carries a carbine and long-range radio.
+* <span style='color:#087b08'> '''Platoon DMR (PDMR)''' </span> - The Platoon DMR carries a DMR with a high magnification scope.
+* <span style='color:#087b08'> '''Platoon UAV (UAV)''' </span> - The Platoon UAV has a UAV drone.
+
+=== Squad Level Roles ===
+* <span style='color:#087b08'> '''Squad Leader (SL)''' </span> - The squad leader carries a carbine with a grenade launcher and some explosives.
+* <span style='color:#087b08'> '''Rifleman (R)''' </span> - Basic Rifleman with an assault rifle.
+* <span style='color:#087b08'> '''Specialist (SPC)''' </span> - The specialists carries a carbine and mini grenades.
+* <span style='color:#087b08'> '''Autorifleman (AR)''' </span> - Light Machine Gunner, focused on suppressing enemies.
+* <span style='color:#087b08'> '''Squad DMR (SDMR)''' </span> - The Squad DMR carries an assault rifle configured as DMR with magnified optics.
+* <span style='color:#087b08'> '''Grenadier (G)''' </span> - The grenadier has an assault rifle with a grenade launcher.
+* <span style='color:#087b08'> '''Light Anti Tank Rifleman (LAT)''' </span> - A LAT carries an assault rifle and a disposable rocket launcher.
+* <span style='color:#087b08'> '''Breacher (B)''' </span> - A breacher carries a carbine and a shotgun.
+* <span style='color:#087b08'> '''Battlerifle (BR)''' </span> - A soldier who carries a high caliber battlerifle.
+* <span style='color:#087b08'> '''Engineer (EOD)''' </span> - An engineer trained in EOD with a mine detector.
+* <span style='color:#087b08'> '''Engineer (Demo)''' </span> - An engineer with various explosives.
+* <span style='color:#087b08'> '''Engineer (Repair)''' </span> - An engineer with repair tools trained to repair vehicles.
+* <span style='color:#087b08'> '''Engineer (Foritification)''' </span> - An engineer with constuction kit and mines to fortify positions.
+* <span style='color:#087b08'> '''Medium Machine Gunner (MMG)''' </span> - Operator with a medium machine gun.
+* <span style='color:#087b08'> '''Medium AT Gunner (MAT)''' </span> - Operator with a medium AT launcher.
+* <span style='color:#087b08'> '''Assistant Medium AT Gunner (Asst. MAT)''' </span> - Assistant to the medium AT gunner.
+
+=== Special Roles ===
+* <span style='color:#087b08'> '''Recon Spotter''' </span> - Recon Team Leader and Spotter for the Sniper.
+* <span style='color:#087b08'> '''Recon Sniper''' </span> - Recon Team Sniper.
+* <span style='color:#087b08'> '''Vehicle Commander'''</span> - Foxtrot Commander.
+* <span style='color:#087b08'> '''Vehicle Crewman'''</span> - Foxtrot Crewman.
+* <span style='color:#087b08'> '''Vehicle Technician'''</span> - Foxtrot Technician who is able to conduct limited vehicle repairs.
+
+More details regarding the content of the loadouts can be found [https://docs.google.com/spreadsheets/d/1n35gWWpEyXhJDm3nVUvsxjJHThSSJgwXwH_gZGxaMxs/edit?usp=sharing here].
+
+[[Category:Handbook]]

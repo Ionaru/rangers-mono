@@ -1,0 +1,41 @@
+The combat reaction routine is a cycle to go through each time you take contact, in particular when this happens unexpectedly.
+
+On each engagement cycle through the following points:
+* Where are hostiles?
+** Do you need to adjust your position?
+* How many hostiles are there?
+** Perform a threat assessment
+* Do they have special assets?
+** Adjust your Threat assessment
+* Are your guys deployed?
+** Maximise your fire output efficiency by making sure everyone is in a good position and doing his job
+* Fire superiority
+** Gain the initiative, get room to breathe
+* Evaluate your position
+** Assess: How effective / vulnerable are you?
+* Can you move?
+** Possibly plan to move into a better position
+* Are you on objective?
+** If this firefight does not benefit your mission then it's an unnecessary risk
+* Advance, fortify, or retreat
+** Make your decision on what to do based on the previous points
+* Communicate
+** Update on your situation, only then you work as one unit and not separated individual parts
+* Do you need support?
+** Make use of the unit
+
+Once combat starts dying down (that is before the combat is over!), you have a window of opportunity to set your own plan into motion. Consider the following points:
+* Enemy reinforcements
+** What is the likeliness of more enemies incoming?
+* Re-evaluate your position
+** Consider the positioning of your units and your role in the mission
+* ACE-report
+** Get to know your squad's situation
+* Communicate if necessary
+** Update PL that you are now able to move again and don't require further assistance
+* Move or Fortify
+** Be ready to implement this as soon as combat is over
+
+If your squad members have suffered injuries, you will likely have to fortify for a moment until the wounded are taken care of. Delegating this to the platoon element may or may not be an option, depending on distance and how busy the platoon element already is.
+
+Time is of the essence in all of these points. If you wait until combat has completely died down before you start thinking about your plans then chances are that by the time you can put them into motion hostile reinforcements have arrived and you have gained nothing. Once you defeated an opponent you gain a window of opportunity that you must use.

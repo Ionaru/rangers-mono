@@ -52,9 +52,9 @@ These paths are added to the auto-generated tsconfig by Nuxt.
 Here is an example of loaded the `tsconfig.base.json` paths. [See source file](./apps/website/nuxt.config.ts)
 
 ```ts
-import { defineNuxtConfig } from 'nuxt/config';
-import { join } from 'path';
-import { workspaceRoot } from '@nx/devkit';
+import { defineNuxtConfig } from "nuxt/config";
+import { join } from "path";
+import { workspaceRoot } from "@nx/devkit";
 
 /**
  * Load tsconfig paths from a tsconfig file
@@ -65,10 +65,10 @@ function getMonorepoTsConfigPaths(tsConfigPath: string) {
   const alias: Record<string, string> = {};
   if (tsPaths) {
     for (const p in tsPaths) {
-      alias[p.replace(/\/\*$/, '')] = join(workspaceRoot, tsPaths[p][0].replace(/\/\*$/, ''));
+      alias[p.replace(/\/\*$/, "")] = join(workspaceRoot, tsPaths[p][0].replace(/\/\*$/, ""));
     }
   } else {
-    console.warn('Root level tsconfig ', tsConfigPath, ' does not contain any paths');
+    console.warn("Root level tsconfig ", tsConfigPath, " does not contain any paths");
   }
 
   return alias;
@@ -85,7 +85,7 @@ export default defineNuxtConfig({
    *
    * https://nuxt.com/docs/guide/directory-structure/tsconfig
    **/
-  alias: getMonorepoTsConfigPaths('../../tsconfig.base.json'),
+  alias: getMonorepoTsConfigPaths("../../tsconfig.base.json"),
   devtools: { enabled: true },
 });
 ```
@@ -142,7 +142,7 @@ UPDATE tsconfig.base.json
 If re-exporting `.vue` file, you might run into TS error about not understanding the files. In that case, you can add a small `d.ts` file with the following contents
 
 ```ts
-declare module '*.vue';
+declare module "*.vue";
 ```
 
 Since Nx only processes typescript files by default, the project graph won't show the usage of the `ui` library in the Nuxt app.

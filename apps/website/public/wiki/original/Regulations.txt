@@ -1,0 +1,55 @@
+This sections lists all gear regulations for Platoon, Squad and individual level. All adjustments to loadouts must be permitted by your leader and conform with our Regulations.
+
+== Weapon Sights ==
+{| class="wikitable" style=width:750px;
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Class'''
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Description'''
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Equipment Box Color'''
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Restrictions'''
+|-
+| Class 1 || Standard optic with no magnification || <span style='color:#6cdd23'>Green</span> || None
+|-
+| Class 2 || Magnified optic (3.4x - 4x) || <span style='color:#dd9323'>Orange</span> || 1 per Element + Platoon Sergeant
+|-
+| Class 3 || Higly magnified optic  || <span style='color:#dd2423'>Red</span> || Platoon DMR only
+|-
+|}
+
+* <span style='color:#087b08'>'''Class 1 Sight '''</span> - Anyone can choose his Class 1 sight.
+* <span style='color:#087b08'>'''Element Sight Upgrade'''</span> - Each Element (Squad, Platoon Element) can upgrade one soldier with a Class 2 sights.
+* <span style='color:#087b08'>'''Sight Upgrade Restriction'''</span> - Following roles are restricted to Class 1 sights and cannot upgrade:
+** Platoon Leader
+** Platoon Medic
+** Squad Leader
+** Combat Medic
+** Autorifleman
+** Breacher
+** Battlerifle
+** Grenadier
+** Medium Machine Gunner
+** Medium AT Gunner
+** Heavy AT Gunner
+** Mortar Gunner
+* <span style='color:#087b08'>'''Platoon Element Sights'''</span> - The Platoon Sergeant and one additional Member can upgrade to a Class 2 Sight. A Platoon DMR counts as a upgrade.
+
+== AT-Weapons ==
+* <span style='color:#087b08'>'''AT Limit'''</span> - Each Squad can carry up to three AT-Weapons.
+* <span style='color:#087b08'>'''MAT/HAT Multiplier'''</span> - The presence of a MAT/HAT in an element counts as two AT-Weapons.
+* <span style='color:#087b08'>'''Restriction'''</span> - Following roles cannot carry AT-Weapons:
+** Autorifleman
+** Medium Machine Gunner
+** MMG Assistant
+** MAT Assistant
+
+== Additional Ammunition ==
+* <span style='color:#087b08'>'''Additional Ammunition'''</span> - Each soldier can carry additional ammunition for the AR, MMG and MAT after permission by his leader:
+** 200 Rnds of Machine Gun Ammunition (AR or MMG)
+** 1x MAT Rocket
+* <span style='color:#087b08'>'''Restriction'''</span> - No soldier who has the abovementioned ammunition in his loadout is allowed to carry additional ammunition.
+
+== Special Gear ==
+* <span style='color:#087b08'>'''Lockpicks'''</span> - One member in the Squad can carry Lockpicks (preferably the Medic).
+* <span style='color:#087b08'>'''Entrenching Tool'''</span> - Each Element can carry two Entrenching Tools (Leader and Medic are not permitted to carry an Entrenching Tool).
+* <span style='color:#087b08'>'''Laserdesignator'''</span> - The Platoon Element may carry one Laserdesignator.
+* <span style='color:#087b08'>'''AN/PRC-152'''</span> - Each Fire Team Leader may carry an AN/PRC-152 (at least the 2nd in Command has to, 3rd in Command may carry one turned off until needed).
+* <span style='color:#087b08'>'''Special Mission Gear'''</span> - Special Mission Gear (e.g. Laptop) is being distributed by the Platoon Leader, the restrictions from the additional ammunition section apply.

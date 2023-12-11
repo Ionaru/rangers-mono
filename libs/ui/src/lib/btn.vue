@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { doubleDec, doubleInc } from '@7th-ranger/utils';
-import { ref } from 'vue';
+import { doubleDec, doubleInc } from "@7th-ranger/utils";
+import { ref } from "vue";
 
 const count = ref(0);
 const incr = () => {

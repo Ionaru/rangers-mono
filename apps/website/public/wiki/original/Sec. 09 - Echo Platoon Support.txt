@@ -1,0 +1,134 @@
+[[File:BFT_E1.png|right|100px]]
+[[File:Echo_2.png|right|250px]]
+
+== Introduction ==
+Echo is embedded in the Main Platoon. Their main tasks include covering regular elements, protect flanks and provide effective fire support.
+
+== Composition ==
+* <span style='color:#087b08'>'''Combat Engineer'''</span> - Echo Team Leader and trained Engineer. Proficient in following fields of work:
+** Fortification of Positions (digging Trenches)
+** Repairing Vehicles
+** Deploying Explosives and Mines
+** Disposal of Explosives and Mines
+
+* <span style='color:#087b08'>'''Weapons Specialist'''</span> - Operator of Echo's Heavy Weapon which include:
+** Medium Machine Guns (MMG)
+** Medium Anti-Tank Launchers (MAT)
+** Heavy Anti-Tank Launchers (HAT)
+** Mortars
+
+* <span style='color:#087b08'>'''Assistant Weapons Specialist'''</span> - Assisting the Weapons Specialist to deploy his weapons in the most effective way.
+** Assist with Rangefinder
+** Carries Ammunition
+** Assists reloading
+** Provides protection
+
+== Combat Engineer Proficiency ==
+=== Engineer Skills ===
+Skills a Combat Engineer need to able to bring onto the battlefield.
+* <span style='color:#087b08'>'''Entrenching'''</span> - Equipped with an Entrenching Tool the Combat Engineer can dig trenches. Used over ACE Self-Interaction he can either dig a small or a big trench. These can be positioned freely, although they require a ground which is able of being moved like sand or grass, it does not work on concrete and such. The Entrenching Tool allows to continue constructing unfinished Fortifications.
+* <span style='color:#087b08'>'''Fortification'''</span> - Equipped with an Entrenching Tool and Construction Tool the Combat Engineer can construct Fortifications as long as there are available resources. Used over ACE Self-Interaction he can construct Fortifications. Each Fortification will cost resources depending on their complexity. Possible Fortifications small bunkers, various sandbag walls, tank traps and razor wire.
+** Construction Resources can also be requested by supply drop.
+** Fortifications can be positioned freely, they do not require soft ground.
+* <span style='color:#087b08'>'''Repairing Vehicles'''</span> - Unless you just switch tires, Repairing requires a Tool Kit. These can be usually found inside of the vehicles. Repairing is done by interacting with the Vehicle with ACE Interaction.
+* <span style='color:#087b08'>'''Deployment of  Explosives'''</span> - Explosives are placed by using ACE Self-Interaction. Often Explosives require arming after placing which is being done by ACE Interaction with the Explosive. The Combat Engineer is carry manual tickers (Clacker).
+* <span style='color:#087b08'>'''Disposal of Explosives'''</span> - Depending of the type of Explosive you face, there are different requirements. Generally it follows a certain procedure.
+** Locate - Use the Mine Detector to assist.
+** Approach - Carefully crawl towards the Explosives, especially if you can suspect a trigger like a pressure plate and such.
+** Defuse - It requires a Defusal Kit and is being done by ACE Interaction with the Explosive.
+
+=== Explosives ===
+
+{| class="wikitable" style=width:900px;
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''APERS Mine'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''APERS Bounding Mine'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''APERS Tripwire Mine'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''AT Mine'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''IED'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''Claymore'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''SLAM'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''Explosive Charge'''
+|style="width:200px;background:#087b08;text-align:left;color:#ffffff" | <span style> '''Explosive Satchel'''
+|-
+|  [[File:apers.jpg|100px]] || [[File:bounding.jpg|100px]] || [[File:tripwire.jpg|100px]] || [[File:at.jpg|100px]] || [[File:ied.jpg|100px]] || [[File:claymore.jpg|100px]] || [[File:slam.jpg|100px]] || [[File:block.jpg|100px]] || [[File:satchel.jpg|100px]]
+|}
+
+* <span style='color:#087b08'>'''APERS Mine'''</span> - Classic pressure activated anti-personnel mine.
+* <span style='color:#087b08'>'''APERS Bounding Mine'''</span> - Pressure activated anti-personnel mine (Bouncing Betty). Initial charge propells the main charge into the air which will explode mid air above ground spreading shrapnel over a large area.
+* <span style='color:#087b08'>'''APERS Tripwire Mine'''</span> - Classic anti-personnel mine activated by a tripwire.
+* <span style='color:#087b08'>'''AT Mine'''</span> - Anti vehicle / tank mine activated by pressure. It will not be activated by infantry stepping on it.
+* <span style='color:#087b08'>'''IED'''</span> - Either pressure or remotely activated. Usually based on a artillery shell. Highly effective with a large explosion radius. Effective against vehicles and personnel.
+* <span style='color:#087b08'>'''Claymore'''</span> - Directional anti-personnel mine. Usually remotely activated.
+* <span style='color:#087b08'>'''SLAM'''</span> - Directional anti vehicle / tank mine. Either activated by pressure in bottom attack mode, laser in side attack mode or remotely activated.
+* <span style='color:#087b08'>'''Explosive Charge'''</span> - Explosive charge activated either by timer or remotely.
+* <span style='color:#087b08'>'''Explosive Satchel'''</span> - Large explosive charge activated either by timer or remotely.
+
+== Heavy Weapon Proficiency ==
+Some things like how to operate Rocket Launchers (MAT/HAT) can be found in [http://www.orbitalstrikeforce.com/armaguide/m/40131059/page/Sec._04_-_Basic_Infantry_Skills Section 4 Basic Infantry Skills].
+
+=== Mortar ===
+The heaviest weapon deployed by Echo is a Mortar. The Communication in regards of Fire Support Request can be found in [http://www.orbitalstrikeforce.com/armaguide/m/40131059/page/Sec._03_-_Communication Section 3 Communication]. Further more you need to proficient with Map Tools, details can be found in [http://www.orbitalstrikeforce.com/armaguide/m/40131059/page/Sec._04_-_Basic_Infantry_Skills Section 4 Basic Infantry Skills].
+
+==== General ====
+* <span style='color:#087b08'>'''Required Tools'''</span> - Following Tools are required for effective mortar deployment and usage:
+** Map Tools - Direction and Distance.
+** 82mm Rangecard - Proving Ballistic Information.
+** Pen & Paper - You eventually need to make some nodes and calculations.
+** Clock - Not required, but handy.
+* <span style='color:#087b08'>'''Assemble Mortar'''</span> - The Mortar is usually stored in two Backpacks. Both need to be placed and assembled.
+* <span style='color:#087b08'>'''Ammunition'''</span> - The Mortar must be manually reloaded with ACE Interaction. Ammunition is stored in box which can be carried. There are three types of Ammunition available:
+** HE
+** Smoke
+** Illumination
+
+==== Firing Solution ====
+Assuming you received a Target or you just prepare for potential Targets during down times. You need to go through following steps:
+
+<span style='color:#087b08'>'''Step 1: Collect Target Information'''</span>
+* Find your exact location on the Map.
+* Find the target location on the Map.
+* Use Map Tools and get the direction (in Mils) and distance in meters.
+* Get the Height Difference between your location and the target location and whether the target is above or below in height.
+
+<span style='color:#087b08'>'''Step 2: Chose appropriate Charge'''</span>
+* Charge is influencing the amount of explosive force used to propel the Mortar Round.
+* Influences the Arc and with it the travel time.
+* Use the lowest Charge possible for the given distance.
+
+<span style='color:#087b08'>'''Step 3: Collect & Calculate'''</span>
+
+Use the 82mm Rangecard and acquire all relevant information. Giving the distance to the target and charge you need to acquire following information:
+* Elevation
+** Base Setting
+* Elevation adjustment for 100m Height Difference
+** Scales linear e.g. 50m Height Difference means half of the adjustment value needed
+** If Target is above in Height add the value to Elevation, else subtract
+* Time of Flight
+** Height adjustment for Time of Flight is negligible
+
+[[File:MortarCard.png|300px]]
+
+<span style='color:#087b08'>'''Step 4: Aim & Fire'''</span>
+
+Set Charge, Elevation (in Mils) and Direction (in Mils) to align your Mortar with the Target and Fire. Communicate your status to the other units:
+* Rounds Away - First Round fired at Target.
+* Rounds Complete - Last Round fired at Target.
+* Splash Out - 7s warning before first impact.
+
+[[File:MortarOptic.png|300px]]
+
+<span style='color:#087b08'>'''Step 5: Evaluate & Adjust'''</span>
+
+Depending on Reports of your effectiveness on the Target you might need adjust and being called to fire again.
+
+== Motorized/Mechanized ==
+Echo might operate with a Vehicle. Usually in order to assist with transporting equipment or enhancing fire power due to vehicle weaponry. This section will be about on how to utilize and deploy a vehicle like a HUMMWV.
+
+* <span style='color:#087b08'>'''Vehicle Roles'''</span> - Depending on the Vehicle the roles may switch. For a HMMWV with an M2 Machine Gun the Weapon Specialist should not be the Gunner of the M2 perse. Him being a passenger allows him to deploy his MMG (for example) while his Asst. Weapon Specialist is able to operate the mounted M2. The Combat Engineer is driving the HMMWV. The Weapon Specialist is sitting in the backseat behind the driver.
+
+[[File:HMMWV_Hold.png|500px]]
+
+* <span style='color:#087b08'>'''Holding Vehicle'''</span> - Hold the vehicle angled on the center of the road. That provides a lot of cover, assuming the contact is coming from the front. It should be angled to provide a maximum of cover, while being able to move forward or go in reverse without switching between them.
+
+[[File:HMMWV.png|150px]]
+[[Category:Handbook]]

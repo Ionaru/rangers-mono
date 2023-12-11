@@ -1,0 +1,50 @@
+== About 7R ==
+
+<br><span style='color:#087b08'> '''How serious are we?''' </span><br>
+In-game, we use military procedures & tactics ([http://www.7th-ranger.com/armaguide/m/40131059/page/Introduction see our handbook]) to make the experience smoother & more enjoyable for our members - being people who enjoy playing Arma with teamwork & good communication. We're also locked to 1st-person POV for better balance.<br><br> '''While there's no 'Yes, sir! no, sir!' enforced, everyone is expected to follow their Leader's orders.'''
+
+<br><span style='color:#087b08'> '''Who do we play as?''' </span><br>
+* MARSOC
+* Bundeswehr
+* 101st Airborne
+* US Army Rangers
+* British Armed Forces
+* Russian Armed Forces
+
+<br><span style='color:#087b08'> '''When & how do we play together?''' </span><br>
+We often organise Impromptu Ops through our community Discord server, but our official times are:
+* Tuesday -  8PM CET (Field Exercise)
+* Saturday - 8PM CET (Main Ops)
+* Sunday -   3.30PM CET (Main Ops)
+
+Most of our missions consist of a single session, with others having two or three parts. Less commonly occurring, our campaigns tend to consist of around 5+ sessions - with the events of each previous session having the potential to affect the next (For example: if we fail to collect intel, the enemy may have additional support which we're unaware of).
+
+<br><span style='color:#087b08'> '''Do we use fixed squads?''' </span> <br>
+'''No - Here's how we slot up:'''
+# Lead roles are taken by volunteers.
+# Leaders select their 2IC (Second-in-command).
+# Medic roles are taken by volunteers.
+# Remaining members are randomly slotted into each squad.
+
+<br><span style='color:#087b08'> '''What aspects of ACE Medical do we use?''' </span><br>
+We use basic medical with a few tweaks - basic bandages, morphine, epinephrine & blood IVs.
+
+== Recruitment ==
+
+<br><span style='color:#087b08'> '''How do I join?''' </span> <br>
+When you're happy we're right for you, [http://www.7th-ranger.com/armarecruitment apply here!]
+
+<br><span style='color:#087b08'> '''Do we have an age limit?''' </span> <br>
+While the large majority of our members are over 18, we have no age limit. We expect our members to know when the situation calls for maturity.
+
+<br><span style='color:#087b08'> '''Are we looking for pilots or armour crew?''' </span> <br>
+While we use armour and aircraft, we're not looking for dedicated members for either of these.
+Being mainly infantry-based, we don't use these in every op.
+
+<br><span style='color:#087b08'> '''I'm completely new to arma, is that okay?''' </span> <br>
+Absolutely - we accept & have members of various skill levels. Our mentoring program will ensure you'll know what to do in our ops.
+You'll also be paired with a more experienced member in your first op - they'll be there to guide you along, and watch your back.
+
+<br><span style='color:#087b08'> '''How will my role be decided?''' </span> <br>
+We don't use predetermined roles - they're decided based on what the mission calls for, and are assigned by your Squad Leader.
+In one mission you could be an MAT Operator, and a Combat Medic in the next.

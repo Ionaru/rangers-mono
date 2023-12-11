@@ -1,0 +1,15 @@
+== Standard Loadout ==
+[[File:Untitled+drawing.png|right|550px|]]
+The current standard loadout for six people consists of
+* 1x AR
+* 1-2 LAT
+* 1x Grenadier (optional)
+* Medic
+* SL
+One LAT is considered necessary unless you have an MAT in your squad to be able to defend against armour. An AR is important for being able to suppress enemies and give the squad more possibilities to maneuver. Medic and SL are necessary for obvious reasons.
+
+=== Adjusting ===
+Loadouts should be tailored to your needs. In the briefing the PL should decide on special weapons in the platoon and decide on which squads are to supply them. The SLs can then tailor their individual loadouts to suit that task.
+
+=== General Concerns ===
+Make sure that you are in compliance with the [https://www.7th-ranger.com/armaguide/m/40131059/page/Regulations_and_Procedures procedures and regulations] when deciding on the squad loadout. in particular make sure to make use of the high-magnification scope and that the second in command has a 152.

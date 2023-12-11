@@ -1,0 +1,291 @@
+= General Guidelines =
+
+Communication is an essential factor for teamplay. A certain level of standardization ensures quick and precise communication while limiting misunderstandings. This section features all important Communication related basics. You will find more situation based communication guidelines in the relevant sections.
+
+When it comes to Communication there are several core principles:
+* <span style='color:#087b08'>'''Compact'''.</span> Information should be always given with as few words possible. Keeping it short will ensure the ability for others to have their necessary air time to convey their messages.
+* <span style='color:#087b08'>'''Clear and Precise'''.</span> Your messages should be clear and precise. Use appropriate known terminology.
+* <span style='color:#087b08'>'''Confirmation'''.</span> Always confirm or even read-back orders given. An unconfirmed order should be handle as a non received order, meaning while somebody is failing to confirm, you repeat until confirmation.
+*<span style='color:#087b08'> '''Allocatable'''.</span> Always start with alerting the recipients of your message and then state who you are (e.g. "Command this is Alpha" , 'Command' as Recipient and 'Alpha' as Sender)
+
+
+To ensure good communication you always need to evaluate which information should be broadcasted on which channel. There are multiple channels available, although not all of them are available for each individual.
+* Direct Talk (talking normal)
+* Squad Radio/Net (main Rifleman Radio)
+* Platoon Radio/Net (Leader, 2IC and Special Roles)
+* Command Radio/Net (Support Coordination Channel usually Long Range)
+
+Based on the information and the availability of your individual accessible channels you to make a decision what channel to use. There are some basic guidelines when to use Direct Talk and when to use the Radio.
+
+
+'''Direct Talk:'''
+* Shout when using a Grenade (Frag out, Smoke out, Flashing,...)
+* Communicate with people in a close proximity, when all recipients can hear you
+* Preferably with your buddy team, if radio not absolutely necessary
+
+
+'''Radio (Squad Net):'''
+* Man down!
+* Orders
+* Spotted Enemies
+* Reports
+* Buddy Team coordination (from Team to Team or Squad Lead to Team)
+* All relevant information where recipients are out Direct Communication range or the importance of this information is so high that it needs to be ensure everyone has to receive it
+
+
+'''Radio (Platoon/Command Net):'''
+* Orders
+* Reports and Status Information
+* Enemy Movement
+* Force Coordination
+
+= Radios =
+
+On default each soldier is carrying a Rifleman Radio AN/PRC-343. Each Squad has their own Squad Net. The Squad Leaders, 2nd in Command, Platoon Leader, Platoon Sergeant and Platoon Medic will also carry an additional Radio connected to the Platoon Net, AN/PRC-152. Furthermore the Platoon Leader will carry a Long-Range Radio to communicate with Support Units such as Aviation on the Command Net, AN/PRC-117F.
+
+It is essential that every soldier is familiar with how to setup and use the Radio. It is mandatory that communication lines remain open at all time, e.g. if a Squad Leader is unconscious, the second in command should go on the Platoon Net and report the situation and assume control of the Squad and the Communication, while the Leader is being treated. In the end every soldier should be ready to take actions to maintain the communication at all time during the mission based on the situation of his unit. It is everyone's duty to ensure a constant uninterrupted line of communication between all elements, no matter the costs. If your unit lacks a Radio capable to connect to the Platoon Net (e.g. AN/PRC-343) may need to one person to switch to the Platoon Actual Net to keep a line of communication.
+
+== Hotkeys ==
+
+Note that the key bindings can be changed in your settings under (configure addons).
+{| class="wikitable" style=width:400px;
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Keys'''
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Action'''
+|-
+| TS3 Push to Talk || Direct Talk
+|-
+| Caps Lock  || Talk on Radio 1
+|-
+| T || Talk on Radio 2
+|-
+| CTRL + Caps Lock || Talk on Radio 3
+|-
+| Tab + Mousewheel || Adjust Talk Volume (AI will hear you)
+|}
+
+Radio can be opened over ACE-Self Interaction. Best is to look in your settings.
+
+== AN/PRC-343 (Rifleman Radio) ==
+Default Radio for every Infantryman. Set on Squad Net Channel. This radio has a limited range of 850m ideally, due to terrain interference it might be substantially lower closer to 400m.
+
+[[File:Radio343.png|300px]]
+
+== AN/PRC-152 ==
+Default Radio for Infantry Leaders and Platoon Level Support Personnel. Set on Platoon Net Channel. This radio has an ideal range of 5-7km, due to terrain interference it might be closer to 2-5km.
+
+[[File:Radio152.png|300px]]
+
+== AN/PRC-148 ==
+Radio for certain Support Units such as Aviation. Set on the Support Area Specific Net such as Air Net. This radio has the same range like the AN/PRC-152.
+
+[[File:Radio148.png|300px]]
+
+== AN/PRC-117F (Long Range Radio) ==
+Radio carried by the Platoon Sergeant and Support Units such as Aviation and Recon. Set mostly on Command Net. This radio has a range of 10-20km sometimes even more.
+
+[[File:Radio117F.png|500px]]
+
+== Stereo Settings ==
+
+Use Stereo Settings to always put the Squad Net on one ear and the Platoon Net (if Leader) on the other ear. That helps identifying the used Channel in a current broadcast. It recommends to always keep it consistent.
+
+= Comm Card =
+
+The Comm Card can be found in the tabs on the right hand top of the map ingame. Do not hesitate to use it.
+
+=== Squad Net Channels ===
+For the AN/PRC-343.
+
+{| class="wikitable" style=width:400px;
+|style="background:#087b08;text-align:left;font-size:12pt;color:#ffffff" | <span style> '''Unit'''
+|style="background:#087b08;text-align:left;font-size:12pt;color:#ffffff" | <span style> '''Channel'''
+|-
+| Alpha || Block 1 - Channel 1
+|-
+| Bravo || Block 1 - Channel 2
+|-
+| Charlie || Block 1 - Channel 3
+|-
+| Delta || Block 1 - Channel 4
+|-
+| Platoon Actual || Block 1 - Channel 5
+|-
+| Echo 1 || Block 1 - Channel 6
+|-
+| Echo 2 || Block 1 - Channel 7
+|-
+| Sierra 1 || Block 1 - Channel 8
+|-
+| Sierra 2 || Block 1 - Channel 9
+|-
+| Hotel 1 (REINF) || Block 1 - Channel 10
+|-
+| Hotel 2 (REINF) || Block 1 - Channel 11
+|}
+
+=== Cross Unit Channel ===
+For all other Radios.
+
+{| class="wikitable" style=width:400px;
+|style="background:#087b08;text-align:left;font-size:12pt;color:#ffffff" | <span style> '''Channel'''
+|style="background:#087b08;text-align:left;font-size:12pt;color:#ffffff" | <span style> '''Description'''
+|-
+| Channel 1 - PLT NET || Platoon Net
+|-
+| Channel 2 - COM NET || Command Net
+|-
+| Channel 3 - SUP NET || Support Net
+|-
+| Channel 4 - MECH NET || Mechanized/Armoured Net
+|-
+| Channel 5 - AIR NET 1 || Aviation Net 1
+|-
+| Channel 6 - AIR NET 2 || Aviation Net 2
+|}
+
+= Procedure and Terminology=
+
+=== Identification ===
+When talking on the Radio start each conversation with stating who you are talking to. Recipient from Sender. For Example:
+
+{| class="wikitable" style=width:550px;
+| style="text-align:center" |<code>
+Alpha SL: "Lead, this is Alpha." <br>
+Platoon Leader: "Alpha, send it." <br>
+Alpha SL: "Alpha is ready to move out." <br>
+Platoon Leader: "Lead copies."
+</code>
+|}
+
+=== General Terminology ===
+
+* <span style='color:#087b08'> '''Copy/Roger''' </span> - Message received and understood.
+* <span style='color:#087b08'> '''Affirmative/Afirm''' </span> - Yes.
+* <span style='color:#087b08'> '''Negative''' </span> - No.
+* <span style='color:#087b08'> '''Wilco''' </span> - Will comply. Usually used with Roger ("Roger, wilco").
+* <span style='color:#087b08'> '''Come in''' </span> - Request for a response.
+* <span style='color:#087b08'> '''Send it''' </span> - Signal to be ready for incoming message.
+* <span style='color:#087b08'> '''Break''' </span> - Signals a pause during a longer transmission.
+* <span style='color:#087b08'> '''Clear Comms/Break, break, break''' </span> - Signals all listeners for radio silence for incoming priority message.
+* <span style='color:#087b08'> '''Interrogative''' </span> - Used to indicate a following question.
+* <span style='color:#087b08'> '''Stand by''' </span> - Prepare for following Order.
+* <span style='color:#087b08'> '''Oskar Mike''' </span> - On the move.
+
+=== Combat Callouts ===
+* <span style='color:#087b08'> '''Frag Out''' </span> - Warning when throwing a Frag Grenade.
+* <span style='color:#087b08'> '''Smoke Out''' </span> - Warning when throwing a Smoke Grenade.
+* <span style='color:#087b08'> '''Flashing''' </span> - Warning when throwing a Flashbang.
+* <span style='color:#087b08'> '''Grenade''' </span> - Warning of a hostile grenade being thrown at friendlies.
+* <span style='color:#087b08'> '''Bad Frag''' </span> Warning of a friendly frag grenade throwing in a way that endangers friendlies.
+* <span style='color:#087b08'> '''Incoming''' </span> - Warning of incoming fire. Usually combined with direction incoming fire.
+* <span style='color:#087b08'> '''Cease Fire''' </span> - Order to hold and stop fire.
+* <span style='color:#087b08'> '''Check Fire''' </span> - Order to re-identify target to ensure positive identification, used by possible friendly fire.
+* <span style='color:#087b08'> '''Hold Fire''' </span> - Order to hold fire to maintain stealth.
+
+=== Personal Status ===
+* <span style='color:#087b08'> '''Up''' </span> - Report of an operation unit.
+* <span style='color:#087b08'> '''Reloading''' </span> - Report of an unit reloading.
+* <span style='color:#087b08'> '''Weapon Empty/Dry''' </span> -  Report of an unit having no ammunition left.
+* <span style='color:#087b08'> '''Set''' </span> -  Report for an unit being in a position to cover other unit's movement.
+
+
+= Status Reports =
+
+=== Contact Report ===
+A Contact Report contains following Information:
+* <span style='color:#087b08'> '''Warning''' </span> - Usually "Contact!" is used to alert people for incoming Contact Report.
+* <span style='color:#087b08'> '''Description''' </span> - Description of the Hostiles spotted.
+* <span style='color:#087b08'> '''Direction''' </span> - Direction of the Hostiles spotted from the location of the Spotter or other given Reference. Usually Cardinal Directions North/East/South/West or Compass Bearings.
+* <span style='color:#087b08'> '''Distance''' </span> - Distance of the Hostiles spotted from the location of the Spotter or other given Reference.
+* <span style='color:#087b08'> '''Opt. Target Reference''' </span> - Optional Reference Point given which is used as a base for the Direction and Distance.
+* <span style='color:#087b08'> '''Opt. Additional Information''' </span> - Optional all Additional Useful Information about the Hostile spotted, e.g. direction of movement, awareness of our presence...
+
+{| class="wikitable" style=width:650px;
+| style="text-align:center" |<code>
+"Contact, Enemy Fire Team, bearing 060, 400 meters."<br>
+"Contact, Enemy Patrol, 2 men, North, 400 meters of Alpha - 1, moving eastwards."<br>
+</code>
+|}
+
+=== ACE Report ===
+* <span style='color:#087b08'> '''Ammunition''' </span> - The categorized amount of ammunition for the primary and secondary weapon.
+* <span style='color:#087b08'> '''Casualties''' </span> - Count of currently wounded and dead. Furthermore the categorized amount of medical gear.
+* <span style='color:#087b08'> '''Equipment''' </span> - The categorized amount of Equipment in regards of Explosives, Rockets, Grenades...
+
+ACE Reports are given as individuals to the Leader, who will compile them into an overall assessment and report that to his superior. They are used to assess a unit's continued combat ability.
+
+
+'''ACE Report Categories:'''
+{| class="wikitable" style=width:550px;
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Category'''
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Meaning'''
+|style="background:#087b08;text-align:left;color:#ffffff" | <span style> '''Status'''
+|-
+| Green || more than 75% of initial quantity || fully combat effective
+|-
+| Yellow || between 75% to 50% of initial quantity || combat effective, but requires resupply soon
+|-
+| Red || below 50% of initial quantity || combat ineffective, barely operational
+|-
+| Black || below 25% of initial quantity || combat ineffective, not operational
+|}
+
+'''Example:'''
+{| class="wikitable" style=width:650px;
+| style="text-align:center" |<code>
+Report of a Squad Member to his Squad Leader:<br>
+"Green on Ammo, Yellow on Medical, Yellow on Equipment, Black on AT."<br>
+</code>
+|}
+
+=== SITREP ===
+A situational report is a quick report given to get information about the status of troops. SITREPs can be asked for at any level. It is supposed to be less detailed than an ACE Report.  It should be centered around your location, objective status, combat status of your unit, and any other information that you deem relevant to the situation, e.g. status of enemy combatants.
+
+
+= Aviation Requests =
+
+=== Request Pickup ===
+* <span style='color:#087b08'> '''Location''' </span> - The landing zone you request getting picked up.
+* <span style='color:#087b08'> '''Landing Zone Details''' </span> - Relevant information about the Landing Zone like landmarks that are easy to spot from the air and weither it is hot or cold.
+* <span style='color:#087b08'> '''Optional: Friendly Location''' </span> -  Location of friendlies in the area.
+* <span style='color:#087b08'> '''Optional: Recommended Approach''' </span> - Direction you recommend the helicopter to approach the Landing Zone from.
+* <span style='color:#087b08'> '''Optional: Colored Smoke Reference''' </span> - On request of the helicopter crew.
+
+=== Request Supply ===
+* <span style='color:#087b08'> '''Location''' </span> - The Drop Zone you request the Supply Drop to.
+* <span style='color:#087b08'> '''Drop Zone Details''' </span> - Relevant information about the Landing Zone like landmarks that are easy to spot from the air and weither it is hot or cold.
+* <span style='color:#087b08'> '''Optional: Friendly Location''' </span> -  Location of friendlies in the area.
+* <span style='color:#087b08'> '''Optional: Recommended Approach''' </span> - Direction you recommend the helicopter to approach the landing zone from.
+* <span style='color:#087b08'> '''Optional: Colored Smoke Reference''' </span> - On request of the helicopter crew.
+
+=== Request Close Air Support===
+* <span style='color:#087b08'> '''Target''' </span> - Target Marker (T + Number).
+* <span style='color:#087b08'> '''Description''' </span> - Description of the target and area.
+** Distinctive Landmarks which help finding the target and for general orientation.
+** Type of target - Target details like amount and type of enemy.
+** Type of Weapon - Depending on available weaponry what you request (minigun fire, rockets...).
+* <span style='color:#087b08'> '''Friendly Location''' </span> -  Location of friendlies in the area to prevent friendly fire.
+* <span style='color:#087b08'> '''Optional: Recommended Approach''' </span> - Direction you recommend the helicopter to approach the landing zone from.
+* <span style='color:#087b08'> '''Optional: Colored Smoke Reference''' </span> - On request of the helicopter crew.
+
+An optimal recommended approach lets the helicopter stay clear of enemy threats and in case of landing / supply drop has all obstacles around the LZ / Drop zone in front of the helicopter and in plain sight instead of to the sides or to the rear.
+
+=== Request Fire Support===
+
+==== Call Structure ====
+* <span style='color:#087b08'> '''Warning''' </span> - Use "Fire Mission" as an introduction of your request after establishing communication with the Fire Support Element.
+* <span style='color:#087b08'> '''Type''' </span> - Either "Adjust Fire" or "Fire for Effect".
+* <span style='color:#087b08'> '''Amount''' </span> - How many rounds you request.
+* <span style='color:#087b08'> '''Ordnance''' </span> - Type of Ordnance (HE, Smoke, Illumination).
+* <span style='color:#087b08'> '''Target Location''' </span> - Either Grid or Marker Reference.
+* <span style='color:#087b08'> '''Spreading''' </span> - The area of impact, maybe even a direction of expansion of fire.
+* <span style='color:#087b08'> '''Target Description''' </span> - What type of target is the artillery called upon.
+* <span style='color:#087b08'> '''Repeat Back''' </span> - The receiving Fire Support Element is repeating the critical aspects of the fire mission back as a confirmation.
+
+==== Additional Terminology ====
+* <span style='color:#087b08'> '''Rounds away''' </span> - First round has been fired.
+* <span style='color:#087b08'> '''Rounds complete''' </span> - Last round has been fired.
+* <span style='color:#087b08'> '''Splash out''' </span> - Warning 7-5 seconds before first impact.
+* <span style='color:#087b08'> '''Adjust Fire''' </span> - To adjust for direction and distance.
+* <span style='color:#087b08'> '''Good/Bad Effect on Target''' </span> - Feedback on effect on target.
+[[Category:Handbook]]

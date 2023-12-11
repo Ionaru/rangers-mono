@@ -1,0 +1,62 @@
+[[File:BFT_S1.png|right|100px]]
+[[File:ReconTeam.png|right|250px]]
+
+== Reconnaissance Team ==
+* <span style='color:#087b08'>'''Recon Spotter'''</span> - Leader of the Recon Team and spotter for the Sniper. Equipped with a long-range Radio and responsible for the communication with other Elements.
+* <span style='color:#087b08'>'''Recon Sniper'''</span> - Marksman of the Recon Team equipped with a long-range precision rifle.
+* <span style='color:#087b08'>'''Other Recon Roles'''</span> - In some cases the Recon Team may get expanded and additional team members will be added to perform other roles.
+
+== Tasks & Responsibilities ==
+* <span style='color:#087b08'>'''Reconnaissance'''</span> - The Recon Team usually is operating ahead of the other ground teams. Gathering as much intel about enemy position and movements as possbile prior to the arrival of the main ground force. Infiltrating behind enemy lines. They are the eyes and ears of the ground command based on which decisions are made.
+* <span style='color:#087b08'>'''Overwatch'''</span> - Overwatching and cover the advance of ground teams while being on standby to eliminate threats.
+* <span style='color:#087b08'>'''Direct Target Elimination'''</span> - Directly engaging high-value targets. Including high threats for other units e.g. AA-Launchers prior to arrival of Aviation Elements.
+* <span style='color:#087b08'>'''Indirect Target Elimination'''</span> - Coordinating with other Support Elements e.g. Aviation and guide their efforts to engage and eliminate targets. Providing important information and guidance assisting with target acquisition and damage assessment.
+
+== Guidelines ==
+* <span style='color:#087b08'>'''Stealth'''</span> - Stealth is key. The Recon Team should operate without getting detected. Avoiding enemy contacts in order to proceed further behind enemy lines. This may require even total silence of the team members.
+** Avoid skylining, always have a background where you blend in.
+** Avoid hasty movements. Moving individuals are easier to spot, especially when moving fast.
+** After an engagement relocate yourself.
+* <span style='color:#087b08'>'''Communication'''</span> - Gathered information need to be efficiently communicated to other Elements. This is being executed by utilizing both markers and short audio messages.
+* <span style='color:#087b08'>'''Precision'''</span> - When cleared to engage a target precision is key. Other than self-defence mission specific ROE will handle how and when to engage.
+* <span style='color:#087b08'>'''Survival'''</span> - Due to operating behind enemy lines the Recon Team will most likely not receive any direct support by other units. Therefor they need to break contact whenever there is a threat of them being stuck. Transition between slow pace stealth movements and quickly breaking contact is required.
+
+== Sniper Weapon Switching ==
+The Recon Sniper may carries two primary weapons. A Personal Defence Weapon (PDW) and a Sniper Rifle.
+* <span style='color:#087b08'>'''Gun Back'''</span> - The Sniper Rifle is on default loaded into his Gun Back (Backpack). He is carrying his PDW.
+* <span style='color:#087b08'>'''Switching Weapons'''</span> - Place the PDW into your inventory. Use ACE Self-Interaction to take the Sniper Rifle out of your Gun Back. When done, place the Sniper Rifle in your Gun Back with ACE Self-Interaction and take the PDW out of your inventory. It is not possible to switch a weapon your carry directly with the weapon in the Gun Back.
+
+== Marksmanship ==
+Accuracy is vital when engaging targets, especially at range. When breaking stealth to engage a target, it should be precise and quick. Sniper and Spotter need to work together in order to produce accurate shots.
+
+=== Influencing Factors: ===
+* <span style='color:#087b08'>'''Temperature & Humidity'''</span> - Lower Temperatures cause more drag due to higher air density slowing down the bullet. High Humidity is reducing the drag.
+* <span style='color:#087b08'>'''Barometric Pressure'''</span> - Describes the density of air. Higher Pressure results in more drag.
+* <span style='color:#087b08'>'''Range'''</span> - Direct distance to Target.
+* <span style='color:#087b08'>'''Direct wind'''</span> - Headwinds and Tailwinds.
+** Headwinds: Bullet gets slowed down which increases drop.
+** Tailwinds: Bullet gets carried by the wind and arrives quicker, therefor less drop.
+* <span style='color:#087b08'>'''Crosswind'''</span> - Deviates the bullet to the side.
+
+=== Calculations & Scope Adjustments ===
+In order to make adjustments you first need to get the required parameters.
+* <span style='color:#087b08'>'''Vector 21'''</span> - Used to get the direct distance to target ([https://ace3mod.com/wiki/feature/vector.html more])
+* <span style='color:#087b08'>'''Kestrel 4500'''</span> - Weather & Environment Meter.
+[[File:Kestrel4500.png|right|250px]]
+** Atmospheric Data: User Screen 2
+*** Temperature
+*** Humidity
+*** Barometric Pressure
+** Crosswinds
+*** Crosswind
+**** Set the heading to the target direction. Either by auto set with pointing at the target or by manual set.
+**** Point the Kestrel towards the wind direction. Read the crosswind value.
+**** If the wind direction is from left to right relative to your target location you need to make a negative horizontal adjustment and if the wind direction is from the right make a positive horizontal adjustment.
+*** Headwind / Tailwind
+**** When using Crosswind function point the Kestrel at the target. Read of the wind towards target direction. If the wind is coming from a direction behind you it is Tailwind, when it comes from the front it is Headwind.
+* <span style='color:#087b08'>'''Range card'''</span> - Lists of Bullet Drop at certain ranges. Furthermore it lists Crosswind Adjustments and Target Lead Adjustments.
+** Use all previously gained data to read the appropriate values out of the Range card.
+** Recommended is to start with the vertical adjustment (range).
+[[File:RangeCard.png|left|500px]]
+
+[[Category:Handbook]]
