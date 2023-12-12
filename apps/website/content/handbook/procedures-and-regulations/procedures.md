@@ -23,6 +23,7 @@ Follow the outlined Procedures when Joining during a Session.
   - Use JIP-Teleporter accordingly (if you are leader, click on map to get teleported to that position).
 
 ## Dealing with Bugs
+
 - **Stuck** - If you are stuck somewhere you cannot free yourself, contact the Mission Runner (Admin on Server).
   - Option 1: He can teleport you out of your position.
   - Option 2: He asks you to reconnect (follow JIP Procedure).

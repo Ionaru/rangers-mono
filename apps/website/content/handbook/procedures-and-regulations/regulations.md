@@ -109,6 +109,7 @@ More examples:
 There are some general procedures and guidelines to follow when it comes to using Air Transport.
 
 ### Helicopters
+
 - **General Guidelines**
   - Always approach the helicopter from the sides
   - Gunners always shoot when permitted by the Pilot

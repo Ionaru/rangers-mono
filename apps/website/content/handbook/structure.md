@@ -72,7 +72,7 @@ Fire Teams ensure that every person will always look out and operate closely wit
 Support Elements can be Ground Support Elements like Recon Units or any ground based Vehicle Units. Furthermore, there are Air Units, mainly Rotary, which can either serve logistical or fire support roles. All of these elements have the task of supporting the main element.
 
 | Call-signs | Unit Type                          |
-|------------|------------------------------------|
+| ---------- | ---------------------------------- |
 | Echo       | Platoon Support / Combat Engineers |
 | FAC        | Forward Air Controller             |
 | Foxtrot    | Armoured / Mechanized Unit         |

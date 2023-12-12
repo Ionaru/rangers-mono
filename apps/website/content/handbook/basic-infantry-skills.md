@@ -62,7 +62,7 @@ Bearing in degrees is used by default. Mils are only relevant for Artillery Fire
 Map Markers are displayed based on the channel they are broadcast in. You can find the channel you are in at the bottom of your map. Generally we use "Side" channel for markers. There might be situations where Markers will only be put on "Group" or "Command" channel.Cycle through channels with [,], [.], note that these are the default keybindings. To place a marker double-click on the map.
 
 | Channel | Recipients                  |
-|---------|-----------------------------|
+| ------- | --------------------------- |
 | Global  | All Players                 |
 | Side    | Your Faction                |
 | Command | All Faction's Leaders       |
@@ -73,7 +73,7 @@ Map Markers are displayed based on the channel they are broadcast in. You can fi
 Furthermore there are also the options to point at the map [LMB] (visible to people in proximity) or to draw on map [ALT] + [LMB] (channels apply like for map markers). To delete markers and drawings hover over and [DEL].
 
 | Marker                                                                                       | Pointing                                                                                           | Drawing                                                                                            |
-|----------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | <img src="/wiki/images/MapMarker.png" title="MapMarker.png" width="200" alt="MapMarker.png"> | <img src="/wiki/images/MapPointing.png" title="MapPointing.png" width="200" alt="MapPointing.png"> | <img src="/wiki/images/MapDrawning.png" title="MapDrawning.png" width="200" alt="MapDrawning.png"> |
 
 There are some guidelines when it comes to markers:
@@ -86,7 +86,7 @@ There are some guidelines when it comes to markers:
 Use a letter and number combination, if useful the time you placed the marker (e.g. EI 4 - 12:00 NW = Enemy Infantry 4 men moving north-west marked at 12:00). Usually use the "Dot" marker.
 
 | Marker                  | Meaning                                                 |
-|-------------------------|---------------------------------------------------------|
+| ----------------------- | ------------------------------------------------------- |
 | "EI" + Number           | Enemy Infantry (number as count)                        |
 | "BTR" + Number          | BTR                                                     |
 | "APC" + Number          | APC                                                     |
@@ -188,13 +188,13 @@ Movement or in other words: How not to get killed.
 ArmA 3 offers a large variety of vertical ([Ctrl] + [W] or [S]) and horizontal ([Ctrl] + [A] or [D]) stance adjustments. Make sure to minimize your exposure by utilizing the different stances. There are three basic vertical stance categories and each comes with 3 versions (low/normal/height).
 
 | Stance Indicator                                                                                                           | Vertical Adjustments                                                                                              |
-|----------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | <img src="/wiki/images/StanceIndicatorVertical.png" title="StanceIndicatorVertical.png" alt="StanceIndicatorVertical.png"> | <img src="/wiki/images/StancesSlideShow.png" title="StancesSlideShow.png" width="750" alt="StancesSlideShow.png"> |
 
 In addition to the horizontal stance adjustments you can also lean left [Q] and right [E]. Following examples are horizontal adjustments while crouching. Same applies to standing. Leaning while being prone does not work and the keys will make you roll to the according sides.
 
 | Stance Indicator                                                                                                                 | Step-Leaning left                                                                                                    | Leaning left                                                                                                         | Normal                                                                                                               | Leaning right                                                                                                        | Step-Leaning right                                                                                                   |
-|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | <img src="/wiki/images/StanceIndicatorHorizontal.png" title="StanceIndicatorHorizontal.png" alt="StanceIndicatorHorizontal.png"> | <img width="150" src="/wiki/images/StanceHorizontal1.png" title="StanceHorizontal1.png" alt="StanceHorizontal1.png"> | <img width="150" src="/wiki/images/StanceHorizontal2.png" title="StanceHorizontal2.png" alt="StanceHorizontal2.png"> | <img width="150" src="/wiki/images/StanceHorizontal3.png" title="StanceHorizontal3.png" alt="StanceHorizontal3.png"> | <img width="150" src="/wiki/images/StanceHorizontal4.png" title="StanceHorizontal4.png" alt="StanceHorizontal4.png"> | <img width="150" src="/wiki/images/StanceHorizontal5.png" title="StanceHorizontal5.png" alt="StanceHorizontal5.png"> |
 
 Note that stances influence not only exposure, they also influence accuracy, movement speed, and stamina.
@@ -232,7 +232,7 @@ There are a large variety of obstacles. Generally people find a way around them.
 **Utilize wall gaps**
 
 | Pie the corners                        | Line up                                | Roll under                             | Check close corner                     | Move out                               |
-|----------------------------------------|----------------------------------------|----------------------------------------|----------------------------------------|----------------------------------------|
+| -------------------------------------- | -------------------------------------- | -------------------------------------- | -------------------------------------- | -------------------------------------- |
 | <img src="/wiki/images/Obstacle1.png"> | <img src="/wiki/images/Obstacle2.png"> | <img src="/wiki/images/Obstacle3.png"> | <img src="/wiki/images/Obstacle4.png"> | <img src="/wiki/images/Obstacle5.png"> |
 
 Always take the opposite side of the person in front did.

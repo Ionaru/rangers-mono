@@ -55,7 +55,7 @@ It is essential that every soldier is familiar with how to set up and use the Ra
 Note that the key bindings can be changed in your settings under (configure addons).
 
 | Keys             | Action                                |
-|------------------|---------------------------------------|
+| ---------------- | ------------------------------------- |
 | TS3 Push-to-Talk | Direct Talk                           |
 | Caps Lock        | Talk on Radio 1                       |
 | T                | Talk on Radio 2                       |
@@ -101,7 +101,7 @@ The Comm Card can be found in the tabs on the right hand top of the map in-game.
 For the AN/PRC-343.
 
 | Unit            | Channel              |
-|-----------------|----------------------|
+| --------------- | -------------------- |
 | Alpha           | Block 1 - Channel 1  |
 | Bravo           | Block 1 - Channel 2  |
 | Charlie         | Block 1 - Channel 3  |
@@ -119,7 +119,7 @@ For the AN/PRC-343.
 For all other Radios.
 
 | Channel               | Description             |
-|-----------------------|-------------------------|
+| --------------------- | ----------------------- |
 | Channel 1 - PLT NET   | Platoon Net             |
 | Channel 2 - COM NET   | Command Net             |
 | Channel 3 - SUP NET   | Support Net             |
@@ -206,7 +206,7 @@ ACE Reports are given as individuals to the Leader, who will compile them into a
 **ACE Report Categories:**
 
 | Category | Meaning                                | Status                                       |
-|----------|----------------------------------------|----------------------------------------------|
+| -------- | -------------------------------------- | -------------------------------------------- |
 | Green    | more than 75% of initial quantity      | fully combat effective                       |
 | Yellow   | between 75% to 50% of initial quantity | combat effective, but requires resupply soon |
 | Red      | below 50% of initial quantity          | combat ineffective, barely operational       |
@@ -245,14 +245,14 @@ A situational report is a quick report given to get information about the status
 
 ### Request Close Air Support
 
-* **Target** - Target Marker (T + Number).
-* **Description** - Description of the target and area.
-  * Distinctive Landmarks which help finding the target and for general orientation.
-  * Type of target - Target details like amount and type of enemy.
-  * Type of Weapon - Depending on available weaponry what you request (minigun fire, rockets...).
-* **Friendly Location** - Location of friendlies in the area to prevent friendly fire.
-* **Optional: Recommended Approach** - Direction you recommend the helicopter to approach the landing zone from.
-* **Optional: Colored Smoke Reference** - On request of the helicopter crew.
+- **Target** - Target Marker (T + Number).
+- **Description** - Description of the target and area.
+  - Distinctive Landmarks which help finding the target and for general orientation.
+  - Type of target - Target details like amount and type of enemy.
+  - Type of Weapon - Depending on available weaponry what you request (minigun fire, rockets...).
+- **Friendly Location** - Location of friendlies in the area to prevent friendly fire.
+- **Optional: Recommended Approach** - Direction you recommend the helicopter to approach the landing zone from.
+- **Optional: Colored Smoke Reference** - On request of the helicopter crew.
 
 An optimal recommended approach lets the helicopter stay clear of enemy threats and in case of landing / supply drop has all obstacles around the LZ / Drop zone in front of the helicopter and in plain sight instead of to the sides or to the rear.
 
