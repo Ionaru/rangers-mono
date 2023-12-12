@@ -351,6 +351,7 @@ Rocket Launchers have backblast. Only fire if you are cleared. Shout "clear back
 - **Fire Mode** - The Javelin provides two modes: Top and Direct Fire. When using Top Fire the rocket will take a trajectory which leads to it hitting the target directly from above. Direct Fire will make the rocket to climb to travelling height before directly flying at the target ([CTRL] + [TAB]).
 
 #### RPG-7
+
 <img src="/wiki/images/rpg7optic.png" title="rpg7optic.png" width="500" alt="rpg7optic.png">
 
 ## Parachuting

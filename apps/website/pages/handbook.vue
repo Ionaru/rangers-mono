@@ -4,7 +4,7 @@ import type { BreadcrumbLink } from "#ui/types";
 
 const route = useRoute();
 const content = await useAsyncData("handbook", () =>
-  queryContent("handbook/" + route.params.slug).findOne(),
+  queryContent(route.path).findOne(),
 );
 
 const baseLink = { label: "Handbook", to: "/handbook" };
