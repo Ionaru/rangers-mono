@@ -10,7 +10,7 @@ You have two different options available at all time. To treat somebody you can 
 
 | Interaction Menu                                                                                               | Medical Menu                                                                                 |
 | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| <img width="400" src="/wiki/images/MedicalInteract.png" title="Interaction Medical" alt="Interaction Medical"> | <img width="400" src="/wiki/images/MedicalMenu.png" title="Medical Menu" alt="Medical Menu"> |
+| <img width="400" src="/wiki/images/MedicalInteract.png" alt="Interaction Medical"> | <img width="400" src="/wiki/images/MedicalMenu.png" alt="Medical Menu"> |
 | Better for treating fewer smaller injuries and quick medication.                                               | Better for treating heavily wounded.                                                         |
 
 Following Settings are recommended. You can set them in your ACE3 Settings under the category "Interaction" and "Medical". Display Interactions as Lists and allow Medical Menu.
@@ -39,7 +39,7 @@ Blood Loss is defined by the hemorrhage class as outlined in the following table
 
 The following graph summarizes the medical states:
 
-<img src="/wiki/images/7R_States.png" title="7R_States.png" alt="7R_States.png">
+<img src="/wiki/images/7R_States.png" alt="7R_States.png">
 
 **Injured State:**
 The patient is wounded and has lost some blood (Hemorrhage 1 to 3) and most likely is in pain. Unless the patient suffers continuous blood loss his situation remains manageable. He may not need a medic and can effectively treat himself.
@@ -74,7 +74,7 @@ Both medics and regular operators have various diagnosis options available which
 
 There are various types of different wounds. Wound could also be small, medium or large. Each type of bandage has a different effectiveness for different types of wounds.
 
-<img src="/wiki/images/Wounds_Graph.png" title="Wounds_Graph.png" alt="Wounds_Graph.png">
+<img src="/wiki/images/Wounds_Graph.png" alt="Wounds_Graph.png">
 
 - **Field Dressing** - Bandage with medium effectiveness while being prone to open.
 - **Packing Bandage** - Bandage with low effectiveness with moderate likeliness to reopen.
@@ -134,7 +134,7 @@ There are two methods of moving an unconscious patient:
 
 | Dragging                                                              | Carrying                                                                           |
 | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| <img src="/wiki/images/Dragging.png" title="Dragging" alt="Dragging"> | <img src="/wiki/images/Carrying.png" title="Carrying" alt="Carrying">              |
+| <img src="/wiki/images/Dragging.png" alt="Dragging"> | <img src="/wiki/images/Carrying.png" alt="Carrying">              |
 | **Pros:**<br>- Quick to begin<br>- Low-Profile                        | **Pros:**<br>- Movement Speed while Carrying<br>- Looking in Direction of Movement |
 | **Cons:**<br>- Slow Movement speed<br>- Walking Backwards             | **Cons:**<br>- Slow to begin<br>- High-Profile                                     |
 
@@ -158,7 +158,7 @@ There are two methods of moving an unconscious patient:
 
 ## Medical Procedure
 
-<img src="/wiki/images/7R_ProcedureFullFix.png" title="7R_ProcedureFullFix.png" alt="7R_ProcedureFullFix.png">
+<img src="/wiki/images/7R_ProcedureFullFix.png" alt="7R_ProcedureFullFix.png">
 
 ## Triage Station
 
@@ -181,8 +181,8 @@ We have a custom system to ensure quick resupplies in the field. There are resup
 
 | Icon                                                                                                                       | Name                   | Content                                                                        | Requirement |
 | -------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------ | ----------- |
-| <img src="/wiki/images/gear_FirstAidKit_CA.png" title="gear_FirstAidKit_CA.png" width="100" alt="gear_FirstAidKit_CA.png"> | Personal Aid Kit (PAK) | 6x Field Dressing<br>4x Quick Clot<br>2x Morphine                              | None        |
-| <img src="/wiki/images/band.png" title="band.png" width="100" alt="band.png">                                              | Bandage Pack           | 3x Field Dressing<br>3x Elastic Bandage<br>3x Quick Clot<br>3x Packing Bandage | Medic       |
-| <img src="/wiki/images/meds.png" title="meds.png" width="100" alt="meds.png">                                              | Medicine Pack          | 5x Morphine<br>5x Epinephrine                                                  | Medic       |
-| <img src="/wiki/images/utility.png" title="utility.png" width="100" alt="utility.png">                                     | Utility Pack           | 7x Splint<br>3x Tourniquet                                                     | Medic       |
-| <img src="/wiki/images/blood.png" title="blood.png" width="100" alt="blood.png">                                           | BloodIV Pack           | 2L BloodIV                                                                     | Medic       |
+| <img src="/wiki/images/gear_FirstAidKit_CA.png" width="100" alt="gear_FirstAidKit_CA.png"> | Personal Aid Kit (PAK) | 6x Field Dressing<br>4x Quick Clot<br>2x Morphine                              | None        |
+| <img src="/wiki/images/band.png" width="100" alt="band.png">                                              | Bandage Pack           | 3x Field Dressing<br>3x Elastic Bandage<br>3x Quick Clot<br>3x Packing Bandage | Medic       |
+| <img src="/wiki/images/meds.png" width="100" alt="meds.png">                                              | Medicine Pack          | 5x Morphine<br>5x Epinephrine                                                  | Medic       |
+| <img src="/wiki/images/utility.png" width="100" alt="utility.png">                                     | Utility Pack           | 7x Splint<br>3x Tourniquet                                                     | Medic       |
+| <img src="/wiki/images/blood.png" width="100" alt="blood.png">                                           | BloodIV Pack           | 2L BloodIV                                                                     | Medic       |

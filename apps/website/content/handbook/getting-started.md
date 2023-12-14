@@ -23,7 +23,7 @@ ACE 3 is a mod that brings a lot of aspects to the game in regards of simulating
 
 ## ACRE Mod
 
-Being able to use the radio is essential. Make sure to read the communication section of the handbook.
+Being able to use the radio is essential. Make sure to read the [communication section](/handbook/communication) of the handbook.
 
 ## Your First Mission
 
@@ -35,12 +35,12 @@ Now it is time to talk about you first mission with us. Depending on your prior 
 - **Inform your SL** - Tell your squad leader that this is your first operation.
 - **Follow Orders** - Each team requires a structure and chain of command. Respect the chain of command and follow orders.
 - **Follow the Rules** - There are some rules regarding customization of loadouts.
-- You may get another weapon sight from the equipment action box (green - low zoom level).
-- With permission you may get addition ammunition.
-- Keep your primary weapon empty during the preparation phase. Load your weapon just before start of the insertion.
-- Do not attack civilians.
-- Do not attack team mates intentionally.
-- Be respectful.
+  - You may get another weapon sight from the equipment action box (green - low zoom level).
+  - With permission you may get addition ammunition.
+  - Keep your primary weapon empty during the preparation phase. Load your weapon just before start of the insertion.
+  - Do not attack civilians.
+  - Do not attack team mates intentionally.
+  - Be respectful.
 
 ## Operation Structure
 
@@ -51,4 +51,4 @@ Now it is time to talk about you first mission with us. Depending on your prior 
 - **Infiltration** - Units insertion in to the combat area. Load your weapon before moving out.
 - **Execution** - Execution of the mission.
 - **Exfiltration** - Exfiltration from the area of operation.
-- **End / Debrief** - End of the mission and short debrief.
+- **End / Debrief** - End of the mission and short [debrief](/handbook/debrief).

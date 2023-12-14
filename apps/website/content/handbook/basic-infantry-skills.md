@@ -12,7 +12,7 @@ It is essential to understand how to read a map and use tools to find your locat
 
 ArmA uses a 6-digit grid system (3x3). Grid coordinates are being read in the following way: first 3 right, then up. On a 6-digit grid system one side of a grid is 100 meters which makes a grid an area of 100 x 100 meters.
 
-<img src="/wiki/images/MapGrid.png" title="MapGrid.png" width="300" alt="MapGrid.png">
+<img src="/wiki/images/MapGrid.png" width="300" alt="MapGrid.png">
 
 Given that you know your own grid coordinate, you only know that you are in an area the size of 100 x 100 meters. Therefor you need to learn on how to take all information displayed on the map to be able to find your exact location.
 
@@ -53,7 +53,7 @@ The GPS is showing your exact grid location on the map and your height above sea
 
 Map tools can be displayed by using ACE-Self Interaction while on the map screen and select show Map Tools. There is a small version and a normal version. Other than for Mortar Fire Support the small version is enough. Once selected to show it will appear in the bottom right corner of the map. You can drag it wherever you need it. In order to rotate it around hold alt while dragging with your mouse.
 
-<img src="/wiki/images/MapToolsFinal.png" title="MapToolsFinal.png" width="500" alt="MapToolsFinal.png">
+<img src="/wiki/images/MapToolsFinal.png" width="500" alt="MapToolsFinal.png">
 
 Bearing in degrees is used by default. Mils are only relevant for Artillery Fire Support. More details can be found in the [ACE3 Documentation](https://ace3.acemod.org/wiki/feature/maptools.html).
 
@@ -62,7 +62,7 @@ Bearing in degrees is used by default. Mils are only relevant for Artillery Fire
 Map Markers are displayed based on the channel they are broadcast in. You can find the channel you are in at the bottom of your map. Generally we use "Side" channel for markers. There might be situations where Markers will only be put on "Group" or "Command" channel.Cycle through channels with [,], [.], note that these are the default keybindings. To place a marker double-click on the map.
 
 | Channel | Recipients                  |
-| ------- | --------------------------- |
+|---------|-----------------------------|
 | Global  | All Players                 |
 | Side    | Your Faction                |
 | Command | All Faction's Leaders       |
@@ -72,9 +72,9 @@ Map Markers are displayed based on the channel they are broadcast in. You can fi
 
 Furthermore there are also the options to point at the map [LMB] (visible to people in proximity) or to draw on map [ALT] + [LMB] (channels apply like for map markers). To delete markers and drawings hover over and [DEL].
 
-| Marker                                                                                       | Pointing                                                                                           | Drawing                                                                                            |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| <img src="/wiki/images/MapMarker.png" title="MapMarker.png" width="200" alt="MapMarker.png"> | <img src="/wiki/images/MapPointing.png" title="MapPointing.png" width="200" alt="MapPointing.png"> | <img src="/wiki/images/MapDrawning.png" title="MapDrawning.png" width="200" alt="MapDrawning.png"> |
+| Marker                                                                 | Pointing                                                                   | Drawing                                                                    |
+|------------------------------------------------------------------------|----------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| <img src="/wiki/images/MapMarker.png" width="200" alt="MapMarker.png"> | <img src="/wiki/images/MapPointing.png" width="200" alt="MapPointing.png"> | <img src="/wiki/images/MapDrawning.png" width="200" alt="MapDrawning.png"> |
 
 There are some guidelines when it comes to markers:
 
@@ -86,7 +86,7 @@ There are some guidelines when it comes to markers:
 Use a letter and number combination, if useful the time you placed the marker (e.g. EI 4 - 12:00 NW = Enemy Infantry 4 men moving north-west marked at 12:00). Usually use the "Dot" marker.
 
 | Marker                  | Meaning                                                 |
-| ----------------------- | ------------------------------------------------------- |
+|-------------------------|---------------------------------------------------------|
 | "EI" + Number           | Enemy Infantry (number as count)                        |
 | "BTR" + Number          | BTR                                                     |
 | "APC" + Number          | APC                                                     |
@@ -117,11 +117,11 @@ Use a letter and number combination, if useful the time you placed the marker (e
 
 Rangefinder are tools to measure a distance. We mainly use the Vector 21. It allows you to get the distance [R] and azimuth [Tab] of your target. It takes the slot of the binoculars. Alternatively Laser designators work as well.
 
-<img src="/wiki/images/Vector21.png" title="Vector21.png" width="250" alt="Vector21.png">
+<img src="/wiki/images/Vector21.png" width="250" alt="Vector21.png">
 
 In addition you can find the horizontal distance to a target and the height difference between your location and the target by first tapping [R] followed by hold [R]. Furthermore, you can also get the distance and direction between two point. Therefor you press and hold [R]. Once the circle appears press [Tab] and keep holding [R]. Once the P-1 info appears aim at your second point and release [R]. More functions can be found in the official [ACE3 Wiki](https://ace3.acemod.org/wiki/feature/vector.html).
 
-<img src="/wiki/images/VectorDistance.png" title="VectorDistance.png" width="500" alt="VectorDistance.png" style="float: right">
+<img src="/wiki/images/VectorDistance.png" width="500" alt="VectorDistance.png" style="float: right">
 
 - **Direct Distance** - Used to zero weapons onto targets.
 - **Horizontal Distance** - Used to produce an accurate map marker location. Since the map is a 2D environment. The larger the height difference the higher the deviation in distance.
@@ -144,7 +144,7 @@ Being aware of what is happening around you is important to understand the situa
 - **Hard contact versus soft contact** - Soft contact is an enemy contact with the enemy not being alerted or aware of your position. Hard contact is an enemy contact with the enemy being aware of your location and process of engaging you or directly being in an engagement with you.
 - **Squad mate radar** - Frequently check the radar at the bottom of your screen displaying the location of squad mates around you
 
-<img src="/wiki/images/ShactacRadar.png" title="ShactacRadar.png" width="300" alt="ShactacRadar.png">
+<img src="/wiki/images/ShactacRadar.png" width="300" alt="ShactacRadar.png">
 
 Inner circle is 15m, middle circle is 30m and outer circle is 50m.
 
@@ -187,15 +187,15 @@ Movement or in other words: How not to get killed.
 
 ArmA 3 offers a large variety of vertical ([Ctrl] + [W] or [S]) and horizontal ([Ctrl] + [A] or [D]) stance adjustments. Make sure to minimize your exposure by utilizing the different stances. There are three basic vertical stance categories and each comes with 3 versions (low/normal/height).
 
-| Stance Indicator                                                                                                           | Vertical Adjustments                                                                                              |
-| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| <img src="/wiki/images/StanceIndicatorVertical.png" title="StanceIndicatorVertical.png" alt="StanceIndicatorVertical.png"> | <img src="/wiki/images/StancesSlideShow.png" title="StancesSlideShow.png" width="750" alt="StancesSlideShow.png"> |
+| Stance Indicator                                                                       | Vertical Adjustments                                                                 |
+|----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| <img src="/wiki/images/StanceIndicatorVertical.png" alt="StanceIndicatorVertical.png"> | <img src="/wiki/images/StancesSlideShow.png" width="750" alt="StancesSlideShow.png"> |
 
 In addition to the horizontal stance adjustments you can also lean left [Q] and right [E]. Following examples are horizontal adjustments while crouching. Same applies to standing. Leaning while being prone does not work and the keys will make you roll to the according sides.
 
-| Stance Indicator                                                                                                                 | Step-Leaning left                                                                                                    | Leaning left                                                                                                         | Normal                                                                                                               | Leaning right                                                                                                        | Step-Leaning right                                                                                                   |
-| -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| <img src="/wiki/images/StanceIndicatorHorizontal.png" title="StanceIndicatorHorizontal.png" alt="StanceIndicatorHorizontal.png"> | <img width="150" src="/wiki/images/StanceHorizontal1.png" title="StanceHorizontal1.png" alt="StanceHorizontal1.png"> | <img width="150" src="/wiki/images/StanceHorizontal2.png" title="StanceHorizontal2.png" alt="StanceHorizontal2.png"> | <img width="150" src="/wiki/images/StanceHorizontal3.png" title="StanceHorizontal3.png" alt="StanceHorizontal3.png"> | <img width="150" src="/wiki/images/StanceHorizontal4.png" title="StanceHorizontal4.png" alt="StanceHorizontal4.png"> | <img width="150" src="/wiki/images/StanceHorizontal5.png" title="StanceHorizontal5.png" alt="StanceHorizontal5.png"> |
+| Stance Indicator                                                                           | Step-Leaning left                                                                      | Leaning left                                                                           | Normal                                                                                 | Leaning right                                                                          | Step-Leaning right                                                                     |
+|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| <img src="/wiki/images/StanceIndicatorHorizontal.png" alt="StanceIndicatorHorizontal.png"> | <img width="150" src="/wiki/images/StanceHorizontal1.png" alt="StanceHorizontal1.png"> | <img width="150" src="/wiki/images/StanceHorizontal2.png" alt="StanceHorizontal2.png"> | <img width="150" src="/wiki/images/StanceHorizontal3.png" alt="StanceHorizontal3.png"> | <img width="150" src="/wiki/images/StanceHorizontal4.png" alt="StanceHorizontal4.png"> | <img width="150" src="/wiki/images/StanceHorizontal5.png" alt="StanceHorizontal5.png"> |
 
 Note that stances influence not only exposure, they also influence accuracy, movement speed, and stamina.
 
@@ -232,7 +232,7 @@ There are a large variety of obstacles. Generally people find a way around them.
 **Utilize wall gaps**
 
 | Pie the corners                        | Line up                                | Roll under                             | Check close corner                     | Move out                               |
-| -------------------------------------- | -------------------------------------- | -------------------------------------- | -------------------------------------- | -------------------------------------- |
+|----------------------------------------|----------------------------------------|----------------------------------------|----------------------------------------|----------------------------------------|
 | <img src="/wiki/images/Obstacle1.png"> | <img src="/wiki/images/Obstacle2.png"> | <img src="/wiki/images/Obstacle3.png"> | <img src="/wiki/images/Obstacle4.png"> | <img src="/wiki/images/Obstacle5.png"> |
 
 Always take the opposite side of the person in front did.
@@ -294,11 +294,11 @@ Being able to hit a target at various ranges and speeds is more than just shooti
 
 Understanding bullet trajectory is important when engaging target at ranges. Bullets drop over range. It is important to know the range of your target to adjust your aim.
 
-<img src="/wiki/images/Trajectory.png" width="300" style="float: right">
+<img src="/wiki/images/Trajectory.png" alt="Trajectory.png" width="300" style="float: right">
 
 Zeroing your weapon, meaning to adjust the weapon sights to a certain range can be helpful. Otherwise, you might have to take the range the weapon is configured on and either aim above or below the target to hit. If your weapon sights allow you can zero them to certain ranges using [Page Up] and [Page Down]. The distance your weapon sight has been configured for you will find on the HUD. Zeroing might be more relevant for longer engagement distances in regard to firearms, although it is extremely important for heavier projectiles with higher drop rate like 40mm grenades or even rockets.
 
-<img src="/wiki/images/WeaponRanging1.png" title="WeaponRanging1.png" width="300" alt="WeaponRanging1.png">
+<img src="/wiki/images/WeaponRanging1.png" width="300" alt="WeaponRanging1.png">
 
 Bullets and other projectiles need to travel to their destination. There are not instantly there. Especially when shooting at moving targets you need to mind the travel time of the bullet, meaning that you need to aim ahead your target in its direction of movement. Tracers might help to track your own fire or the fire of friendlies. If you are paired up with a machine gunner trace his fire but looking at the tracers and call corrections if needed.
 
@@ -317,11 +317,11 @@ Know when to reload can save your life. There are two different types of reload:
 - **Tactical Reload** - Reloading a partially full magazine in order to get a full magazine. This can occur if the magazine is almost empty and the current fire fight is over, or you advance and expect a lot of contacts. Also in CQB environments when clearing buildings. Generally whenever you will potentially need a full magazine.
 - **Dry Reload** - Reloading an empty magazine. Often especially in CQB it might make more sense to switch to pistol and continue clearing the proximity before reloading.
 
-<img src="/wiki/images/WeaponMag1.png" title="WeaponMag1.png" width="300" alt="WeaponMag1.png">
+<img src="/wiki/images/WeaponMag1.png" width="300" alt="WeaponMag1.png">
 
 Keep track of your ammunition. The HUD will only display the amount of magazine you have regardless of them being full or partially empty. You can check the current state of your magazine in your weapon by pressing [L Ctrl] + [R]. It will display a categorized amount of bullets in your magazine. Partial magazine can be repacked, meaning that you will pack all magazines together that you end up with as many full magazine possible out of the amount of bullets you have. Repacking magazine can be done through ACE self interact. You should do this whenever the situation allows. Since it takes a while to do, make sure that you do not start right before the order to move out. You do not own your ammunition. It is belongs to the team same as all your gear share if required.
 
-You weapon can jam, especially when weapon temperatures rise. You can clear a jam by pressing [L Shift] + [R].
+Your weapon can jam, especially when weapon temperatures rise. You can clear a jam by pressing [L Shift] + [R].
 
 ## Gear
 
@@ -352,7 +352,7 @@ Rocket Launchers have backblast. Only fire if you are cleared. Shout "clear back
 
 #### RPG-7
 
-<img src="/wiki/images/rpg7optic.png" title="rpg7optic.png" width="500" alt="rpg7optic.png">
+<img src="/wiki/images/rpg7optic.png" width="500" alt="rpg7optic.png">
 
 ## Parachuting
 

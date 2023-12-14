@@ -37,7 +37,7 @@ watch(
         Back to the index
       </NuxtLink>
     </nav>
-    <ContentDoc class="container mx-auto lg:px-8 px-4 sm:px-6 my-4">
+    <ContentDoc class="container mx-auto lg:px-8 px-4 sm:px-6 my-4" :key="$route.path">
       <template #not-found>
         <div class="container mx-auto lg:px-8 px-4 sm:px-6 my-4">
           <p>Could not find this page.</p>

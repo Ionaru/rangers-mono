@@ -68,25 +68,25 @@ Radio can be opened over ACE-Self Interaction. Best is to look in your settings.
 
 Default Radio for every Infantryman. Set on Squad Net Channel. This radio has a limited range of 850m ideally, due to terrain interference it might be substantially lower closer to 400m.
 
-<img src="/wiki/images/Radio343.png" title="Radio343.png" width="300" alt="Radio343.png">
+<img src="/wiki/images/Radio343.png" width="300" alt="Radio343.png">
 
 ## AN/PRC-152
 
 Default Radio for Infantry Leaders and Platoon Level Support Personnel. Set on Platoon Net Channel. This radio has an ideal range of 5-7km, due to terrain interference it might be closer to 2-5km.
 
-<img src="/wiki/images/Radio152.png" title="Radio343.png" width="300" alt="Radio152.png">
+<img src="/wiki/images/Radio152.png" width="300" alt="Radio152.png">
 
 ## AN/PRC-148
 
 Radio for certain Support Units such as Aviation. Set on the Support Area Specific Net such as Air Net. This radio has the same range as the AN/PRC-152.
 
-<img src="/wiki/images/Radio148.png" title="Radio148.png" width="300" alt="Radio148.png">
+<img src="/wiki/images/Radio148.png" width="300" alt="Radio148.png">
 
 ## AN/PRC-117F (Long Range Radio)
 
 Radio carried by the Platoon Sergeant and Support Units such as Aviation and Recon. Set mostly on Command Net. This radio has a range of 10-20km sometimes even more.
 
-<img src="/wiki/images/Radio117F.png" title="Radio117F.png" width="500" alt="Radio117F.png">
+<img src="/wiki/images/Radio117F.png" width="500" alt="Radio117F.png">
 
 ## Stereo Settings
 
