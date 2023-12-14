@@ -2,7 +2,9 @@
 title: Communication
 ---
 
-# General Guidelines
+# Communication
+
+## General Guidelines
 
 Communication is an essential factor for team-play. A certain level of standardization ensures quick and precise communication while limiting misunderstandings. This section features all important Communication related basics. You will find more situation based communication guidelines in the relevant sections.
 
@@ -44,13 +46,13 @@ Based on the information and the availability of your individual accessible chan
 - Enemy Movement
 - Force Coordination
 
-# Radios
+## Radios
 
 On default each soldier is carrying a Rifleman Radio AN/PRC-343. Each Squad has their own Squad Net. The Squad Leaders, 2nd in Command, Platoon Leader, Platoon Sergeant and Platoon Medic will also carry an additional Radio connected to the Platoon Net, AN/PRC-152. Furthermore, the Platoon Leader will carry a Long-Range Radio to communicate with Support Units such as Aviation on the Command Net, AN/PRC-117F.
 
 It is essential that every soldier is familiar with how to set up and use the Radio. It is mandatory that communication lines remain open at all time, e.g. if a Squad Leader is unconscious, the second in command should go on the Platoon Net and report the situation and assume control of the Squad and the Communication, while the Leader is being treated. In the end every soldier should be ready to take actions to maintain the communication at all time during the mission based on the situation of his unit. It is everyone's duty to ensure a constant uninterrupted line of communication between all elements, no matter the costs. If your unit lacks a Radio capable to connect to the Platoon Net (e.g. AN/PRC-343) may need to one person to switch to the Platoon Actual Net to keep a line of communication.
 
-## Hotkeys
+### Hotkeys
 
 Note that the key bindings can be changed in your settings under (configure addons).
 
@@ -64,35 +66,35 @@ Note that the key bindings can be changed in your settings under (configure addo
 
 Radio can be opened over ACE-Self Interaction. Best is to look in your settings.
 
-## AN/PRC-343 (Rifleman Radio)
+### AN/PRC-343 (Rifleman Radio)
 
 Default Radio for every Infantryman. Set on Squad Net Channel. This radio has a limited range of 850m ideally, due to terrain interference it might be substantially lower closer to 400m.
 
 <img src="/wiki/images/Radio343.png" width="300" alt="Radio343.png">
 
-## AN/PRC-152
+### AN/PRC-152
 
 Default Radio for Infantry Leaders and Platoon Level Support Personnel. Set on Platoon Net Channel. This radio has an ideal range of 5-7km, due to terrain interference it might be closer to 2-5km.
 
 <img src="/wiki/images/Radio152.png" width="300" alt="Radio152.png">
 
-## AN/PRC-148
+### AN/PRC-148
 
 Radio for certain Support Units such as Aviation. Set on the Support Area Specific Net such as Air Net. This radio has the same range as the AN/PRC-152.
 
 <img src="/wiki/images/Radio148.png" width="300" alt="Radio148.png">
 
-## AN/PRC-117F (Long Range Radio)
+### AN/PRC-117F (Long Range Radio)
 
 Radio carried by the Platoon Sergeant and Support Units such as Aviation and Recon. Set mostly on Command Net. This radio has a range of 10-20km sometimes even more.
 
 <img src="/wiki/images/Radio117F.png" width="500" alt="Radio117F.png">
 
-## Stereo Settings
+### Stereo Settings
 
 Use Stereo Settings to always put the Squad Net on one ear and the Platoon Net (if Leader) on the other ear. That helps to identify the used Channel in a current broadcast. It is recommended to always keep it consistent.
 
-# Comm Card
+## Comm Card
 
 The Comm Card can be found in the tabs on the right hand top of the map in-game. Do not hesitate to use it.
 
@@ -127,7 +129,7 @@ For all other Radios.
 | Channel 5 - AIR NET 1 | Aviation Net 1          |
 | Channel 6 - AIR NET 2 | Aviation Net 2          |
 
-# Procedure and Terminology
+## Procedure and Terminology
 
 ### Identification
 
@@ -175,7 +177,7 @@ Platoon Leader: "Lead copies."
 - **Weapon Empty/Dry** - Report of a unit having no ammunition left.
 - **Set** - Report for a unit being in a position to cover other unit's movement.
 
-# Status Reports
+## Status Reports
 
 ### Contact Report
 
@@ -225,7 +227,7 @@ Report of a Squad Member to his Squad Leader:
 
 A situational report is a quick report given to get information about the status of troops. SITREPs can be asked for at any level. It is supposed to be less detailed than an ACE Report. It should be centered around your location, objective status, combat status of your unit, and any other information that you deem relevant to the situation, e.g. status of enemy combatants.
 
-# Aviation Requests
+## Aviation Requests
 
 ### Request Pickup
 

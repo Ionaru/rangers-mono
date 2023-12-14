@@ -1,6 +1,8 @@
 ---
-title: Fixed Wing Aviation Addendum
+title: Fixed Wing Addendum
 ---
+
+# Fixed Wing Addendum
 
 ## Preflight checklist
 

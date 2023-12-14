@@ -2,7 +2,9 @@
 title: Armour
 ---
 
-<img src="/wiki/images/BFT_F1.png" alt="BFT_F1.png" style="float: right">
+# Armour
+
+<img class="element-icon" src="/wiki/images/BFT_F1.png" alt="BFT_F1.png" style="float: right">
 
 ## Introduction
 
@@ -15,14 +17,14 @@ The purpose of an armoured unit is to support an infantry platoon. Unlike some m
 
 7th Rangers deploys a wide range of armoured vehicles, they play a supporting role to infantry on the battlefield and are under the command of the platoon commander.
 
-The *armoured vehicle certification* we employ, ensures that armoured elements on the battlefield can provide a base level of proficiency in the role. The vehicle commander is **required** to be a holder of this certification. The gunner and driver positions of an armoured vehicle can be filled by members without the certification but are required to take part in the Training. In the event multiple people volunteered for the role of gunner or driver, the member that holds the armoured vehicle certification is given priority.
+The _armoured vehicle certification_ we employ, ensures that armoured elements on the battlefield can provide a base level of proficiency in the role. The vehicle commander is **required** to be a holder of this certification. The gunner and driver positions of an armoured vehicle can be filled by members without the certification but are required to take part in the Training. In the event multiple people volunteered for the role of gunner or driver, the member that holds the armoured vehicle certification is given priority.
 
 ## Terminology
 
 - **Hull-down & Turret-down** - A position the vehicle can assume where either its turret, or only the periscope, is visible to the enemy. The rest of the vehicle is masked behind cover or terrain.
 
 <img src="/wiki/images/Hull_down_tank_diagram.png" width="600" alt="Examples of exposed, hull-down, turret-down and hide positions.">
-<img src="/wiki/images/Sky-lined_tank.png" width="200" alt="An example of skylining (left) and a position with a background (right) in turret-down and hull-down positions.">
+<img src="/wiki/images/Sky-lined_tank.png" width="200" alt="An example of skylining (left) and a position with a background (right) in turret-down and hull-down positions." style="float: right">
 
 - **Hide position** - A position where the vehicle is completely masked behind cover or terrain.
 - **Skylining** - The undesirable act of appearing as a silhouette against the sky.
@@ -96,10 +98,10 @@ Not to Engage - Targets not allowed to be engaged:
 
 During our operations, you may have to crew one of these vehicle types.
 
-- **MRAP**: _Mine-Resistant Ambush Protected_ - Of the armoured vehicles, MRAPs have the lightest armour and are usually equipped with either a single heavy machine gun or automatic grenade launcher. These wheeled vehicles are mainly used for infantry transport and defence, and only rarely used in combat situations. MRAPs have a crew of two, consisting of a driver and gunner. Examples are the Hunter and Ifrit.
-- **APC**: _Armoured Personnel Carrier_ - APCs are light or medium armoured vehicles designed to transport infantry and equipment in combat zones. APCs may be unarmed, or armed with some combination of light, medium, heavy machine guns, or automatic grenade launchers for self-defence. Both wheeled and tracked APCs exist, are often amphibious and have a crew of two or three. The crew consists of a driver, gunner and optionally a dedicated commander. Examples are the M113 and BTR.
-- **IFV**: _Infantry Fighting Vehicle_ - IFVs are similar to APCs in their role of transporting infantry in combat zones, but they also have the possibility of providing direct-fire support. In a way they are a middleground between an APC and MBT. IFVs are typically tracked, but wheeled variants exist. The armament of an IFV can consist of automatic cannons, low or medium velocity guns, ATGMs or automatic grenade launchers. IFVs require a crew of three to operate, consisting of a driver, gunner and commander. Examples are the M2 Bradley and BMP.
-- **MBT**: _Main Battle Tank_ - MBTs are the most heavily armed and armoured among mechanized forces. These vehicles are exclusively tracked and are armed with high-caliber, high velocity guns. The MBTs main armament is usually supplemented with two or more heavy machine guns to engage infantry and light vehicles. MBTs typically have a crew of three or four, consisting of a driver, gunner and commander and an optional loader in some MBT variants. Examples are the M1 Abrams and T-80.
+- **MRAP** - _Mine-Resistant Ambush Protected_ - Of the armoured vehicles, MRAPs have the lightest armour and are usually equipped with either a single heavy machine gun or automatic grenade launcher. These wheeled vehicles are mainly used for infantry transport and defence, and only rarely used in combat situations. MRAPs have a crew of two, consisting of a driver and gunner. Examples are the Hunter and Ifrit.
+- **APC** - _Armoured Personnel Carrier_ - APCs are light or medium armoured vehicles designed to transport infantry and equipment in combat zones. APCs may be unarmed, or armed with some combination of light, medium, heavy machine guns, or automatic grenade launchers for self-defence. Both wheeled and tracked APCs exist, are often amphibious and have a crew of two or three. The crew consists of a driver, gunner and optionally a dedicated commander. Examples are the M113 and BTR.
+- **IFV** - _Infantry Fighting Vehicle_ - IFVs are similar to APCs in their role of transporting infantry in combat zones, but they also have the possibility of providing direct-fire support. In a way they are a middleground between an APC and MBT. IFVs are typically tracked, but wheeled variants exist. The armament of an IFV can consist of automatic cannons, low or medium velocity guns, ATGMs or automatic grenade launchers. IFVs require a crew of three to operate, consisting of a driver, gunner and commander. Examples are the M2 Bradley and BMP.
+- **MBT** - _Main Battle Tank_ - MBTs are the most heavily armed and armoured among mechanized forces. These vehicles are exclusively tracked and are armed with high-caliber, high velocity guns. The MBTs main armament is usually supplemented with two or more heavy machine guns to engage infantry and light vehicles. MBTs typically have a crew of three or four, consisting of a driver, gunner and commander and an optional loader in some MBT variants. Examples are the M1 Abrams and T-80.
 
 ## Ammo and Weapon Types
 
@@ -123,6 +125,7 @@ Each Commander and Gunner has to know when and what ammo type or weapon system h
 ## Tactics
 
 Here is a list of Tactics that should give people a general idea on what to do or expect in the field.
+
 the general rule of thumb of how to assault the enemy is as follows: If spotted covering fire or smoke by friendlies or the vehicle, mask movement disengage and reengage from another angle. If undetected, scout the emplacement for weak spots dead angels e.t.c then engage and make sure you have cover to fall back to. “The opponent is preferably to be attacked from the flank, barriers are to be avoided” Mobility and firepower is key.
 
 ### Foot Recon & Ground Guides
@@ -138,11 +141,17 @@ Infantry are squishy. Particularly in close terrain, make an effort to not run o
 <img src="/wiki/images/ttp3_illustration_03.png" width="400" alt="Optimal Formation of infantry and Tanks in Urban Environment." style="float: right">
 
 Keep a healthy distance from the armor. Armored vehicles have a hard time seeing infantry close to them. Since you're a squishy infantryman, it's a good idea to keep your distance from the armor. In particular, you want to avoid being behind them unless they are deliberately providing cover for friendly infantry. If not, they are apt to throw into reverse without any warning, which can result in pancaked infantry quite easily.
+
 Watch out for overpressure from tank main guns. The blast overpressure that comes from the main gun being fired can severely injure anyone nearby. Stay clear of tanks when they are likely to be employing the main gun.
+
 Screen the tank in close terrain, ensure infantry are moving ahead of it as well. Infantry should be moving in a fashion that allows them to observe and cover any threat avenues before the tank becomes visible to them. This is intended to spot ATGMs, RPG teams, and other infantry threats so that the armor can be warned, or the infantry can kill them before they have a chance to do anything.
+
 Identify and communicate threats to the armor. Whenever a known or suspected threat is identified, the armor should be informed of it as appropriate. If the threat is high, this typically means that the armor will be told to stop while the infantry clear it out.
+
 Identify and communicate any threats to the infantry that the armor can instead handle. Some threats will exist that will not be a danger to the armor, but may pose a severe threat to infantry. Typically, these take the form of enemy infantry concentrations, snipers, machine-gun bunkers, and other forces that can hurt infantry yet do not pose a threat to armor. When these are identified, it is the job of the infantry to direct the armor so that the armor can eliminate the threat.
+
 Be aware of the armor's breaching abilities, and request them when appropriate.
+
 Armor can act as part of the base of fire, freeing up more infantry to participate in an assault. While you will generally want to keep infantry with the armored base of fire to provide close protection, you won't need as many people in the actual base of fire due to the magnified optics and powerful weapons of the armor being a force multiplier.
 
 ### Breaching with Armor

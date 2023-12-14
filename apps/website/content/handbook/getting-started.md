@@ -2,6 +2,8 @@
 title: Getting Started
 ---
 
+# Getting Started
+
 ## Recruitment Process
 
 Our recruitment process follows these simple steps:

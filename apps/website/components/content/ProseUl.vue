@@ -4,7 +4,11 @@
   </ul>
 </template>
 <style lang="postcss" scoped>
-ul ul {
+ul {
+  list-style-position: outside;
+}
+
+li ul {
   list-style-type: circle;
   padding-inline-start: 1em;
   @apply mb-0;

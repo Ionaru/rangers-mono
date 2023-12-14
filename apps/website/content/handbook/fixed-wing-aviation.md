@@ -2,7 +2,9 @@
 title: Fixed Wing Aviation
 ---
 
-<img src="/wiki/images/BFT_W1.png" alt="BFT_W1.png" style="float: right">
+# Fixed Wing Aviation
+
+<img class="element-icon" src="/wiki/images/BFT_W1.png" alt="BFT_W1.png" style="float: right">
 
 ## Before joining your first training
 

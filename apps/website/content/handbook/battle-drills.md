@@ -1,6 +1,8 @@
 ---
-title: Regulations
+title: Battle Drills
 ---
+
+# Battle Drills
 
 ## Introduction
 
@@ -21,11 +23,11 @@ Whenever you are moving in a hostile environment, you should make sure that you 
 - **Last Man** - If you are the last man, you should start moving. If you are the last man, and you bypass a covering soldier. You call "last man" to let him know that he is the last man of the Squad.
 - **Spacing** - Vertical spacing might not be possible without stopping to move and wait, which is not desired. If vertical spacing is not good, increase horizontal spacing.
 
-<img src="/wiki/images/Spacing.png" width="150" alt="Spacing.png" style="float: right">
+<img class="transparent-fix" src="/wiki/images/Spacing.png" width="150" alt="Spacing.png" style="float: right">
 
 - **Leap Frog** - If you are the last man in the Squad or there are two soldiers in front of you covering, you move forward.
 
-<img src="/wiki/images/MoveAndCover.png" width="300" alt="MoveAndCover.png">
+<img class="transparent-fix" src="/wiki/images/MoveAndCover.png" width="300" alt="MoveAndCover.png">
 
 - **Regroup** - Whenever the situation requires additional coordination or there is a lack of cover ahead - regroup. Quickly communicate on how to proceed.
 - **Crossing Roads** - If you are the first on a road, cover for the others to cross.
@@ -45,7 +47,7 @@ When running into contact following steps apply.
 
 Now it is on the Squad Leader to decide what to do. There are multiple options.
 
-<img src="/wiki/images/SuppressiveFireGraph.png" width="250" alt="SuppressiveFireGraph.png" style="float: right">
+<img class="transparent-fix" src="/wiki/images/SuppressiveFireGraph.png" width="250" alt="SuppressiveFireGraph.png" style="float: right">
 
 - **Suppressive Fire** - Gain fire superiority and force the enemies into cover.
   - Volume of Fire - The volume of fire required to establish fire superiority is high, but once the enemy is suppressed it requires less ammunition to maintain suppression.
@@ -53,7 +55,7 @@ Now it is on the Squad Leader to decide what to do. There are multiple options.
 - **Push** - The decision can be to either push the enemy directly or push into a better position.
 - **Flank** - Either your team or another team might be sent to flank the enemy. This requires other elements maintaining suppressive fire.
 
-<img src="/wiki/images/SuppressiveFire.png" width="250" alt="SuppressiveFire.png" style="float: right">
+<img class="transparent-fix" src="/wiki/images/SuppressiveFire.png" width="250" alt="SuppressiveFire.png" style="float: right">
 
 - **Peel Back** - When peeling back one element will always cover and suppress while others are falling back to take over and cover for the team in front, to leap frog back. It is a reverse move and cover. The goal is to keep suppressing the enemy while falling and back and ultimately disengage.
 
@@ -74,11 +76,11 @@ There are two basic types of ambushes:
 
 - Linear Ambush - All elements are forming a single line facing the enemy. Especially used for hasty assembled ambushes.
 
-<img src="/wiki/images/LinAmbush.png" width="200" alt="LinAmbush.png">
+<img class="transparent-fix" src="/wiki/images/LinAmbush.png" width="200" alt="LinAmbush.png">
 
 - L-Shape Ambush - An ambush from two sides. Both lines are forming the shape of an L. Usually one element is position at the front of the enemy in order to block them and the other element is in their flank. Both elements create a huge crossfire while staying out of each others fire lines.
 
-<img src="/wiki/images/L-Shape.png" width="250" alt="L-Shape.png">
+<img class="transparent-fix" src="/wiki/images/L-Shape.png" width="250" alt="L-Shape.png">
 
 ## Close Quarter Battle
 
@@ -92,17 +94,17 @@ Fighting in close quarters requires a high level of team work and coordination. 
   - Call "clear" to notify that your sector is clear so all can move to the next entry point/sector.
 - **Pieing** - Before moving in try to peek into the area to systematically eliminate potential enemy locations while keeping exposure to a minimum.
 
-<img src="/wiki/images/Pieing.png" width="300" alt="Pieing.png">
+<img class="transparent-fix" src="/wiki/images/Pieing.png" width="300" alt="Pieing.png">
 
 - **Cover each other** - Always cover each other. If the person in front is entering a room to the right, you take the left.
 - **Movement** - Always move along a wall and avoid moving in another persons firing line or sector. Slow is smooth and smooth is fast. Moving smooth and at the right speed is important to ensure a precise clearing.
 - **Sector by sector** - Proper procedure is required by each room you are clearing.
 
-<img class="image-transparent-fix" src="/wiki/images/Entering3.png" width="600" alt="Entering3.png">
+<img class="transparent-fix" src="/wiki/images/Entering3.png" width="600" alt="Entering3.png">
 
 More examples:
 
-<img class="image-transparent-fix" src="/wiki/images/Entering1.png" width="500" alt="Entering1.png"> <img class="image-transparent-fix" src="/wiki/images/Entering2.png" width="500" alt="Entering2.png">
+<img class="transparent-fix" src="/wiki/images/Entering1.png" width="500" alt="Entering1.png"> <img class="transparent-fix" src="/wiki/images/Entering2.png" width="500" alt="Entering2.png">
 
 ## Air Transport
 

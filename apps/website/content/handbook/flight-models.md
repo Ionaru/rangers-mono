@@ -2,6 +2,8 @@
 title: Flight Models
 ---
 
+# Flight Models
+
 Arma 3 uses two different flight models: Basic and Advanced. Both are accepted in our unit and set client side, not server side. This means that you personally chose which one you want to use when flying a helicopter. This page provides an overview over the differences and helps you make your choice.
 
 ## Basic Flight Model

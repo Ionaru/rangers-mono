@@ -2,7 +2,9 @@
 title: Reconnaissance
 ---
 
-<img src="/wiki/images/BFT_S1.png" alt="BFT_S1.png" style="float: right">
+# Reconnaissance
+
+<img class="element-icon" src="/wiki/images/BFT_S1.png" alt="BFT_S1.png" style="float: right">
 
 ## Reconnaissance Team
 

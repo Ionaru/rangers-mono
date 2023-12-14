@@ -2,6 +2,8 @@
 title: Procedures and Regulations
 ---
 
+# Procedures and Regulations
+
 This page is outlining our regulations and procedures we expect our members to follow.
 
 ## Procedures

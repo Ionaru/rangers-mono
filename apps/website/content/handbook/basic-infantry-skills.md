@@ -2,6 +2,8 @@
 title: Basic Infantry Skills
 ---
 
+# Basic Infantry Skills
+
 ## Navigation
 
 It is essential to understand how to read a map and use tools to find your location and any other target location on the map. Also being able to Navigate based on your position and your target position.
@@ -62,7 +64,7 @@ Bearing in degrees is used by default. Mils are only relevant for Artillery Fire
 Map Markers are displayed based on the channel they are broadcast in. You can find the channel you are in at the bottom of your map. Generally we use "Side" channel for markers. There might be situations where Markers will only be put on "Group" or "Command" channel.Cycle through channels with [,], [.], note that these are the default keybindings. To place a marker double-click on the map.
 
 | Channel | Recipients                  |
-|---------|-----------------------------|
+| ------- | --------------------------- |
 | Global  | All Players                 |
 | Side    | Your Faction                |
 | Command | All Faction's Leaders       |
@@ -73,7 +75,7 @@ Map Markers are displayed based on the channel they are broadcast in. You can fi
 Furthermore there are also the options to point at the map [LMB] (visible to people in proximity) or to draw on map [ALT] + [LMB] (channels apply like for map markers). To delete markers and drawings hover over and [DEL].
 
 | Marker                                                                 | Pointing                                                                   | Drawing                                                                    |
-|------------------------------------------------------------------------|----------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | <img src="/wiki/images/MapMarker.png" width="200" alt="MapMarker.png"> | <img src="/wiki/images/MapPointing.png" width="200" alt="MapPointing.png"> | <img src="/wiki/images/MapDrawning.png" width="200" alt="MapDrawning.png"> |
 
 There are some guidelines when it comes to markers:
@@ -86,7 +88,7 @@ There are some guidelines when it comes to markers:
 Use a letter and number combination, if useful the time you placed the marker (e.g. EI 4 - 12:00 NW = Enemy Infantry 4 men moving north-west marked at 12:00). Usually use the "Dot" marker.
 
 | Marker                  | Meaning                                                 |
-|-------------------------|---------------------------------------------------------|
+| ----------------------- | ------------------------------------------------------- |
 | "EI" + Number           | Enemy Infantry (number as count)                        |
 | "BTR" + Number          | BTR                                                     |
 | "APC" + Number          | APC                                                     |
@@ -119,9 +121,9 @@ Rangefinder are tools to measure a distance. We mainly use the Vector 21. It all
 
 <img src="/wiki/images/Vector21.png" width="250" alt="Vector21.png">
 
-In addition you can find the horizontal distance to a target and the height difference between your location and the target by first tapping [R] followed by hold [R]. Furthermore, you can also get the distance and direction between two point. Therefor you press and hold [R]. Once the circle appears press [Tab] and keep holding [R]. Once the P-1 info appears aim at your second point and release [R]. More functions can be found in the official [ACE3 Wiki](https://ace3.acemod.org/wiki/feature/vector.html).
+In addition, you can find the horizontal distance to a target and the height difference between your location and the target by first tapping [R] followed by hold [R]. Furthermore, you can also get the distance and direction between two point. Therefor you press and hold [R]. Once the circle appears press [Tab] and keep holding [R]. Once the P-1 info appears aim at your second point and release [R]. More functions can be found in the official [ACE3 Wiki](https://ace3.acemod.org/wiki/feature/vector.html).
 
-<img src="/wiki/images/VectorDistance.png" width="500" alt="VectorDistance.png" style="float: right">
+<img class="transparent-fix" src="/wiki/images/VectorDistance.png" width="500" alt="VectorDistance.png" style="float: right">
 
 - **Direct Distance** - Used to zero weapons onto targets.
 - **Horizontal Distance** - Used to produce an accurate map marker location. Since the map is a 2D environment. The larger the height difference the higher the deviation in distance.
@@ -188,13 +190,13 @@ Movement or in other words: How not to get killed.
 ArmA 3 offers a large variety of vertical ([Ctrl] + [W] or [S]) and horizontal ([Ctrl] + [A] or [D]) stance adjustments. Make sure to minimize your exposure by utilizing the different stances. There are three basic vertical stance categories and each comes with 3 versions (low/normal/height).
 
 | Stance Indicator                                                                       | Vertical Adjustments                                                                 |
-|----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | <img src="/wiki/images/StanceIndicatorVertical.png" alt="StanceIndicatorVertical.png"> | <img src="/wiki/images/StancesSlideShow.png" width="750" alt="StancesSlideShow.png"> |
 
 In addition to the horizontal stance adjustments you can also lean left [Q] and right [E]. Following examples are horizontal adjustments while crouching. Same applies to standing. Leaning while being prone does not work and the keys will make you roll to the according sides.
 
 | Stance Indicator                                                                           | Step-Leaning left                                                                      | Leaning left                                                                           | Normal                                                                                 | Leaning right                                                                          | Step-Leaning right                                                                     |
-|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | <img src="/wiki/images/StanceIndicatorHorizontal.png" alt="StanceIndicatorHorizontal.png"> | <img width="150" src="/wiki/images/StanceHorizontal1.png" alt="StanceHorizontal1.png"> | <img width="150" src="/wiki/images/StanceHorizontal2.png" alt="StanceHorizontal2.png"> | <img width="150" src="/wiki/images/StanceHorizontal3.png" alt="StanceHorizontal3.png"> | <img width="150" src="/wiki/images/StanceHorizontal4.png" alt="StanceHorizontal4.png"> | <img width="150" src="/wiki/images/StanceHorizontal5.png" alt="StanceHorizontal5.png"> |
 
 Note that stances influence not only exposure, they also influence accuracy, movement speed, and stamina.
@@ -232,7 +234,7 @@ There are a large variety of obstacles. Generally people find a way around them.
 **Utilize wall gaps**
 
 | Pie the corners                        | Line up                                | Roll under                             | Check close corner                     | Move out                               |
-|----------------------------------------|----------------------------------------|----------------------------------------|----------------------------------------|----------------------------------------|
+| -------------------------------------- | -------------------------------------- | -------------------------------------- | -------------------------------------- | -------------------------------------- |
 | <img src="/wiki/images/Obstacle1.png"> | <img src="/wiki/images/Obstacle2.png"> | <img src="/wiki/images/Obstacle3.png"> | <img src="/wiki/images/Obstacle4.png"> | <img src="/wiki/images/Obstacle5.png"> |
 
 Always take the opposite side of the person in front did.
@@ -294,7 +296,7 @@ Being able to hit a target at various ranges and speeds is more than just shooti
 
 Understanding bullet trajectory is important when engaging target at ranges. Bullets drop over range. It is important to know the range of your target to adjust your aim.
 
-<img src="/wiki/images/Trajectory.png" alt="Trajectory.png" width="300" style="float: right">
+<img class="transparent-fix" src="/wiki/images/Trajectory.png" alt="Trajectory.png" width="300" style="float: right">
 
 Zeroing your weapon, meaning to adjust the weapon sights to a certain range can be helpful. Otherwise, you might have to take the range the weapon is configured on and either aim above or below the target to hit. If your weapon sights allow you can zero them to certain ranges using [Page Up] and [Page Down]. The distance your weapon sight has been configured for you will find on the HUD. Zeroing might be more relevant for longer engagement distances in regard to firearms, although it is extremely important for heavier projectiles with higher drop rate like 40mm grenades or even rockets.
 

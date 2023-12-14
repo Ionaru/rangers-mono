@@ -1,6 +1,6 @@
 <template>
   <Navigation />
-  <main>
+  <main class="mx-4">
     <slot />
   </main>
   <Footer />

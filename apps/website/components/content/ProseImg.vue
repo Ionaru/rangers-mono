@@ -38,7 +38,13 @@ const refinedSrc = computed(() => {
 </template>
 
 <style lang="postcss" scoped>
-img[src$=".png"] {
-  @apply bg-zinc-800 dark:bg-transparent m-2 p-4 rounded-2xl;
+img {
+  &.transparent-fix {
+    @apply bg-zinc-800 dark:bg-transparent m-2 p-4 rounded-2xl;
+  }
+
+  &.element-icon {
+    @apply p-2 rounded-full bg-primary m-2;
+  }
 }
 </style>

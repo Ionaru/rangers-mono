@@ -2,7 +2,9 @@
 title: Rotary Aviation
 ---
 
-<img src="/wiki/images/BFT_R1.png" alt="BFT_R1.png" style="float: right">
+# Rotary Aviation
+
+<img class="element-icon" src="/wiki/images/BFT_R1.png" alt="BFT_R1.png" style="float: right">
 
 This page is intended as a supplement to the Rotary Wing Training. It will not work as a replacement for live training sessions.
 
@@ -132,8 +134,6 @@ The Pilot can further restrict the RoE. Gunners only fire upon clearance from th
   - Historic Sites / Cultural Treasures / Safe Zones
 
 Any engagement call be called of by the command / ground teams at all time.
-
-
 
 ## Emergency Procedures
 

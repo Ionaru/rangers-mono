@@ -2,6 +2,8 @@
 title: Combined Arms
 ---
 
+# Combined Arms
+
 ## Introduction
 
 More often than not our operations are conducted by a diverse force. While everything is centered around the Infantry Platoon as the core of our force, there can be a variety of support oriented units serving alongside it.
@@ -18,7 +20,7 @@ All elements like Aviation, Reconnaissance, Armour or other Support Units are pu
 - **Coordination** - He coordinates the actions and assignments of the Support Elements in support of the Infantry Platoon.
 - **Decisions** - He is authorized to make decisions in regards on how to deploy the Support Elements based on the directives given by the Platoon Leader.
 - **Execution** - Platoon Leader has ultimate authority. Once the Platoon Leader issues an order on how he want to have Support Elements deployed, it is on the Platoon Sergeant to execute the order.
-- **Advisement** - He may advise and suggest Support Element usage to the Platoon Leader. While he has room to make individual calls and deploys Support Elements alongside operational guidelines. 
+- **Advisement** - He may advise and suggest Support Element usage to the Platoon Leader. While he has room to make individual calls and deploys Support Elements alongside operational guidelines.
 
 The Callsign for the Platoon Sergeant on the Command Net is "Central" in order to prevent confusion with the Platoon Leader himself.
 

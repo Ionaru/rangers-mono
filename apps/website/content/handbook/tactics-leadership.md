@@ -2,6 +2,8 @@
 title: Tactics & Leadership
 ---
 
+# Tactics & Leadership
+
 ## Leadership Personnel Roles
 
 Each Leadership Personnel has a certain responsibilities which differ from his role within the Platoon.
@@ -30,10 +32,10 @@ A tactic is only as good as you are able to execute it. A well executed simple t
 
 Formations serve multiple purposes, they ensure a good all around security, but also a reliability of a structured frontline. These are primary aimed at squad formations, but they can also be used as a platoon formation.
 
-| Wedge                            | Line                                                        | Column                                            | Staggered Column                                       | Diamond                                                           |
-|----------------------------------|-------------------------------------------------------------|---------------------------------------------------|--------------------------------------------------------|-------------------------------------------------------------------|
-| ![Wedge](/wiki/images/Wedge.png) | ![Line](/wiki/images/Line.png)                              | ![Column](/wiki/images/Column.png)                | ![Staggered Column](/wiki/images/StaggeredColumn.png)  | ![Diamond](/wiki/images/Diamond.png)                              |
-| Default combat area formation.   | Attack formation, on contact form a line towards the enemy. | Travelling formation or used in areas with mines. | Travelling formation or used when patrolling on roads. | Combat area or close quarters with expected attack from the rear. |
+| Wedge                                                                  | Line                                                                 | Column                                                                   | Staggered Column                                                                           | Diamond                                                                    |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| <img class="transparent-fix" src="/wiki/images/Wedge.png" alt="Wedge"> | <img class="transparent-fix" src="/wiki/images/Line.png" alt="Line"> | <img class="transparent-fix" src="/wiki/images/Column.png" alt="Column"> | <img class="transparent-fix" src="/wiki/images/StaggeredColumn.png" alt="StaggeredColumn"> | <img class="transparent-fix" src="/wiki/images/Diamond.png" alt="Diamond"> |
+| Default combat area formation.                                         | Attack formation, on contact form a line towards the enemy.          | Travelling formation or used in areas with mines.                        | Travelling formation or used when patrolling on roads.                                     | Combat area or close quarters with expected attack from the rear.          |
 
 Based on the terrain you are operating in, formations might not be a perfect as displayed. Often it is more beneficial to slightly leave the formation and follow the terrain for cover and concealment.
 
@@ -44,11 +46,11 @@ Group movement techniques which are used for the movement of multiple buddy team
 - **Travelling** - Continuous movement of all elements used for maximum travelling speed at the expense of protection. Generally for situations where combat is not likely. Spacing is defined by the ability of the elements to support each other if needed.
 - **Travelling Overwatch** - Extent of travelling. While the lead element is continuously moving the trail element is moving at various speeds and may halt to provide overwatch. Spacing is defined by the ability of the trail element to provide suppressive fire for the lead element if needed. Use when speed is important, but with more added security.
 
-<img src="/wiki/images/SuccBouding.png" width="250" alt="SuccBouding.png" style="float: right">
+<img class="transparent-fix" src="/wiki/images/SuccBouding.png" width="250" alt="SuccBouding.png" style="float: right">
 
 - **Successive Bounding** - The lead element advances while the trail element covers from an overwatch position. The lead element halts and assumes a forward overwatch position. When the lead element is set, the trail element advances to an overwatch position abreast from the lead element. Once the trail element is in position the procedure repeats. During this movement the trail element avoids moving ahead past the lead element.
 
-<img src="/wiki/images/AltBouding.png" width="250" alt="AltBouding.png" style="float: right">
+<img class="transparent-fix" src="/wiki/images/AltBouding.png" width="250" alt="AltBouding.png" style="float: right">
 
 - **Alternate Bounding** - Covered by the trail element, the lead element advances and assumes a forward overwatch position. When the lead element is set, the trail element advances past the lead element and assumes an overwatch position ahead of the lead element. Once set, the lead element moves ahead again. Both teams leap frog past each other continuously while one of the is always set to cover and only one of them is moving at a time.
 - **Breaking Contact** - When facing an overwhelming enemy force, being caught in a bad position or momentum needs to be maintained, you might need to break contact in an organized manner. Breaking contact is a reversed alternate bounding. While the trail elements halts and provides suppressive fire, the lead element falls back to an overwatch position and then takes over the suppressive fire in order for the trail element to fall back and leap frog past the lead element.

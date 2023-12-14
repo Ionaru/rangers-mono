@@ -2,7 +2,10 @@
 title: Qualifications
 ---
 
+# Qualifications
+
 ## General
+
 Qualifications allow members to certify their skills in certain areas. The infantry qualification is mandatory for all members, others qualifications are voluntary.
 
 <img src="/wiki/images/ExpInf.png" width="100" alt="ExpInf.png" style="float: right">
@@ -58,11 +61,11 @@ Requirements: Infantryman Qualification
 Content:
 
 - Weapon Proficiency
- - Designated Marksman Rifle
-   - Accurate up to 800m
- - Sniper Rifle
-   - Accurate up to 1000m
- - Anti-Material-Rifle
+  - Designated Marksman Rifle
+    - Accurate up to 800m
+  - Sniper Rifle
+    - Accurate up to 1000m
+  - Anti-Material-Rifle
 - Concealed Movement
 
 <img src="/wiki/images/CE.png" width="100" alt="CE.png" style="float: right">

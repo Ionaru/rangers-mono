@@ -2,16 +2,18 @@
 tltle: Medical
 ---
 
+# Medical
+
 ## Controls
 
 We are using a customized ACE 3 Medical System for an optimal balance between simulation and fun gameplay.
 
 You have two different options available at all time. To treat somebody you can use ACE Interact and interact with the injured body parts directly. Alternatively you can use ACE Interact and open the Medical Menu (you find it under interactions). Certain actions might only be conductible on certain body parts. On Self Treatment use ACE Self Interact.
 
-| Interaction Menu                                                                                               | Medical Menu                                                                                 |
-| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Interaction Menu                                                                   | Medical Menu                                                            |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | <img width="400" src="/wiki/images/MedicalInteract.png" alt="Interaction Medical"> | <img width="400" src="/wiki/images/MedicalMenu.png" alt="Medical Menu"> |
-| Better for treating fewer smaller injuries and quick medication.                                               | Better for treating heavily wounded.                                                         |
+| Better for treating fewer smaller injuries and quick medication.                   | Better for treating heavily wounded.                                    |
 
 Following Settings are recommended. You can set them in your ACE3 Settings under the category "Interaction" and "Medical". Display Interactions as Lists and allow Medical Menu.
 
@@ -132,11 +134,11 @@ In the following paragraph you learn the procedures of dealing with wounded. Alw
 
 There are two methods of moving an unconscious patient:
 
-| Dragging                                                              | Carrying                                                                           |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| <img src="/wiki/images/Dragging.png" alt="Dragging"> | <img src="/wiki/images/Carrying.png" alt="Carrying">              |
-| **Pros:**<br>- Quick to begin<br>- Low-Profile                        | **Pros:**<br>- Movement Speed while Carrying<br>- Looking in Direction of Movement |
-| **Cons:**<br>- Slow Movement speed<br>- Walking Backwards             | **Cons:**<br>- Slow to begin<br>- High-Profile                                     |
+| Dragging                                                  | Carrying                                                                           |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| <img src="/wiki/images/Dragging.png" alt="Dragging">      | <img src="/wiki/images/Carrying.png" alt="Carrying">                               |
+| **Pros:**<br>- Quick to begin<br>- Low-Profile            | **Pros:**<br>- Movement Speed while Carrying<br>- Looking in Direction of Movement |
+| **Cons:**<br>- Slow Movement speed<br>- Walking Backwards | **Cons:**<br>- Slow to begin<br>- High-Profile                                     |
 
 **Step 3: Stop the Bleeding:**
 
@@ -179,10 +181,10 @@ A centralized location where wounded are being gathered for treatment. Usually s
 
 We have a custom system to ensure quick resupplies in the field. There are resupply packages which unfold into usable medical gear when taken by a player. Some packages only unfold in the inventory of a medic.
 
-| Icon                                                                                                                       | Name                   | Content                                                                        | Requirement |
-| -------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------ | ----------- |
+| Icon                                                                                       | Name                   | Content                                                                        | Requirement |
+| ------------------------------------------------------------------------------------------ | ---------------------- | ------------------------------------------------------------------------------ | ----------- |
 | <img src="/wiki/images/gear_FirstAidKit_CA.png" width="100" alt="gear_FirstAidKit_CA.png"> | Personal Aid Kit (PAK) | 6x Field Dressing<br>4x Quick Clot<br>2x Morphine                              | None        |
-| <img src="/wiki/images/band.png" width="100" alt="band.png">                                              | Bandage Pack           | 3x Field Dressing<br>3x Elastic Bandage<br>3x Quick Clot<br>3x Packing Bandage | Medic       |
-| <img src="/wiki/images/meds.png" width="100" alt="meds.png">                                              | Medicine Pack          | 5x Morphine<br>5x Epinephrine                                                  | Medic       |
-| <img src="/wiki/images/utility.png" width="100" alt="utility.png">                                     | Utility Pack           | 7x Splint<br>3x Tourniquet                                                     | Medic       |
-| <img src="/wiki/images/blood.png" width="100" alt="blood.png">                                           | BloodIV Pack           | 2L BloodIV                                                                     | Medic       |
+| <img src="/wiki/images/band.png" width="100" alt="band.png">                               | Bandage Pack           | 3x Field Dressing<br>3x Elastic Bandage<br>3x Quick Clot<br>3x Packing Bandage | Medic       |
+| <img src="/wiki/images/meds.png" width="100" alt="meds.png">                               | Medicine Pack          | 5x Morphine<br>5x Epinephrine                                                  | Medic       |
+| <img src="/wiki/images/utility.png" width="100" alt="utility.png">                         | Utility Pack           | 7x Splint<br>3x Tourniquet                                                     | Medic       |
+| <img src="/wiki/images/blood.png" width="100" alt="blood.png">                             | BloodIV Pack           | 2L BloodIV                                                                     | Medic       |

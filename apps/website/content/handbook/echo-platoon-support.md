@@ -1,8 +1,10 @@
 ---
-tltle: Echo Platoon Support
+title: Echo Platoon Support
 ---
 
-<img src="/wiki/images/BFT_E1.png" alt="BFT_E1.png" style="float: right">
+# Echo Platoon Support
+
+<img class="element-icon" src="/wiki/images/BFT_E1.png" alt="BFT_E1.png" style="float: right">
 
 ## Introduction
 
@@ -53,8 +55,8 @@ Skills a Combat Engineer needs to be able to bring onto the battlefield.
 
 ### Explosives
 
-| APERS Mine                                                                       | APERS Bounding Mine                                                                       | APERS Tripwire Mine                                                                       | AT Mine                                                                 | IED                                                                        | Claymore                                                                                  | SLAM                                                                          | Explosive Charge                                                                 | Explosive Satchel                                                                      |
-|----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| APERS Mine                                                     | APERS Bounding Mine                                                  | APERS Tripwire Mine                                                  | AT Mine                                                  | IED                                                        | Claymore                                                             | SLAM                                                         | Explosive Charge                                               | Explosive Satchel                                                  |
+| -------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------ |
 | <img src="/wiki/images/apers.jpg" width="100" alt="apers.jpg"> | <img src="/wiki/images/bounding.jpg" width="100" alt="bounding.jpg"> | <img src="/wiki/images/tripwire.jpg" width="100" alt="tripwire.jpg"> | <img src="/wiki/images/at.jpg" width="100" alt="at.jpg"> | <img src="/wiki/images/ied.jpg" width="100" alt="ied.jpg"> | <img src="/wiki/images/claymore.jpg" width="100" alt="claymore.jpg"> | <img src="/wiki/images/slam.jpg" width="100" alt="slam.jpg"> | <img src="/wiki/images/block.jpg" width="100" alt="block.jpg"> | <img src="/wiki/images/satchel.jpg" width="100" alt="satchel.jpg"> |
 
 - **APERS Mine** - Classic pressure activated anti-personnel mine.
@@ -73,7 +75,7 @@ Some things like how to operate Rocket Launchers (MAT/HAT) can be found in [Sect
 
 ### Mortar
 
-The heaviest weapon deployed by Echo is a Mortar. The Communication in regard to Fire Support Request can be found in [Section 3 Communication](/handbook/communication). 
+The heaviest weapon deployed by Echo is a Mortar. The Communication in regard to Fire Support Request can be found in [Section 3 Communication](/handbook/communication).
 Furthermore, you need to proficient with Map Tools, details can be found in [Section 4 Basic Infantry Skills](/handbook/basic-infantry-skills).
 
 #### General
@@ -144,4 +146,4 @@ Echo might operate with a Vehicle. Usually in order to assist with transporting 
 
 - **Holding Vehicle** - Hold the vehicle angled in the center of the road. That provides a lot of cover, assuming the contact is coming from the front. It should be angled to provide a maximum of cover, while being able to move forward or go in reverse without switching between them.
 
-<img src="/wiki/images/HMMWV.png" width="150" alt="HMMWV.png">
+<img class="transparent-fix" src="/wiki/images/HMMWV.png" width="150" alt="HMMWV.png">

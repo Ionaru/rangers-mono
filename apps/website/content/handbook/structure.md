@@ -2,6 +2,8 @@
 title: Structure
 ---
 
+# Structure
+
 ## Organisation (Outside of the game)
 
 - **Recruit** - New member of the 7th Rangers.
@@ -22,7 +24,7 @@ This makes the platoon leader in charge of the entire operation.
 - **Squad Elements** - A platoon consists out of up to three squads (Alpha, Bravo & Charlie). Squads are generally the frontline elements and the main element of our platoon.
 - **Support Elements** - There are various possible support elements such as combat engineers, weapons teams, reconnaissance teams, mechanized or armoured teams. Support elements have generally more freedom and are under less strict control of the platoon leadership. Their main task is to support the squad elements and help them succeed with their tasks. Their freedom enables them to apply their special abilities to their fullest potential.
 
-<img src="/wiki/images/PL_Struc2.png" alt="Platoon structure" style="float:right;">
+<img class="transparent-fix" src="/wiki/images/PL_Struc2.png" alt="Platoon structure" style="float:right;">
 
 ### Platoon Element Roles
 
@@ -55,7 +57,7 @@ A squad consists of one Squad Leader, 6 Operators, and one Combat Medic. Usually
 - **Sector Security** - Ensure a 360° Security at all time. All Sectors must be covered.
 - **2nd in Command** - The 2IC is responsible to enforce the order given by the Squad Leader and ensure their timely and proper execution.
 
-<img src="/wiki/images/Untitled+drawing.png" alt="Squad Setup"">
+<img class="transparent-fix" src="/wiki/images/Untitled+drawing.png" alt="Squad Setup">
 
 ## Fire Team
 

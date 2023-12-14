@@ -2,12 +2,14 @@
 title: Regulations
 ---
 
+# Regulations
+
 This sections lists all gear regulations for Platoon, Squad and individual level. All adjustments to loadouts must be permitted by your leader and conform with our Regulations.
 
 ## Weapon Sights
 
 | Class   | Description                          | Equipment Box Color | Restrictions                     |
-|---------|--------------------------------------|---------------------|----------------------------------|
+| ------- | ------------------------------------ | ------------------- | -------------------------------- |
 | Class 1 | Standard optic with no magnification | Green               | None                             |
 | Class 2 | Magnified optic (3.4x - 4x)          | Orange              | 1 per Element + Platoon Sergeant |
 | Class 3 | Highly magnified optic               | Red                 | Platoon DMR only                 |
