@@ -2,27 +2,51 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "cache": true
     },
-    "lint": {
+    "e2e": {
+      "inputs": [
+        "default",
+        "^production"
+      ],
+      "cache": true
+    },
+    "@nx/eslint:lint": {
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore"
       ],
       "cache": true
-    },
-    "e2e": {
-      "inputs": ["default", "^production"],
-      "cache": true
-    },
-    "test": {
-      "cache": true
     }
   },
-  "plugins": ["nx/plugins/package-json"],
+  "plugins": [
+    "nx/plugins/package-json",
+    {
+      "plugin": "@nx/nuxt/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "previewTargetName": "preview",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "serveStaticTargetName": "serve-static"
+      }
+    }
+  ],
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -30,7 +54,10 @@
       "!{projectRoot}/.output/**/*",
       "sharedGlobals"
     ],
-    "production": ["default", "!{projectRoot}/.eslintrc.json"],
+    "production": [
+      "default",
+      "!{projectRoot}/.eslintrc.json"
+    ],
     "sharedGlobals": []
   }
 }

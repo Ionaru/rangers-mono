@@ -56,6 +56,9 @@ export default defineNuxtConfig({
   ],
   content: {
     documentDriven: true,
+    experimental: {
+      clientDB: true,
+    },
   },
   router: {
     options: {
@@ -74,9 +77,9 @@ export default defineNuxtConfig({
     // "/handbook": { prerender: true },
   },
   // ssr: false,
-  content: {
-    experimental: {
-      clientDB: true,
-    },
-  },
+  // content: {
+  //   experimental: {
+  //     clientDB: true,
+  //   },
+  // },
 });
