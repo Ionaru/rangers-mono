@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "dev": "nx run-many --target=serve --parallel 99",
     "build": "nx build website",
     "e2e": "nx e2e website-e2e",
     "format": "prettier --write .",
@@ -12,21 +13,21 @@
   "devDependencies": {
     "@nuxt/devtools": "latest",
     "@nuxtjs/color-mode": "^3.3.2",
-    "@nx/eslint": "18.0.4",
-    "@nx/eslint-plugin": "18.0.4",
-    "@nx/js": "18.0.4",
-    "@nx/nuxt": "^18.0.4",
-    "@nx/playwright": "18.0.4",
-    "@nx/workspace": "18.0.4",
-    "@playwright/test": "^1.41.2",
-    "@types/node": "20.11.17",
+    "@nx/eslint": "18.0.6",
+    "@nx/eslint-plugin": "18.0.6",
+    "@nx/js": "18.0.6",
+    "@nx/nuxt": "18.0.6",
+    "@nx/playwright": "18.0.6",
+    "@nx/workspace": "18.0.6",
+    "@playwright/test": "^1.42.1",
+    "@types/node": "20.11.24",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
-    "eslint": "8.56.0",
+    "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-playwright": "^0.22.2",
-    "nuxt": "^3.10.1",
-    "nx": "18.0.4",
+    "eslint-plugin-playwright": "^1.5.1",
+    "nuxt": "^3.10.3",
+    "nx": "18.0.6",
     "prettier": "^3.2.5",
     "typescript": "5.3.3"
   },
@@ -36,11 +37,8 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/vue-fontawesome": "^3.0.6",
     "@nuxt/content": "^2.12.0",
-    "@nuxt/ui": "^2.13.0",
-    "@nuxt/ui-pro": "^0.7.5",
+    "@nuxt/ui": "^2.14.1",
+    "@nuxt/ui-pro": "^1.0.1",
     "@pinia/nuxt": "^0.5.1"
-  },
-  "overrides": {
-    "@parcel/watcher": "2.1.0"
   }
 }

@@ -34,7 +34,7 @@ const refinedSrc = computed(() => {
 </script>
 
 <template>
-  <img :src="refinedSrc" :alt="alt" :width="width" :height="height" />
+  <img class="m-4" :src="refinedSrc" :alt="alt" :width="width" :height="height" />
 </template>
 
 <style lang="postcss" scoped>

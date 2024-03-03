@@ -55,10 +55,10 @@ export default defineNuxtConfig({
     "~/assets/css/root.css",
   ],
   content: {
-    documentDriven: true,
-    experimental: {
-      clientDB: true,
-    },
+    // documentDriven: true,
+    // experimental: {
+    //   clientDB: true,
+    // },
   },
   router: {
     options: {

@@ -30,6 +30,7 @@ const store = useHeaderPanelStore();
           href="ts3server://ts.7th-ranger.com"
           icon="fa-brands fa-teamspeak"
         />
+        <HeaderJoinButton />
         <HeaderMenuButton
           class="lg:hidden inline-flex"
           @click="store.toggle()"
