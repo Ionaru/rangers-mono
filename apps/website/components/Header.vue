@@ -8,7 +8,7 @@ const store = useHeaderPanelStore();
   <Banner />
 
   <nav
-    class="bg-background/75 backdrop-blur border-b border-gray-200 dark:border-gray-800 -mb-px sticky top-0 z-50"
+    class="bg-gray-100 dark:bg-gray-900 !bg-opacity-50 backdrop-blur border-b dark:border-gray-800 -mb-px sticky top-0 z-50"
   >
     <div
       class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex items-center justify-between gap-3 h-[--header-height]"
@@ -20,7 +20,7 @@ const store = useHeaderPanelStore();
         <HeaderLink href="/" name="Home" />
         <HeaderLink href="/handbook" name="Handbook" />
       </ul>
-      <div class="flex items-center justify-end lg:flex-1 gap-1.5">
+      <div class="flex items-center justify-end lg:flex-1 gap-2">
         <ColorModeButton />
         <HeaderIconLink
           href="https://discord.gg/vbFMQXe"

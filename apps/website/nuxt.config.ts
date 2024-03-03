@@ -73,7 +73,7 @@ export default defineNuxtConfig({
     // },
   },
   routeRules: {
-    // "/": { prerender: true },
+    "/": { prerender: true },
     // "/handbook": { prerender: true },
   },
   // ssr: false,

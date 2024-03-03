@@ -17,6 +17,10 @@ export default <Partial<Config>>{
           "900": "#087b08",
           "950": "#087b08",
         },
+        discord: {
+          DEFAULT: "#5865F2",
+          light: "#8891f2",
+        }
       },
     },
   },
