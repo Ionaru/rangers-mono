@@ -20,7 +20,7 @@ export default <Partial<Config>>{
         discord: {
           DEFAULT: "#5865F2",
           light: "#8891f2",
-        }
+        },
       },
     },
   },

@@ -14,7 +14,7 @@ defineProps<{
       <font-awesome-icon :icon="['fas', icon]" size="4x" fixed-width />
     </div>
     <div class="ps-6">
-      <Heading4 class="text-primary !mt-0">{{heading}}</Heading4>
+      <Heading4 class="text-primary !mt-0">{{ heading }}</Heading4>
       <slot />
     </div>
   </div>

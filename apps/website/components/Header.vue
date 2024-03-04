@@ -2,6 +2,28 @@
 import { useHeaderPanelStore } from "~/stores/header-panel";
 
 const store = useHeaderPanelStore();
+const { status, data } = useAuth();
+
+const links = [
+  {
+    label: "Home",
+    to: "/",
+  },
+  {
+    label: "Handbook",
+    to: "/handbook",
+  },
+];
+
+const authLink = [
+  {
+    label: data.value?.user?.name,
+    avatar: {
+      src: data.value?.user?.image,
+    },
+    to: "/profile",
+  },
+];
 </script>
 
 <template>
@@ -17,8 +39,7 @@ const store = useHeaderPanelStore();
         <HeaderLogoLink />
       </div>
       <ul class="items-center gap-x-8 hidden lg:flex mx-8">
-        <HeaderLink href="/" name="Home" />
-        <HeaderLink href="/handbook" name="Handbook" />
+        <UHorizontalNavigation :links="links" />
       </ul>
       <div class="flex items-center justify-end lg:flex-1 gap-2">
         <ColorModeButton />
@@ -30,7 +51,12 @@ const store = useHeaderPanelStore();
           href="ts3server://ts.7th-ranger.com"
           icon="fa-brands fa-teamspeak"
         />
-        <HeaderJoinButton />
+        <HeaderJoinButton v-if="status !== 'authenticated'" />
+        <UHorizontalNavigation
+          class="w-auto"
+          v-if="status === 'authenticated'"
+          :links="authLink"
+        />
         <HeaderMenuButton
           class="lg:hidden inline-flex"
           @click="store.toggle()"

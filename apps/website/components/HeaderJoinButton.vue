@@ -1,7 +1,5 @@
 <template>
-  <NuxtLink
-    to="/auth"
-  >
+  <NuxtLink to="/auth">
     <PrimaryButton>Join 7R</PrimaryButton>
   </NuxtLink>
 </template>

@@ -49,7 +49,14 @@ export default defineNuxtConfig({
   build: {
     transpile: ["@fortawesome/vue-fontawesome"],
   },
-  modules: ["@pinia/nuxt", "@nuxt/content", "@nuxt/ui"],
+  modules: ["@pinia/nuxt", "@nuxt/content", "@nuxt/ui", "@sidebase/nuxt-auth"],
+  auth: {
+    globalAppMiddleware: true,
+    provider: {
+      type: "authjs",
+      defaultProvider: "discord",
+    },
+  },
   css: [
     "@fortawesome/fontawesome-svg-core/styles.css",
     "~/assets/css/root.css",

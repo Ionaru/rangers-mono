@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+
+definePageMeta({ auth: false });
 </script>
 
 <template>
