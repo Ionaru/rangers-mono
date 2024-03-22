@@ -1,0 +1,23 @@
+services:
+  nginx:
+    image: ghcr.io/ionaru/rangers/nginx:latest
+    build:
+      context: .
+      dockerfile: deploy/nginx.Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+  nuxt:
+    image: ghcr.io/ionaru/rangers/nuxt:latest
+    build:
+      context: .
+      dockerfile: deploy/nuxt.Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - AUTH_ORIGIN
+      - AUTH_CLIENT_ID
+      - AUTH_CLIENT_SECRET
+      - AUTH_SESSION_SECRET
+    restart: unless-stopped

@@ -73,6 +73,9 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    output: {
+      dir: "../../dist/apps/website",
+    },
     // prerender: {
     //   crawlLinks: true,
     //   failOnError: true,
