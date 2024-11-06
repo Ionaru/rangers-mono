@@ -13,5 +13,5 @@ services:
       - AUTH_SESSION_SECRET
     restart: unless-stopped
     healthcheck:
-      test: 'wget --header="Accept: text/html" localhost:3001/graphql -q --spider'
+      test: 'wget --header="Accept: text/html" localhost:3001 -q --spider'
       start_period: 30s
