@@ -9,6 +9,7 @@ services:
     ports:
       - "3001:3000"
     environment:
+      - NEXTAUTH_URL
       - AUTH_ORIGIN
       - AUTH_CLIENT_ID
       - AUTH_CLIENT_SECRET
