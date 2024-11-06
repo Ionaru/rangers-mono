@@ -89,9 +89,6 @@ jobs:
       group: deploy
       cancel-in-progress: false
     steps:
-      - name: Wait for the registry to process the uploads.
-        run: sleep 2m
-        shell: bash
       - uses: appleboy/ssh-action@v1.1.0
         with:
           command_timeout: 30m
