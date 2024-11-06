@@ -81,6 +81,7 @@ jobs:
       - run: docker push -a ghcr.io/ionaru/rangers-mono/${{matrix.app}}
 
   deploy:
+    name: Deploy to server
     needs: [get_sha, push-image]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -88,6 +89,9 @@ jobs:
       group: deploy
       cancel-in-progress: false
     steps:
+      - name: Wait for the registry to process the uploads.
+        run: sleep 30s
+        shell: bash
       - uses: appleboy/ssh-action@v1.0.3
         with:
           command_timeout: 30m
