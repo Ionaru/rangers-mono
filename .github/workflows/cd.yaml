@@ -1,0 +1,103 @@
+name: Deals CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  audit:
+    name: Audit dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm audit --omit=dev
+
+  get_sha:
+    name: Get short SHA for image tags
+    runs-on: ubuntu-latest
+    outputs:
+      sha_short: ${{ steps.get_sha.outputs.sha_short }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: get_sha
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+  determine_buildable:
+    name: Determine buildable apps
+    runs-on: ubuntu-latest
+    outputs:
+      buildable: ${{ steps.determine_buildable.outputs.buildable }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npx nx show projects --with-target serve --json
+      - id: determine_buildable
+        run: echo "buildable=$(npx nx show projects --with-target serve --json)" >> "$GITHUB_OUTPUT"
+
+  build-image:
+    name: Build image
+    needs: [audit, determine_buildable]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{fromJson(needs.determine_buildable.outputs.buildable)}}
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build ${{matrix.app}}
+      - run: docker save -o ${{matrix.app}}-image.tar ghcr.io/ionaru/deals/${{matrix.app}}:latest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{matrix.app}}-image
+          path: ${{matrix.app}}-image.tar
+          retention-days: 1
+
+  push-image:
+    name: Push image
+    if: github.event_name == 'push'
+    needs: [get_sha, determine_buildable]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{fromJson(needs.determine_buildable.outputs.buildable)}}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{matrix.app}}-image
+      - run: docker load -i ${{matrix.app}}-image.tar
+      - run: docker tag ghcr.io/ionaru/rangers-mono/${{matrix.app}}:latest ghcr.io/ionaru/rangers-mono/${{matrix.app}}:${{needs.get_sha.outputs.sha_short}}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker push -a ghcr.io/ionaru/rangers-mono/${{matrix.app}}
+
+  deploy:
+    needs: [get_sha, push-image]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: appleboy/ssh-action@v1.0.3
+        with:
+          command_timeout: 30m
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SECRET }}
+          script: |
+            cd /Arma/Handbook
+            git fetch -a
+            git switch -d ${{needs.get_sha.outputs.sha_short}}
+            docker system prune --all -f
+            DEALS_BUILD_TAG=${{needs.get_sha.outputs.sha_short}} docker compose pull
+            DEALS_BUILD_TAG=${{needs.get_sha.outputs.sha_short}} docker compose up --pull=never --no-build --wait --remove-orphans -d

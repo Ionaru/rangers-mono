@@ -73,6 +73,7 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    preset: 'node-server',
     output: {
       dir: "../../dist/apps/website",
     },

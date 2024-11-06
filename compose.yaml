@@ -1,15 +1,6 @@
 services:
-  nginx:
-    image: ghcr.io/ionaru/rangers/nginx:latest
-    build:
-      context: .
-      dockerfile: deploy/nginx.Dockerfile
-    ports:
-      - "80:80"
-    restart: unless-stopped
-
-  nuxt:
-    image: ghcr.io/ionaru/rangers/nuxt:latest
+  website:
+    image: ghcr.io/ionaru/rangers-mono/website:${RANGERS_BUILD_TAG:-latest}
     build:
       context: .
       dockerfile: deploy/nuxt.Dockerfile
@@ -21,3 +12,6 @@ services:
       - AUTH_CLIENT_SECRET
       - AUTH_SESSION_SECRET
     restart: unless-stopped
+    healthcheck:
+      test: 'wget --header="Accept: text/html" localhost:3001/graphql -q --spider'
+      start_period: 30s
