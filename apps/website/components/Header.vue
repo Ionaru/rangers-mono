@@ -13,6 +13,10 @@ const links = [
     label: "Handbook",
     to: "/handbook",
   },
+  {
+    label: "Briefing Generator",
+    to: "/briefing-generator",
+  },
 ];
 
 const authLink = [

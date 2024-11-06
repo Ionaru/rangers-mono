@@ -12,6 +12,10 @@ store.isOpen = false;
     <HeaderSideMenu>
       <HeaderSideMenuLink href="/" name="Home" />
       <HeaderSideMenuLink href="/handbook" name="Handbook" />
+      <HeaderSideMenuLink
+        href="/briefing-generator"
+        name="Briefing Generator"
+      />
     </HeaderSideMenu>
   </USlideover>
 </template>
