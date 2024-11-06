@@ -1,4 +1,4 @@
-name: Deals CD
+name: Rangers CD
 
 on:
   workflow_dispatch:
@@ -99,5 +99,7 @@ jobs:
             git fetch -a
             git switch -d ${{needs.get_sha.outputs.sha_short}}
             docker system prune --all -f
-            DEALS_BUILD_TAG=${{needs.get_sha.outputs.sha_short}} docker compose pull
-            DEALS_BUILD_TAG=${{needs.get_sha.outputs.sha_short}} docker compose up --pull=never --no-build --wait --remove-orphans -d
+            $env:RANGERS_BUILD_TAG=${{needs.get_sha.outputs.sha_short}}
+            docker compose pull
+            docker compose up --pull=never --no-build --wait --remove-orphans -d
+            Remove-Item Env:\RANGERS_BUILD_TAG
