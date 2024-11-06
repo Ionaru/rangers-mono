@@ -45,6 +45,7 @@ export default defineNuxtConfig({
     pinia: "../../node_modules/@pinia/nuxt/node_modules/pinia/dist/pinia.mjs",
     ...getMonorepoTsConfigPaths("../../tsconfig.base.json"),
   },
+  compatibilityDate: '2024-11-06',
   devtools: { enabled: true },
   build: {
     transpile: ["@fortawesome/vue-fontawesome"],
