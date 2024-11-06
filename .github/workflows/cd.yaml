@@ -52,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose build ${{matrix.app}}
-      - run: docker save -o ${{matrix.app}}-image.tar ghcr.io/ionaru/deals/${{matrix.app}}:latest
+      - run: docker save -o ${{matrix.app}}-image.tar ghcr.io/ionaru/rangers-mono/${{matrix.app}}:latest
       - uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.app}}-image
