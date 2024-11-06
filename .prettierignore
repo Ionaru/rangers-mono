@@ -4,3 +4,5 @@
 /.nx/cache
 .output
 .nuxt
+
+/.nx/workspace-data
