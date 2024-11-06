@@ -99,7 +99,7 @@ jobs:
             git fetch -a
             git switch -d ${{needs.get_sha.outputs.sha_short}}
             docker system prune --all -f
-            $env:RANGERS_BUILD_TAG=${{needs.get_sha.outputs.sha_short}}
+            $env:RANGERS_BUILD_TAG = '${{needs.get_sha.outputs.sha_short}}'
             docker compose pull
             docker compose up --pull=never --no-build --wait --remove-orphans -d
             Remove-Item Env:\RANGERS_BUILD_TAG
