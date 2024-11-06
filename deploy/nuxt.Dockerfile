@@ -9,6 +9,8 @@ COPY tsconfig.base.json nx.json ./
 COPY apps/website ./apps/website
 COPY libs ./libs
 
+ARG AUTH_ORIGIN
+
 RUN npx nx build website --generate
 
 
