@@ -127,6 +127,7 @@ const copyToClipboard = () => {
         :state="state"
         @submit="onSubmit"
         @error="onError"
+        :validate-on="['blur']"
         class="mt-4 container items-center flex flex-col"
       >
         <UFormGroup
@@ -178,7 +179,7 @@ const copyToClipboard = () => {
 
         <UFormGroup
           name="commandersIntent"
-          label="Commanders Intent"
+          label="Commander's Intent"
           class="mt-4 lg:w-2/4 w-full"
         >
           <UTextarea
