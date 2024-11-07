@@ -16,5 +16,5 @@ services:
       - AUTH_SESSION_SECRET
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'powershell', 'Invoke-WebRequest -Uri http://localhost:3001 -Headers @{"Accept"="text/html"} -UseBasicParsing > $null']
+      test: 'wget --header="Accept: text/html" localhost:3000 -q --spider'
       start_period: 30s
