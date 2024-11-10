@@ -30,7 +30,14 @@ type Schema = z.infer<typeof schema>;
 const form = ref();
 const briefing = ref();
 
-const cleanText = (text: string) => text.replace(/\n/g, "\n<br>\n").trim();
+const cleanText = (text: string) => text
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;')
+  .replaceAll('\n', "\n<br/>\n")
+  .trim();
 
 const onSubmit = (event: FormSubmitEvent<Schema>) => {
   // Do something with event.data
@@ -44,8 +51,7 @@ const onSubmit = (event: FormSubmitEvent<Schema>) => {
   const credits = cleanText(event.data.credits);
 
   briefing.value = `
-_cre = player createDiaryRecord ["diary", ["Credits","
-<br/>
+player createDiaryRecord ["diary", ["Credits","
 Mission created by ${credits}
 <br/><br/>
 Using 7R Framework
@@ -53,7 +59,7 @@ Using 7R Framework
 Briefing made with 7R Briefing Generator (https://www.7th-ranger.com/briefing-generator)
 "]];
 
-_exe = player createDiaryRecord ["diary", ["Execution","
+player createDiaryRecord ["diary", ["Execution","
 <font size='18'>COMMANDER'S INTENT</font>
 <br/>
 ${commandersIntent}
@@ -67,15 +73,12 @@ ${movementPlan}
 ${fireSupportPlan}
 "]];
 
-_mis = player createDiaryRecord ["diary", ["Mission","
-<br/>
+player createDiaryRecord ["diary", ["Mission","
 ${mission}
 "]];
 
-_sit = player createDiaryRecord ["diary", ["Situation","
-<br/>
+player createDiaryRecord ["diary", ["Situation","
 ${situation}
-<br/><br/>
 <br/><br/>
 <font size='18'>ENEMY FORCES</font>
 <br/>
@@ -230,7 +233,7 @@ const copyToClipboard = () => {
 
       <div
         v-if="briefing"
-        class="mt-4 lg:w-2/4 w-full items-center flex flex-col"
+        class="mt-4 items-center flex flex-col container"
       >
         <HorizontalRule class="w-full" />
         <div class="mt-4">
@@ -238,7 +241,7 @@ const copyToClipboard = () => {
             Copy to clipboard
           </PrimaryButton>
         </div>
-        <pre id="briefing">{{ briefing }}</pre>
+        <pre id="briefing" class="break-all lg:w-2/4 w-full whitespace-pre-wrap">{{ briefing }}</pre>
       </div>
     </div>
   </NuxtLayout>
