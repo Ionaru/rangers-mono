@@ -30,14 +30,15 @@ type Schema = z.infer<typeof schema>;
 const form = ref();
 const briefing = ref();
 
-const cleanText = (text: string) => text
-  .replaceAll('&', '&amp;')
-  .replaceAll('<', '&lt;')
-  .replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;')
-  .replaceAll("'", '&#039;')
-  .replaceAll('\n', "\n<br/>\n")
-  .trim();
+const cleanText = (text: string) =>
+  text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;")
+    .replaceAll("\n", "\n<br/>\n")
+    .trim();
 
 const onSubmit = (event: FormSubmitEvent<Schema>) => {
   // Do something with event.data
@@ -231,17 +232,19 @@ const copyToClipboard = () => {
         </div>
       </UForm>
 
-      <div
-        v-if="briefing"
-        class="mt-4 items-center flex flex-col container"
-      >
+      <div v-if="briefing" class="mt-4 items-center flex flex-col container">
         <HorizontalRule class="w-full" />
         <div class="mt-4">
           <PrimaryButton id="copy-button" @click="copyToClipboard">
             Copy to clipboard
           </PrimaryButton>
         </div>
-        <pre id="briefing" class="break-all lg:w-2/4 w-full whitespace-pre-wrap">{{ briefing }}</pre>
+        <pre
+          id="briefing"
+          class="break-all lg:w-2/4 w-full whitespace-pre-wrap"
+        >
+          {{ briefing }}
+        </pre>
       </div>
     </div>
   </NuxtLayout>

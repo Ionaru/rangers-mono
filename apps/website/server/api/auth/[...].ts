@@ -5,7 +5,6 @@ import { OAuthUserConfig } from "next-auth/providers/oauth";
 export default NuxtAuthHandler({
   callbacks: {
     jwt: ({ token, account, user }) => {
-      console.log('Hey!')
       if (account && user) {
         token.accessToken = account.access_token;
       }

@@ -354,7 +354,12 @@ Rocket Launchers have backblast. Only fire if you are cleared. Shout "clear back
 
 #### RPG-7
 
-<img src="/wiki/images/rpg7optic.png" width="500" alt="rpg7optic.png">
+(Click on the image to see the full size)
+
+<span style="display: flex">
+  <a href="/wiki/images/rpg7optic.png" target="_blank"><img src="/wiki/images/rpg7optic.png" style="max-height: 500px" alt="RPG-7 Optic"></a>
+  <a href="/wiki/images/rpg7optic2.png" target="_blank"><img src="/wiki/images/rpg7optic2.png" style="max-height: 500px" alt="RPG-7 Optic"></a>
+</span>
 
 ## Parachuting
 
