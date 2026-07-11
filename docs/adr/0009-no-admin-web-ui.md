@@ -6,7 +6,7 @@ The platform has **no admin web panel**. Role assignment stays in Discord and th
 - **admin-gated slash commands** for identity-link exceptions (`/link-force`) and the rare manual guest claim;
 - a **CLI task** (`deno task sync:preview`) for the sync dry-run.
 
-The website carries only **read-only** views (a member's own attendance, and a roster/vetting view of who has linked/verified).
+The website carries only **read-only** views (a member's own attendance, and a plain read-only roster).
 
 ## Why
 
@@ -19,7 +19,7 @@ Anything that changes a member's roles writes **through to Discord** (the single
 ## Consequences
 
 - Assignable mapping changes go through a PR + re-seed (a deploy), not a live editor. Fine for ~16 rarely-changing rows.
-- Admin actions (`/link-force`, guest-claim) live in the bot's slash-command surface, gated by `DISCORD_ADMIN_ROLE_IDS`.
+- Admin actions (`/link-force`, `/attendance claim`) live in the bot's slash-command surface, gated by `DISCORD_ADMIN_ROLE_IDS`.
 - The sync dry-run is `deno task sync:preview` (prints the add/remove diff); the live sync runs headless.
 - Guest attendance auto-resolves when a member links their TeamSpeak identity (backfill past sessions by `ts_uid`); a leftover is claimed via an admin command.
 - Read-only roster/attendance views are ordinary site pages, not an admin panel.

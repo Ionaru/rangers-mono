@@ -1,35 +1,92 @@
 # Resolved questions log
 
-All 16 open questions from the grilling are resolved. Kept as a record of what was decided and any residual action.
+Two grilling sessions have happened. The first resolved 16 open questions. The second re-opened some of them, found that a few were answered on false premises, and settled a further set of decisions. This file is the record of both.
+
+Part 1 keeps the original 16 verbatim in intent, with the superseded ones marked. Part 2 lists what the second session decided. Part 3 lists doc statements that were simply false, so nobody reintroduces them.
+
+---
+
+# Part 1 - The original 16
 
 ## Ownership, hosting, security
 
-- **Q2 - Ownership.** You control the Discord app/guild (`305471712546390017`) and GHCR; **reuse all** (after rotating the token).
-- **Q3 - Leaked token.** The `joeyyyb/7r-discordbot` repo is now private. **Action still required:** the token was public for ~7 years, so rotate it in the developer portal before reuse. Private repo does not un-leak it.
-- **Q4 - Public reachability.** Yes. The box already runs an **nginx + Let's Encrypt** entrypoint reverse-proxying other containers; the new site slots in as an upstream. (Reverse-proxy plan changed from Caddy to reusing this.)
-- **Q5 - Docker.** **Docker Desktop** (Linux containers).
+- **Q2 - Ownership.** You control the Discord app/guild (`305471712546390017`) and GHCR; **reuse all** (after rotating the token). Still stands; confirming this is a Phase 0 task.
+- **Q3 - Leaked token.** The `joeyyyb/7r-discordbot` repo is now private. **Action still required:** the token was public for ~7 years, so rotate it in the developer portal before reuse. Private repo does not un-leak it. Still stands, and the **order now matters**: rotate first, then use the new token to refresh the meme attachment URLs (see Q13).
+- **Q4 - Public reachability.** Yes. The box already runs an **nginx + Let's Encrypt** entrypoint reverse-proxying other containers; the new site slots in as an upstream. Still true as a fact about the box, but **infrastructure is now out of scope** (C7): the deliverable is a `docker-compose.yml`, and where it runs is the operator's concern.
+- **Q5 - Docker.** **Docker Desktop** (Linux containers). Stands, with a recorded hazard the operator owns: Docker Desktop's engine only starts inside an interactive Windows login session (docker/roadmap#515, open since 2023), so after an unattended reboot there is no daemon, `restart: unless-stopped` never fires, and the stack stays down silently.
 
 ## Data & roles
 
-- **Q1 - Legacy DB.** **Retrievable.** Import Discord<->TeamSpeak links + rank/role/badge definitions; also import historical attendance (same TS-presence mechanism, so comparable).
-- **Q8 - Rank structure.** Unchanged: Recruit -> Member -> NCO -> Officer, plus role (job) and badge (qualification) groups.
-- **Q6 - TS control.** **Full control** (query login + IP allowlist available).
-- **Q10 - Linking mechanic.** Users can message the query bot but **can't see it** without an obscure setting. Resolved by making it bot-initiated: pick-self-from-list, the bot pokes a code, member types it back. (Superseded the PM-a-code flow.)
+- **Q1 - Legacy DB. PARTIALLY SUPERSEDED.** Still retrievable, and the dump is in the repo at `data/Dump20260711.sql`. What is imported: the ~99 Discord-to-TeamSpeak identity links, and the Assignable **definitions** (names + Discord role ids, sgids resolved live). What is **not**: historical attendance (see B1 below), LOA (see A2 below), per-member assignments (Discord is the truth), permissions, sessions, applications, incidents. The original answer's reasoning ("same TS-presence mechanism, so comparable") does not hold: legacy sampled at 15 minutes, we sample at 90 seconds.
+- **Q8 - Rank structure. WRONG, SUPERSEDED.** There are **five** ranks, not four: Recruit, Member, NCO, Officer, **Reserve**. Reserve is live and means "still one of us, not currently active"; it is a rank rather than a rung on the ladder, and sorts last. The Role/Badge definitions in the original answer were also backwards: a **Role** is a staff function (Recruiter, Instructor, Mission maker), a **Badge** is a training qualification (Medic, Marksman, Engineer, Armoured, Heavy Weapons, Leadership, Rotary Aviation, Fixed-Wing Aviation). Medic and Pilot are badges, not roles. See A4 below.
+- **Q6 - TS control.** **Full control** (query login + IP allowlist available). Stands.
+- **Q10 - Linking mechanic.** Users can message the query bot but **can't see it** without an obscure setting. Resolved by making it bot-initiated: pick-self-from-list, the bot pokes a code, member types it back. (Superseded the PM-a-code flow.) Stands.
 
 ## TeamSpeak future & Arma
 
-- **Q15 - TS3 vs TS6.** **Stay on TS3**, transport behind a swappable interface.
-- **Q11 - Engine future.** **Staying on Arma 3.** (No longer affects attendance, which is TS-based.)
-- **Q7 - Op window.** Mission time **20:00-23:00** Europe/Amsterdam; Discord event to **23:30** (overtime/debrief). Attendance window is 20:00-23:00.
-- **Q12 - Attendance threshold.** **60 minutes** of in-window presence.
+- **Q15 - TS3 vs TS6.** **Stay on TS3**, transport behind a swappable interface. Stands, but the interface is **not free to swap downward**: TeamSpeak is reached over the public internet (`ts.7th-ranger.com`), so the SSH transport on port 10022 is mandatory. Falling back to raw ServerQuery on 10011 would put the query password in cleartext on the wire at every reconnect. See E2.
+- **Q11 - Engine future.** **Staying on Arma 3.** (No longer affects attendance, which is TS-based.) Stands.
+- **Q7 - Op window.** Mission time **20:00-23:00** Europe/Amsterdam; Discord event to **23:30** (overtime/debrief). Attendance window is 20:00-23:00. Stands, now pinned to **Saturday only** (A3).
+- **Q12 - Attendance threshold.** **60 minutes** of in-window presence. Stands as the rule, but the thing it computes is now understood to be **just a statistic** (A1): nobody acts on it, it gates no promotion, it triggers no removal.
 
-## Attendance approach change
+## Attendance approach
 
-- Attendance now comes from **TeamSpeak Operations-channel presence** (ADR 0007), not the Arma server (ADR 0004 superseded). One Operations channel (ACRE2 handles squad comms). Steam/Arma kept only for **roster completeness & vetting**.
+- Attendance comes from **TeamSpeak Operations-channel presence** (ADR 0007), not the Arma server (ADR 0004 superseded). One Operations channel (ACRE2 handles squad comms).
+- **CORRECTION.** The old line "Steam/Arma kept only for roster completeness & vetting" is wrong and is withdrawn. Steam is a **plain profile field** (A6): it proves account ownership via Steam OpenID and yields a SteamID64 members can use to find each other. It applies no vetting rule, gates nothing, and is optional.
 
 ## Content & ops
 
-- **Q13 - Meme images.** Not dead: the old bot still runs and serves them. **Harvest and re-host now** while the URLs are live.
-- **Q14 - Handbook.** Migrate the current 21 files **and restore** the dropped sections (FAQ, Loadouts, Formations, Extended handbook), after a content sanity-check.
-- **Q9 - Loadout Sheet.** **Keep external** (linked from the handbook).
-- **Q16 - Backup bus-factor.** **Deferred to Phase 7** (document restore + arrange a second key-holder then).
+- **Q13 - Meme images. FALSE PREMISE, SUPERSEDED.** The old bot never served the images. They are Discord CDN attachment links hardcoded in `fun.py`, and they return **404 to any anonymous client** because Discord CDN links have required signed `ex`/`is`/`hm` params since 2023-24. They still render inside Discord only because the client re-signs its own attachment URLs. Recovery procedure: **rotate the leaked bot token first** (Q3), then `POST /api/v9/attachments/refresh-urls` with the new token, download all 25 images, commit them to the repo, serve them from our own domain. See C4.
+- **Q14 - Handbook.** Migrate the current 21 files **and restore** the dropped sections (FAQ, Loadouts, Formations, Extended handbook), after a content sanity-check. Stands; this is now Phase 6.
+- **Q9 - Loadout Sheet.** **Keep external** (linked from the handbook). Stands.
+- **Q16 - Backup bus-factor. SUPERSEDED.** There are **no backups at all** (C6), so there is no restore doc to write and no second key-holder to arrange. There is also no Phase 7 to defer it to. See C6 below.
+
+---
+
+# Part 2 - Resolved in the second grilling session
+
+## Product and domain
+
+- **A1 - Attendance is just a statistic.** Nobody acts on it. It gates no promotion and triggers no removal. It shows on a member's own profile and in a read-only site view. That is the whole feature.
+- **A2 - There is no Leave of Absence.** The legacy `loa` table (2,667 rows) is not ported and not imported. Planning who turns up for an op is handled by **Discord scheduled-event RSVP** (the native "Interested" list), which the weekly job's event gives us for free. Cheaper than any table we would have built.
+- **A3 - Ops are Saturday only.** The weekly job creates one Discord scheduled event plus one Operation row per Saturday. The legacy also ran Wednesday ops (119 of them). That is history and does not come back.
+- **A4 - Assignable keeps three kinds, with corrected definitions.** **Rank** is exclusive (exactly one of Recruit, Member, NCO, Officer, Reserve). **Role** is an additive staff function (Recruiter, Instructor, Mission maker); in the legacy these carried the admin permissions. **Badge** is an additive training qualification (Medic, Marksman, Engineer, Armoured, Heavy Weapons, Leadership, Rotary Aviation, Fixed-Wing Aviation). The `category` column is **dropped**: `kind` + `sort_order` already cover grouping and display.
+- **A5 - Badges have no Discord role and must be given one.** All 8 legacy badges have `discordRole = NULL`; they only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so Phase 0 gains a required task: **create the 8 badge roles in Discord and backfill the 83 legacy grants** (held by 32 distinct members). Every legacy user has a Discord id, so this is scriptable. Without it, badges cannot be Discord-authoritative.
+- **A6 - Steam is a plain profile field.** Optional, proves account ownership, yields a SteamID64. No vetting, no gating, no "roster completeness". A member without one is not incomplete. Side note: the docs' claim that Steam "was never populated" is false, 23 legacy users have a SteamID64.
+- **A7 - Admin is a single boolean.** Derived from a configured set of Discord role ids (`DISCORD_ADMIN_ROLE_IDS`). No permission table, no tiers, no RBAC. The legacy 7-permission model is deliberately not ported.
+
+## Legacy migration
+
+- **B1 - No historical attendance import.** The 75,241 samples and 401 operations are not migrated; attendance starts from zero. Reasons: it is a stat nobody acts on (A1); the last write was 2024-07-27, two years dead, and the unit did not notice; 113 of the 401 ops have zero samples; the legacy `operation` table has **no date column at all**; 90 of the 188 TeamSpeak attendees link to no member; and the legacy 15-minute sample resolution does not match our 90-second sampling, so mixing them would quietly mix two precisions.
+- **B2 - No LOA import.** The 2,667 `loa` rows are not migrated. See A2: there is no absence concept to import them into.
+- **B3 - Re-derive TeamSpeak sgids from the live server.** Never trust the dump's numbers. The legacy `teamspeakRank` table holds two families of ids for the same group names (Arma3 Member = 65 and 14297; NCO = 66/14354; Recruit = 68/26336; Officer = 71/27548; Reserve = 79/27767), because the TS server was rebuilt at some point. The stored sgids may be dead. The seed task resolves every group by **name** against a live `servergrouplist`, prints the proposed name-to-sgid mapping to the terminal for confirmation before any write, and logs any name with no live match. There is no admin web UI (ADR 0009), so confirmation is a terminal step.
+- **B4 - What is imported, and what is not.** Imported: the ~99 Discord-to-TeamSpeak identity links (`member.discord_id` + `ts_uid`, marked `legacy_import` and flagged for re-verification), and the Assignable **definitions** (names + Discord role ids, sgids resolved by name per B3). Not imported: per-member role/rank/badge assignments (Discord is the truth), attendance, LOA, the permission tables, sessions, applications, incidents, enjinTags, migrations.
+- **B5 - Use the real row counts.** The old docs quoted AUTO_INCREMENT values. Verified by parsing the dump: `user` 150 rows (all 150 have a `discordUser`, 99 have a `ts3UserId`, 23 have a `steamUser`, 76 have a rank, `disabled` is 0 on every row); `teamspeakUser` 228; `operation` 401; `attendance` 75,241; `loa` 2,667; `badge` 8; `role` 3; `rank` 5; `permission` 7; `user_badges_badge` 83 grants across 32 members; `user_roles_role` 21. `application`, `incident` and `incident_users_user` are empty stubs that were never built.
+
+## Algorithms and build
+
+- **C1 - The reconcile iterates OUR members, not the Discord guild list.** This is a bug fix. Looping over guild members means a member who **leaves** the unit vanishes from the poll, is never reconciled, and keeps their TeamSpeak groups forever. Invert the loop: iterate members in our database that have a linked `ts_uid`, and look up each one's roles from the polled guild data. A leaver simply has no roles, so their desired set is empty, so every owned group is removed on the next pass. No special case needed. Also stamp `disabled_at` when a member is first seen missing from the guild, which finally gives that column a meaning.
+- **C2 - Permanent blast-radius guard.** If one reconcile pass would remove owned groups from more than `SYNC_MAX_REMOVALS` members (default 5), it halts, applies nothing, and posts to the error Discord webhook. Normal operation touches 0-2 people, so a mass removal is definitionally a bug (bad mapping, empty Discord poll, TS returning garbage). Additions stay automatic. This is a **standing** guard, not a first-run check: the dry-run protects run #1, this protects run #200.
+- **C3 - There is no live test environment.** No test Discord guild, no dockerised TeamSpeak. Testing is **pure unit tests** over the two pure functions: the three-way group reconcile, and the sample-to-session reconstruction. The I/O layer is exercised for the first time in production, behind `SYNC_DRY_RUN` and the blast-radius guard. This is a deliberate trade-off, and the cost is real: transport, auth and pagination bugs surface only in production.
+- **C4 - The meme images are recoverable, but not the way the docs said.** See Q13. The old bot never hosted them; they are Discord CDN attachment links that 404 to any anonymous client. Rotate the token first, then harvest via `POST /api/v9/attachments/refresh-urls` with the bot token, download all 25, commit them, and serve them from our own domain.
+- **C5 - Cutover is incremental, not big-bang.** The old bot and the old website are both still running (7th-ranger.com returns 200, and so does /handbook/). But **nothing currently writes TeamSpeak server groups**: the legacy sync was never finished, and the attendance recorder's last write was 2024-07-27. So the new reconcile is the only writer, there is no old sync to fight, and there is no kill-the-old-sync step. Slash commands cannot collide with the old bot's `!` prefix commands, so the two bots coexist until the old one is retired. TeamSpeak groups are maintained **by hand** today. That is the toil this project actually removes.
+- **C6 - No backups.** No restic, no off-box storage, no restore drill, no second key-holder. The only irreplaceable data is roughly 100 TeamSpeak links, a few kilobytes. Everything else rebuilds itself: Discord roles live in Discord (ADR 0002), the Assignable mapping is git-tracked config (ADR 0009), Steam is a re-linkable profile field, the handbook is in git, and no attendance history is imported. Worst case, the unit re-links over a week. Non-binding suggestion: a `pg_dump` to another folder on the same box costs nothing and guards against a bad migration, which is a likelier failure than losing the disk.
+- **C7 - Infrastructure is out of scope.** The deliverable is a `docker-compose.yml`. Where and how it runs is an operational concern for whoever owns the box, not an architectural decision this project makes. The Docker Desktop reboot hazard (Q5) is recorded, not solved.
+- **C8 - ARCHITECTURE.md is the spec.** There is no separate requirements document. Definition of done is: the phase plan completes. ADR 0007's reference to a "Requirement #4" points at nothing and is struck.
+
+## Phase plan
+
+- **D - The plan was re-cut.** The old plan put TeamSpeak sync at Phase 5 of 7, behind a full rebuild of a website that already works. That is backwards. The unit's real, felt, recurring pain is hand-managing TeamSpeak groups; the site and bot already serve, so the content port blocks nobody and must not be allowed to stall the useful part. New order: **0** prep (rotate token, harvest memes, create the 8 badge roles and backfill the 83 grants, confirm the reused app/guild/GHCR); **1** foundation (workspace, config, domain, db, Compose, CI); **2** identity (Discord login, profile, TS linking, Steam linking, import the legacy links); **3** TeamSpeak sync, **the phase that pays for the project**; **4** Discord bot (interactions, memes, role commands, the weekly event job); **5** attendance (sampling, session reconstruction, read-only views, guest auto-backfill); **6** public content (site, branding, handbook, briefing generator). There is no Phase 7: backups are cut (C6) and infra is out of scope (C7). What was useful in it (log rotation, error-to-Discord alerts) folds into the phases that need it.
+
+---
+
+# Part 3 - Things the docs said that were false
+
+Recorded so nobody puts them back.
+
+- **E3 - "The Discord gateway is regression-prone on Deno and broke as recently as 2025."** Stale. A live gateway connection from Deno 2.9.2 returned `op = 10 HELLO` with zero npm packages, and denoland/deno#20761 was closed 2025-02-20. ADR 0003's HTTP-only **decision still stands**, but on its other reason: no always-on stateful process is needed, and the interactions endpoint is just a route the web app already serves. One gateway claim does survive: Discordeno is genuinely stale, still 21.0.0 from December 2024.
+- **E4 - "The npm/Deno split is contained to `apps/web`."** False. Astro's bundler cannot resolve a deno.json-only workspace member: `Rolldown failed to resolve import "@7r/db"`. **Every shared package that `apps/web` consumes needs a `package.json` alongside its `deno.json`.** Verified working. Without this, the monorepo's only stated benefit (a shared domain/db layer consumed by both web and worker) does not materialise for the website.
+- **E5 - "Keep a Node build stage as insurance."** Inverted. `npx astro build` emits an artifact that **dies at boot** (`error: Import "unstorage" not a dependency`) unless you ship ~276 MB of node_modules into the runtime image. The "insurance" is what manufactures the failure. Build Astro **with Deno** (`deno run -A npm:astro build`), and add `RUN deno cache dist/server/entry.mjs` at image-build time, or a cold boot pulls 119 files from jsr.io and a jsr.io outage kills the container.
+- **E6 - "Astro sessions need a Postgres driver via unstorage or logins break."** False. A full Discord login completed on Deno + Postgres with **no** Astro session driver configured at all. Better Auth owns its own session table and signed cookie. Remove the driver config and the claim. Note: `unstorage` itself stays, Astro hard-depends on it. What goes is the config.
+- **E7 - `MANAGE_EVENTS` is the wrong permission.** Creating the weekly scheduled event needs **`CREATE_EVENTS` (1<<44)**. `MANAGE_EVENTS` (1<<33) only edits and deletes events that already exist, and 403s on create. The bot's permissions are `CREATE_EVENTS` + `MANAGE_ROLES`, plus the **GUILD_MEMBERS privileged intent** enabled in the developer portal (it is required for the REST member list, not only for the gateway).
+- **E8 - `GET /guilds/{id}/members` defaults to `limit=1`.** Always pass `?limit=1000` explicitly and paginate with `after`. Miss this and role sync silently processes exactly **one** member, which presents as "sync mostly doesn't work" rather than as an error.
