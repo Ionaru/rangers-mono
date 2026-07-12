@@ -26,6 +26,11 @@ secrets/*
 # ids. ADR 0011 rejected dumps-in-git for exactly this reason.
 backups/
 
+# Written by the deploy on the box: a docker config with no credential helper,
+# because Docker Desktop's needs an interactive Windows logon session and the
+# deploy arrives over SSH (ADR 0012).
+.docker-ci/
+
 # logs
 npm-debug.log*
 yarn-debug.log*

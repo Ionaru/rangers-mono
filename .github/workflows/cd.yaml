@@ -241,6 +241,32 @@ jobs:
             $env:GHCR_REPO = '${{ needs.meta.outputs.repo }}'
             $env:RANGERS_BUILD_TAG = '${{ needs.meta.outputs.sha_short }}'
 
+            # Docker Desktop's credential helper reads the Windows Credential
+            # Manager, and that only exists inside an interactive Windows logon
+            # session. Over SSH there is none, so `docker-credential-desktop`
+            # exits non-zero with "A specified logon session does not exist" and
+            # takes `docker compose pull` down with it. This is the same root
+            # cause as ADR 0005's recorded risk 1 (the engine needs an
+            # interactive session); the credential helper needs one too.
+            #
+            # It had been failing on every deploy and nothing said so, because
+            # the old script did not check the exit code: `up` then ran against
+            # whatever images the box happened to already have.
+            #
+            # Nothing here needs credentials. The GHCR packages inherit the
+            # repository's visibility and are public, and postgres comes from
+            # Docker Hub. A DOCKER_CONFIG with no `credsStore` simply never
+            # invokes the helper. Scoped to this session, so the operator's own
+            # ~/.docker/config.json is left alone.
+            #
+            # The fruiz deploy solves this the same way but points at a
+            # hand-made /docker-no-creds on the box. We write ours instead, so
+            # the deploy carries no undocumented prerequisite and a fresh box
+            # needs no preparation.
+            $env:DOCKER_CONFIG = Join-Path (Get-Location) '.docker-ci'
+            New-Item -ItemType Directory -Force -Path $env:DOCKER_CONFIG | Out-Null
+            Set-Content -Path (Join-Path $env:DOCKER_CONFIG 'config.json') -Value '{}' -Encoding ascii
+
             # Checking this is what stops the migrator building its own image.
             # `docker compose run` has no --no-build (only --build; the negation
             # does not exist), and it will happily build from source when the
@@ -295,6 +321,7 @@ jobs:
             # unbounded pile of PII is nobody's idea of a default. Errors are
             # swallowed on purpose: the deploy has already succeeded by here, and
             # failing it over housekeeping would be a lie about what happened.
-            Get-ChildItem './backups/*.dump' -ErrorAction SilentlyContinue |
-              Sort-Object LastWriteTime -Descending |
-              Select-Object -Skip 10 | Remove-Item -Force -ErrorAction SilentlyContinue
+            # One line on purpose: every other statement here is one, and a
+            # trailing-pipe continuation is the one construct whose survival
+            # through drone-ssh into PowerShell nobody has tested.
+            Get-ChildItem './backups/*.dump' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -Skip 10 | Remove-Item -Force -ErrorAction SilentlyContinue

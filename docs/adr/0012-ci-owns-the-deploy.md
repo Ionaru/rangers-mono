@@ -21,6 +21,16 @@ The honest cost is that the script encodes one fact about the host, its shell. T
 - **A host-agnostic POSIX script.** Rejected as a fiction: the box is Windows with Docker Desktop today, so a `sh` script would simply not run. Writing one to satisfy the wording of ADR 0005 buys portability we cannot test and lose nothing by deferring.
 - **Watchtower / auto-pull on the box.** Already rejected in ARCHITECTURE §6 for our own images: a deploy should be a decision with a SHA on it, not a daemon noticing a tag moved.
 
+## The interactive-session problem bites twice
+
+ADR 0005 records that Docker Desktop's **engine** only starts inside an interactive Windows login session. The same is true of its **credential helper**, and that one is not a background risk, it fires on every deploy. `docker-credential-desktop` reads the Windows Credential Manager, which does not exist in a non-interactive SSH session, so it exits non-zero with `A specified logon session does not exist` and takes `docker compose pull` with it.
+
+This went unnoticed for as long as the deploy discarded exit codes: `pull` failed, nothing checked, and `up --pull=never` then ran against whatever images the box happened to have. Checking the exit codes (ADR 0013) is what surfaced it.
+
+The deploy therefore points `DOCKER_CONFIG` at a directory it writes itself, holding a `config.json` with no `credsStore`. No credentials are needed by anything here: the GHCR packages inherit the repository's visibility and are public, and postgres comes from Docker Hub. The operator's own `~/.docker/config.json` is untouched, and a fresh box needs no preparation. (The sibling `fruiz` deploy solves this with a hand-made `/docker-no-creds` on the box; writing it is the same fix without the undocumented prerequisite.)
+
+**If the repository is ever made private, this breaks**, and the fix is a `docker/login-action`-style `docker login ghcr.io` with a PAT into that same `DOCKER_CONFIG`, not a return to the Desktop helper.
+
 ## Consequences
 
 - **ADR 0005's "needs no code change" is amended.** Moving the stack to a Linux host is still cheap, but it is no longer free: the Compose file and the env vars carry over untouched, and the deploy script's shell has to be rewritten (PowerShell to `sh`). That is one file, and it is the only thing on the platform side that knows the host.
