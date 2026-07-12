@@ -260,27 +260,25 @@ jobs:
             # fresh box needs no preparation, and the operator's own
             # ~/.docker/config.json is left alone.
             #
-            # `credsStore` is set to an empty string rather than merely omitted:
-            # absence and "no helper" should mean the same thing, but this is
-            # the value that says so, and the write is verified rather than
-            # assumed. A silently missing config.json here would send docker
-            # back to the default one, which is exactly the thing being avoided.
+            # The non-empty `auths` map is the load-bearing part, and it is not
+            # obvious. Emptying `credsStore` is NOT enough: when a config holds
+            # no auth of any kind, the docker CLI calls DetectDefaultStore,
+            # which picks the platform default (`wincred` on Windows) and uses
+            # it if the binary is on PATH. Docker Desktop ships it. So an empty
+            # config does not disable the helper, it only swaps `desktop` for
+            # `wincred`, and both read the Windows Credential Manager and both
+            # fail the same way. That detection is skipped only when the config
+            # already contains auth (cli/config: `if !configFile.ContainsAuth()`),
+            # and a populated `auths` map is what satisfies it. The entries are
+            # deliberately empty objects: they say "these registries need no
+            # credentials", which is true, and they are what stops the CLI going
+            # looking for a helper to ask.
             $cfgDir = Join-Path (Get-Location) '.docker-ci'
             New-Item -ItemType Directory -Force -Path $cfgDir | Out-Null
             $cfgFile = Join-Path $cfgDir 'config.json'
-            Set-Content -Path $cfgFile -Value '{"auths":{},"credsStore":"","credHelpers":{}}' -Encoding ascii
+            Set-Content -Path $cfgFile -Value '{"auths":{"ghcr.io":{},"https://index.docker.io/v1/":{}},"credsStore":"","credHelpers":{}}' -Encoding ascii
             if (-not (Test-Path $cfgFile)) { throw "could not write $cfgFile" }
             $env:DOCKER_CONFIG = $cfgDir
-
-            # Diagnosis, because this failed three deploys running and guessing
-            # cost more than printing. Never dump the default config itself: it
-            # can hold registry tokens, and this log is public.
-            Write-Host "DOCKER_CONFIG=$env:DOCKER_CONFIG"
-            Write-Host "wrote: $(Get-Content $cfgFile -Raw)"
-            $defaultCfg = Join-Path $env:USERPROFILE '.docker\config.json'
-            if (Test-Path $defaultCfg) {
-              Write-Host "default config credsStore='$((Get-Content $defaultCfg -Raw | ConvertFrom-Json).credsStore)'"
-            }
 
             # Checking this is what stops the migrator building its own image.
             # `docker compose run` has no --no-build (only --build; the negation
