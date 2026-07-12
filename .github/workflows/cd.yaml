@@ -256,16 +256,31 @@ jobs:
             # Nothing here needs credentials. The GHCR packages inherit the
             # repository's visibility and are public, and postgres comes from
             # Docker Hub. A DOCKER_CONFIG with no `credsStore` simply never
-            # invokes the helper. Scoped to this session, so the operator's own
+            # invokes the helper. The deploy writes the config itself, so a
+            # fresh box needs no preparation, and the operator's own
             # ~/.docker/config.json is left alone.
             #
-            # The fruiz deploy solves this the same way but points at a
-            # hand-made /docker-no-creds on the box. We write ours instead, so
-            # the deploy carries no undocumented prerequisite and a fresh box
-            # needs no preparation.
-            $env:DOCKER_CONFIG = Join-Path (Get-Location) '.docker-ci'
-            New-Item -ItemType Directory -Force -Path $env:DOCKER_CONFIG | Out-Null
-            Set-Content -Path (Join-Path $env:DOCKER_CONFIG 'config.json') -Value '{}' -Encoding ascii
+            # `credsStore` is set to an empty string rather than merely omitted:
+            # absence and "no helper" should mean the same thing, but this is
+            # the value that says so, and the write is verified rather than
+            # assumed. A silently missing config.json here would send docker
+            # back to the default one, which is exactly the thing being avoided.
+            $cfgDir = Join-Path (Get-Location) '.docker-ci'
+            New-Item -ItemType Directory -Force -Path $cfgDir | Out-Null
+            $cfgFile = Join-Path $cfgDir 'config.json'
+            Set-Content -Path $cfgFile -Value '{"auths":{},"credsStore":"","credHelpers":{}}' -Encoding ascii
+            if (-not (Test-Path $cfgFile)) { throw "could not write $cfgFile" }
+            $env:DOCKER_CONFIG = $cfgDir
+
+            # Diagnosis, because this failed three deploys running and guessing
+            # cost more than printing. Never dump the default config itself: it
+            # can hold registry tokens, and this log is public.
+            Write-Host "DOCKER_CONFIG=$env:DOCKER_CONFIG"
+            Write-Host "wrote: $(Get-Content $cfgFile -Raw)"
+            $defaultCfg = Join-Path $env:USERPROFILE '.docker\config.json'
+            if (Test-Path $defaultCfg) {
+              Write-Host "default config credsStore='$((Get-Content $defaultCfg -Raw | ConvertFrom-Json).credsStore)'"
+            }
 
             # Checking this is what stops the migrator building its own image.
             # `docker compose run` has no --no-build (only --build; the negation

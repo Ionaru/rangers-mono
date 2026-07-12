@@ -27,7 +27,7 @@ ADR 0005 records that Docker Desktop's **engine** only starts inside an interact
 
 This went unnoticed for as long as the deploy discarded exit codes: `pull` failed, nothing checked, and `up --pull=never` then ran against whatever images the box happened to have. Checking the exit codes (ADR 0013) is what surfaced it.
 
-The deploy therefore points `DOCKER_CONFIG` at a directory it writes itself, holding a `config.json` with no `credsStore`. No credentials are needed by anything here: the GHCR packages inherit the repository's visibility and are public, and postgres comes from Docker Hub. The operator's own `~/.docker/config.json` is untouched, and a fresh box needs no preparation. (The sibling `fruiz` deploy solves this with a hand-made `/docker-no-creds` on the box; writing it is the same fix without the undocumented prerequisite.)
+The deploy therefore points `DOCKER_CONFIG` at a directory it writes itself, holding a `config.json` that declares no credential helper. No credentials are needed by anything here: the GHCR packages inherit the repository's visibility and are public, and postgres comes from Docker Hub. The operator's own `~/.docker/config.json` is untouched, and a fresh box needs no preparation.
 
 **If the repository is ever made private, this breaks**, and the fix is a `docker/login-action`-style `docker login ghcr.io` with a PAT into that same `DOCKER_CONFIG`, not a return to the Desktop helper.
 
