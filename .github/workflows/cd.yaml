@@ -107,21 +107,36 @@ jobs:
             exit 1
           fi
 
-  sha:
-    name: Short SHA for image tags
+  meta:
+    name: Image tag inputs
     runs-on: ubuntu-latest
     outputs:
       sha_short: ${{ steps.sha.outputs.sha_short }}
+      repo: ${{ steps.repo.outputs.repo }}
     steps:
       - uses: actions/checkout@v4
+
       - id: sha
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      # `github.repository` preserves the owner's canonical casing, and this
+      # owner is `Ionaru`. OCI reference names must be lowercase, so using it
+      # raw yields `ghcr.io/Ionaru/...`, which buildx and `docker compose pull`
+      # both reject outright:
+      #
+      #   invalid reference format: repository name must be lowercase
+      #
+      # rangers-mono's workflow sidestepped this by hardcoding the owner. We
+      # derive it, so we have to fold the case ourselves. `,,` is bash, which is
+      # the default shell here.
+      - id: repo
+        run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
   images:
     name: Image (${{ matrix.service }})
     # Build on every PR, so a broken Dockerfile is caught in review. Push only
     # from the default branch.
-    needs: [check, sha]
+    needs: [check, meta]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -152,8 +167,8 @@ jobs:
           # ghcr.io/<owner>/<repo>/<service>, the same namespace shape
           # rangers-mono uses. Derived, so nothing here hardcodes an owner.
           tags: |
-            ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ needs.sha.outputs.sha_short }}
-            ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
+            ghcr.io/${{ needs.meta.outputs.repo }}/${{ matrix.service }}:${{ needs.meta.outputs.sha_short }}
+            ghcr.io/${{ needs.meta.outputs.repo }}/${{ matrix.service }}:latest
           # Links the package to the repo, so it inherits the repo's visibility
           # rather than arriving orphaned.
           labels: |
@@ -164,7 +179,7 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: [sha, images]
+    needs: [meta, images]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     concurrency:
@@ -202,9 +217,9 @@ jobs:
             if (-not '${{ secrets.DEPLOY_PATH }}') { throw 'DEPLOY_PATH secret is not set' }
             cd '${{ secrets.DEPLOY_PATH }}'
             git fetch -a
-            git switch -d ${{ needs.sha.outputs.sha_short }}
-            $env:GHCR_REPO = '${{ github.repository }}'
-            $env:RANGERS_BUILD_TAG = '${{ needs.sha.outputs.sha_short }}'
+            git switch -d ${{ needs.meta.outputs.sha_short }}
+            $env:GHCR_REPO = '${{ needs.meta.outputs.repo }}'
+            $env:RANGERS_BUILD_TAG = '${{ needs.meta.outputs.sha_short }}'
             docker compose pull
             docker compose --profile migrate run --rm migrate
             docker compose up --pull=never --no-build --wait --remove-orphans -d
