@@ -18,7 +18,7 @@ This document is the plan (the *what* and *why*) and it is the only spec: there 
 | Bot | HTTP-only (interactions + REST), no gateway, all-Deno; all commands are slash commands | ADR 0003 |
 | **Attendance** | **Sample the single TeamSpeak Operations channel during the op window; no Arma integration.** It is a statistic nobody acts on: it gates nothing | **ADR 0007**, ADR 0010 |
 | Legacy data | Import the ~99 identity links and the Assignable definitions. Do **not** import attendance, LOA, per-member assignments, or permissions | ADR 0002, `MIGRATION.md` |
-| Deployment | We ship a `docker-compose.yml`. Where and how it runs is an operational concern for whoever owns the box, not an architectural decision this project makes | ADR 0005 |
+| Deployment | We ship a `compose.yaml`. Where and how it runs is an operational concern for whoever owns the box, not an architectural decision this project makes. CI does own the *act* of deploying (pull, migrate, up), and its script knows the box is Windows | ADR 0005, ADR 0012 |
 | Testing | No live test environment (no test guild, no dockerised TeamSpeak). Pure unit tests over the two pure functions; the I/O layer is first exercised in production behind `SYNC_DRY_RUN` and the blast-radius guard | this doc |
 | Repo/runtime | One monorepo, Deno 2 + native workspaces, no Nx; every shared package that `apps/web` consumes carries a `package.json` alongside its `deno.json` | ADR 0006 |
 | Database | PostgreSQL in Docker; Drizzle ORM (0.45.x, pinned) + drizzle-kit | ADR 0008 |
@@ -39,7 +39,7 @@ Confirmed unit facts: TeamSpeak is primary voice; the Arma server is self-hosted
 Three containers plus the unchanged external TeamSpeak and Discord. We ship the Compose file; the reverse proxy and TLS in front of it belong to whoever runs the box (ADR 0005).
 
 ```
-                    ┌──────────────── docker-compose.yml (what we ship) ─────────────────────────────┐
+                    ┌──────────────── compose.yaml (what we ship) ────────────────────────────────────┐
                     │                                                                                 │
  Internet ─443─▶ ┌───────────────┐        ┌───────────────┐          ┌───────────────┐                │
                  │ reverse proxy │──────▶ │  web (Astro   │─────────▶│   postgres    │◀──────┐        │
@@ -172,7 +172,7 @@ One Member, verified across three namespaces:
 rangers-platform/
   deno.json                 # workspace members, tasks, single lockfile
   deno.lock                 # committed; Deno version is pinned exactly (§4.4)
-  docker-compose.yml        # web + worker + postgres (this is the deployment deliverable)
+  compose.yaml              # web + worker + postgres (this is the deployment deliverable)
   CONTEXT.md                # glossary
   data/
     Dump20260711.sql        # the legacy MySQL dump
@@ -206,7 +206,7 @@ Build notes: build Astro **with Deno** (`deno run -A npm:astro build`), and add 
 
 ## 6. Deployment & operations
 
-**Infrastructure is out of scope (ADR 0005).** The deliverable is a `docker-compose.yml`. Where and how it runs is an operational concern for whoever owns the box, not an architectural decision this project makes.
+**Infrastructure is out of scope (ADR 0005).** The deliverable is a `compose.yaml`. Where and how it runs is an operational concern for whoever owns the box, not an architectural decision this project makes.
 
 - **What we ship:** `web` + `worker` + `postgres`, with Postgres on a Docker-managed volume, and the `web` service exposed for the host's existing reverse proxy to front.
 - **Secrets:** Compose file-based `secrets:` for the DB password, Discord bot token, TeamSpeak query password, session key. Not committed, not in images.

@@ -6,7 +6,21 @@ dist/
 
 # dependencies
 node_modules/
+
+# There is one lockfile and it lives at the root (ADR 0006, ARCHITECTURE §5).
+# Running `deno cache` / `deno run` from inside a member writes a second one
+# there, resolved against that member's config rather than the workspace, and
+# nothing reads it: the images and CI only ever see the root lock.
+*/*/deno.lock
+
+# The legacy MySQL dump. It holds 150 members' Discord / TeamSpeak / Steam ids,
+# so it stays out of git (§7, GDPR-lite). Phase 2's import reads it from disk.
 data/
+
+# Docker Compose file-based secrets. The .example files are the committed part.
+secrets/*
+!secrets/*.example
+!secrets/README.md
 
 # logs
 npm-debug.log*

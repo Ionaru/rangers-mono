@@ -1,0 +1,12 @@
+{
+  "name": "@7r/config",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "dependencies": {
+    "@7r/domain": "workspace:*",
+    "zod": "4.4.3"
+  }
+}

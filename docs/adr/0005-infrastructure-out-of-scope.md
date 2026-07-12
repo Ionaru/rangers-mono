@@ -1,6 +1,6 @@
 # Infrastructure is out of scope: the platform ships a Compose file
 
-The project's infrastructure deliverable is a `docker-compose.yml` (web, Postgres, worker) and nothing more. Where and how it runs (which host, which Docker distribution, how it starts on boot, TLS, the reverse proxy) is an operational concern owned by whoever runs the box, not an architectural decision this project makes.
+The project's infrastructure deliverable is a `compose.yaml` (web, Postgres, worker) and nothing more. Where and how it runs (which host, which Docker distribution, how it starts on boot, TLS, the reverse proxy) is an operational concern owned by whoever runs the box, not an architectural decision this project makes.
 
 ## Why
 
@@ -31,4 +31,4 @@ Documented, not solved. These are hosting decisions, and this ADR does not make 
 
 - **The project's deliverable is the Compose file.** Host selection, boot behaviour, TLS termination, and monitoring live with the operator.
 - **There is no hardening phase.** Backups are cut and infrastructure is out of scope. What is left of the old Phase 7 (log rotation, error-to-Discord alerts) folds into the phases that need it.
-- **Splitting the stack onto a separate host is a cheap change at any time and needs no code change**: point the Compose file at a Linux box, keep the same env vars.
+- **Splitting the stack onto a separate host is a cheap change at any time**: point the Compose file at a Linux box, keep the same env vars. Amended by ADR 0012: it is cheap, but no longer *free*. CI owns the deploy and its script is PowerShell, because the box is Windows with Docker Desktop, so a move to Linux rewrites that one script's shell. Nothing else on the platform side knows the host.

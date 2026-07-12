@@ -1,0 +1,20 @@
+{
+  "name": "@7r/db",
+  "version": "0.0.1",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "imports": {
+    // drizzle-kit must be declared here AND nodeModulesDir must be "auto" at the
+    // workspace root. Both are required, independently: without the import you
+    // get `Import "drizzle-kit" not a dependency`, and without nodeModulesDir
+    // you get the actively misleading "Please install latest version of
+    // drizzle-orm" even though it is installed and current (ADR 0008).
+    "drizzle-kit": "npm:drizzle-kit@0.31.10",
+    "@std/path": "jsr:@std/path@^1.1.6"
+  },
+  "tasks": {
+    "generate": "deno run -A npm:drizzle-kit@0.31.10 generate",
+    "migrate": "deno run --allow-net --allow-env --allow-read --allow-sys migrate.ts"
+  }
+}

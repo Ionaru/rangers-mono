@@ -313,7 +313,7 @@ TeamSpeak sync comes early, not last. The site and the old bot already serve; ha
 5. **Attendance.** Operations-channel sampling, session reconstruction, read-only member/site views, guest auto-backfill on link. No historical import.
 6. **Public content.** Public site, branding, handbook (Starlight, no versioning; migrate the 21 `.md` files, move the 103 images to `public/wiki/images/` or rewrite the 96 absolute paths, strip the inline `float:right;width:500px` styles, restore the dropped sections), the stateless briefing generator (SQF byte-for-byte). This replaces the current public site, which serves fine until then.
 
-There is no hardening phase. Backups are cut (ADR/ARCHITECTURE: the only irreplaceable data is ~100 TeamSpeak links) and infrastructure is out of scope (the deliverable is a `docker-compose.yml`). Log rotation and error-to-Discord alerts fold into the phases that need them.
+There is no hardening phase. Backups are cut (ADR/ARCHITECTURE: the only irreplaceable data is ~100 TeamSpeak links) and infrastructure is out of scope (the deliverable is a `compose.yaml`). Log rotation and error-to-Discord alerts fold into the phases that need them.
 
 ---
 

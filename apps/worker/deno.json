@@ -1,0 +1,9 @@
+{
+  "name": "@7r/worker",
+  "version": "0.0.1",
+  "exports": "./main.ts",
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --allow-read --allow-sys --watch main.ts",
+    "start": "deno run --allow-net --allow-env --allow-read --allow-sys main.ts"
+  }
+}

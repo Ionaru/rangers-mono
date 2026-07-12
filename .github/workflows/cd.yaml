@@ -1,0 +1,212 @@
+name: Rangers Platform CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DENO_VERSION: 2.9.2
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      # The Deno version is pinned in three places: this workflow, .dvmrc, and
+      # both Dockerfiles. One number, several homes, so it decays quietly unless
+      # something checks. This is that something. The pin is load-bearing twice
+      # over: ssh2 leans on node:crypto for a cipher Deno has broken before, and
+      # the workspace symlinking this layout depends on only landed in Deno 2.9.
+      - name: Deno version pin is consistent
+        run: |
+          set -euo pipefail
+          fail=0
+          check() {
+            if ! grep -q "$2" "$1"; then
+              echo "::error file=$1::expected Deno ${DENO_VERSION} (looked for '$2')"
+              fail=1
+            fi
+          }
+          check .dvmrc "^${DENO_VERSION}$"
+          check apps/web/Dockerfile "denoland/deno:${DENO_VERSION}"
+          check apps/worker/Dockerfile "denoland/deno:${DENO_VERSION}"
+          exit $fail
+
+      # apps/web/deno.prod.json is the web runtime image's manifest (it is copied
+      # in as ./deno.json). It sits outside the Deno workspace and outside
+      # deno.lock, so it hand-repeats the drizzle/postgres/zod pins and nothing
+      # else can catch it drifting: `deno ci` never sees it, and `deno cache`
+      # fails on a missing specifier, not a stale version. Bump drizzle in
+      # packages/db and, without this, production silently keeps the old one.
+      #
+      # Compares version strings literally, so every manifest must pin exactly
+      # ("0.45.2", never "^0.45.2"). That is already the house style, and a range
+      # here would defeat the point: the runtime image resolves at build time.
+      - name: Runtime dependency pins are consistent
+        run: |
+          set -euo pipefail
+          fail=0
+          check() {
+            local name=$1 manifest=$2 want got
+            want=$(jq -r --arg n "$name" '.dependencies[$n]' "$manifest")
+            got=$(jq -r --arg n "$name" '
+              .imports | to_entries[]
+              | select(.key == $n or .key == ($n + "/"))
+              | .value | capture("@(?<v>[0-9][^/]*)").v
+            ' apps/web/deno.prod.json | sort -u)
+            if [ "$got" != "$want" ]; then
+              echo "::error file=apps/web/deno.prod.json::${name} resolves to '${got}' here but ${manifest} pins '${want}'"
+              fail=1
+            fi
+          }
+          check drizzle-orm packages/db/package.json
+          check postgres    packages/db/package.json
+          check zod         packages/config/package.json
+          exit $fail
+
+      # Installs strictly from deno.lock and fails if it is stale. Without this,
+      # committing the lockfile is decoration.
+      - name: Install (frozen lockfile)
+        run: deno ci
+
+      - name: Format
+        run: deno task fmt:check
+
+      - name: Lint
+        run: deno task lint
+
+      - name: Typecheck
+        run: deno task check
+
+      # The two pure functions this suite exists for (the TeamSpeak group
+      # reconcile, the sample-to-session reconstruction) arrive in Phases 3 and
+      # 5. For now: the config parser and the domain rules.
+      - name: Test
+        run: deno task test
+
+      # The generated SQL is committed. If someone edits schema.ts and forgets to
+      # regenerate, the schema and the migration drift apart silently, and the
+      # first symptom is a production query failing on a column that never got
+      # created.
+      - name: Migrations match the schema
+        run: |
+          set -euo pipefail
+          deno task db:generate
+          if ! git diff --exit-code --quiet packages/db/drizzle; then
+            echo "::error::schema.ts changed but packages/db/drizzle was not regenerated. Run: deno task db:generate"
+            git diff --stat packages/db/drizzle
+            exit 1
+          fi
+
+  sha:
+    name: Short SHA for image tags
+    runs-on: ubuntu-latest
+    outputs:
+      sha_short: ${{ steps.sha.outputs.sha_short }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: sha
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+  images:
+    name: Image (${{ matrix.service }})
+    # Build on every PR, so a broken Dockerfile is caught in review. Push only
+    # from the default branch.
+    needs: [check, sha]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [web, worker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.service }}/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          # ghcr.io/<owner>/<repo>/<service>, the same namespace shape
+          # rangers-mono uses. Derived, so nothing here hardcodes an owner.
+          tags: |
+            ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ needs.sha.outputs.sha_short }}
+            ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
+          # Links the package to the repo, so it inherits the repo's visibility
+          # rather than arriving orphaned.
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    name: Deploy
+    needs: [sha, images]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      # The box is Windows with Docker Desktop, so the remote shell is
+      # PowerShell (hence $env: rather than export). The known hazard, recorded
+      # in ARCHITECTURE §6 and owned by the operator, not solved here: Docker
+      # Desktop's engine only starts inside an interactive Windows login
+      # session, so after an unattended reboot there is no daemon and the stack
+      # stays down silently.
+      #
+      # Every deploy input is a secret, DEPLOY_PATH included: the directory
+      # layout of the box is not something to publish in a workflow file. There
+      # is deliberately no fallback value. An unset secret expands to an empty
+      # string, so `cd` would land in the SSH user's home directory and the rest
+      # of the script would run against whatever happened to be there. The guard
+      # below turns that into a failure with a name on it.
+      #
+      # Deliberately no `docker system prune`. The box is not ours (ADR 0005):
+      # it already runs the operator's nginx, the old bot and the old website. A
+      # daemon-wide prune reaps every stopped container, every image not backing
+      # a running one, and the shared build cache, so it breaks the next restart
+      # of stacks this project does not own. Reclaiming disk on that box is the
+      # operator's call, not the deploy's. The deploy does exactly what
+      # ARCHITECTURE §6 sanctions: pull, migrate, up.
+      - uses: appleboy/ssh-action@v1.1.0
+        with:
+          command_timeout: 30m
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SECRET }}
+          script: |
+            if (-not '${{ secrets.DEPLOY_PATH }}') { throw 'DEPLOY_PATH secret is not set' }
+            cd '${{ secrets.DEPLOY_PATH }}'
+            git fetch -a
+            git switch -d ${{ needs.sha.outputs.sha_short }}
+            $env:GHCR_REPO = '${{ github.repository }}'
+            $env:RANGERS_BUILD_TAG = '${{ needs.sha.outputs.sha_short }}'
+            docker compose pull
+            docker compose --profile migrate run --rm migrate
+            docker compose up --pull=never --no-build --wait --remove-orphans -d
+            Remove-Item Env:\GHCR_REPO
+            Remove-Item Env:\RANGERS_BUILD_TAG

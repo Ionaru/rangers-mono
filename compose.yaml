@@ -1,0 +1,157 @@
+# The deployment deliverable (ADR 0005). Where and how this runs is an
+# operational concern for whoever owns the box; the reverse proxy and TLS in
+# front of `web` are not ours. We ship this file.
+#
+# First run, in this order (migrations never run on boot, ADR 0008):
+#
+#   cp secrets/postgres_password.example secrets/postgres_password
+#   cp secrets/database_url.example      secrets/database_url   # and edit both
+#   docker compose up -d postgres
+#   docker compose --profile migrate run --rm migrate
+#   docker compose up -d
+#
+# Deploys are the same three steps: pull, migrate, up.
+name: rangers-platform
+
+# Docker rotates no logs by default and a chatty container fills the disk, so
+# every service opts in. There is no separate hardening phase to defer this to.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# The timings only. The `test:` command cannot be hoisted with them: each service
+# probes its own port, and the port sits inside the command string, which a YAML
+# anchor cannot parameterise.
+x-healthcheck-timing: &healthcheck-timing
+  interval: 30s
+  timeout: 5s
+  retries: 3
+  start_period: 10s
+
+# One image, used twice: by the worker, and by the one-shot migrator, which is
+# that same image with the command overridden.
+x-worker-image: &worker-image
+  image: ghcr.io/${GHCR_REPO:-ionaru/rangers-platform}/worker:${RANGERS_BUILD_TAG:-latest}
+  build:
+    context: .
+    dockerfile: apps/worker/Dockerfile
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: 7r
+      POSTGRES_DB: 7r
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Loopback only. This exists so the local dev tasks (`deno task migrate`,
+    # `deno task web:dev`) can reach the database from outside the network; it
+    # is not an entry point for anything else.
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U 7r -d 7r"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  web:
+    # Named so the same compose file builds locally and pulls on the server.
+    # RANGERS_BUILD_TAG is the short commit SHA CI pushes; unset, you get the
+    # local build. Deploys pin it, so `docker compose pull && up` is exact.
+    image: ghcr.io/${GHCR_REPO:-ionaru/rangers-platform}/web:${RANGERS_BUILD_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      # Secrets are files, never image contents or plain env (IMPLEMENTATION §2).
+      DATABASE_URL_FILE: /run/secrets/database_url
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8085}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    secrets:
+      - database_url
+    # 8085 is baked into the build by the Deno adapter, so it is a constant here,
+    # not a knob. Bound to loopback: the host's existing nginx fronts it.
+    ports:
+      - "127.0.0.1:8085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # `deno eval` runs with full permissions; passing --allow-net to it is an
+      # error ("unexpected argument"), which fails the check while the app is fine.
+      test:
+        - CMD
+        - deno
+        - eval
+        - "const r = await fetch('http://localhost:8085/healthz'); if (!r.ok) Deno.exit(1);"
+      <<: *healthcheck-timing
+
+  worker:
+    <<: *worker-image
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      DATABASE_URL_FILE: /run/secrets/database_url
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      WORKER_INTERNAL_PORT: 8080
+    secrets:
+      - database_url
+    # No published port, ever. The internal API is reachable on the Compose
+    # network only: never through the proxy, never public (ARCHITECTURE §2).
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - deno
+        - eval
+        - "const r = await fetch('http://localhost:8080/healthz'); if (!r.ok) Deno.exit(1);"
+      <<: *healthcheck-timing
+
+  # Migrations are a one-shot, never a boot step (ADR 0008: the legacy coupled
+  # entity discovery to startup and paid for it). Behind a profile so a plain
+  # `docker compose up` cannot run it by accident.
+  #
+  #   docker compose --profile migrate run --rm migrate
+  migrate:
+    profiles: ["migrate"]
+    # The worker image, with the command overridden. It already carries
+    # packages/db/drizzle/, which is what the runtime migrator reads.
+    <<: *worker-image
+    restart: "no"
+    logging: *logging
+    environment:
+      DATABASE_URL_FILE: /run/secrets/database_url
+    secrets:
+      - database_url
+    command:
+      - run
+      - --cached-only
+      - --allow-net
+      - --allow-env
+      - --allow-read
+      - --allow-sys
+      - packages/db/migrate.ts
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+  database_url:
+    file: ./secrets/database_url
+
+volumes:
+  postgres-data:

@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "web (Astro dev)",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "deno task web:dev"
+    },
+    {
+      "name": "worker",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "deno task worker:dev"
+    }
+  ]
+}
