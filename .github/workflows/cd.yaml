@@ -208,5 +208,6 @@ jobs:
             docker compose pull
             docker compose --profile migrate run --rm migrate
             docker compose up --pull=never --no-build --wait --remove-orphans -d
-            Remove-Item Env:\GHCR_REPO
-            Remove-Item Env:\RANGERS_BUILD_TAG
+            $deployExit = $LASTEXITCODE
+            docker compose logs
+            if ($deployExit -ne 0) { exit $deployExit }
