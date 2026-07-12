@@ -209,7 +209,7 @@ Build notes: build Astro **with Deno** (`deno run -A npm:astro build`), and add 
 **Infrastructure is out of scope (ADR 0005).** The deliverable is a `compose.yaml`. Where and how it runs is an operational concern for whoever owns the box, not an architectural decision this project makes.
 
 - **What we ship:** `web` + `worker` + `postgres`, with Postgres on a Docker-managed volume, and the `web` service exposed for the host's existing reverse proxy to front.
-- **Secrets:** Compose file-based `secrets:` for the DB password, Discord bot token, TeamSpeak query password, session key. Not committed, not in images.
+- **Secrets:** Compose file-based `secrets:` for the DB password and the DB URL. The Discord bot token, TeamSpeak query password, session key and error-alert webhook live in a git-ignored `.env` on the box, loaded into `web` and `worker` with `env_file:` (ADR 0014). Not committed, not in images.
 - **CI/CD:** GitHub Actions builds images to GHCR (reuse the existing namespace); deploy by `docker compose pull && up -d`, pinned to a commit SHA. No Watchtower on our own images.
 - **Logging:** turn on `json-file` log rotation. Docker does none by default and a chatty container can fill the disk.
 - **Observability:** the worker posts its own errors to a private Discord webhook. The blast-radius guard (§4.4) posts there too.

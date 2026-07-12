@@ -7,6 +7,10 @@ node_modules/
 **/node_modules/
 data/
 secrets/
+# Every secret that is not in secrets/ is in here (ADR 0014). It has no business
+# in a build context, let alone in a layer of a public GHCR image.
+.env
+.env.production
 
 **/dist/
 **/.astro/

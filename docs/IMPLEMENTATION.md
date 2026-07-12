@@ -25,7 +25,9 @@ The Astro runtime image ships **no `node_modules`**. Building with `npx astro bu
 
 ## 2. Configuration (env / secrets)
 
-All config is parsed in `packages/config` and **fails loud at boot** if a required value is missing. Secrets go through Docker Compose `secrets:` (file-based), never the image.
+All config is parsed in `packages/config` and **fails loud at boot** if a required value is missing.
+
+The database password and URL are file-based Docker Compose `secrets:`, mounted at `/run/secrets/*`. Every other value, secret or not, reaches `web` and `worker` as plain environment from a git-ignored `.env` on the box, which Compose loads with `env_file:` (ADR 0014). Nothing is ever baked into an image. For any key `X`, a mounted `X_FILE` **beats** a directly-set `X`.
 
 ```
 # Core

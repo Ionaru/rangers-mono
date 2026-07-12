@@ -98,23 +98,41 @@ Deno.test("a secret is read from the file Compose mounts", async () => {
   }
 });
 
-Deno.test("a directly-set value wins over its _FILE counterpart", async () => {
-  // This is what keeps a plain .env working in local development.
+Deno.test("a mounted secret file wins over a directly-set value", async () => {
+  // Compose loads the same .env into `web` and `worker` that a developer uses
+  // on the host, and that file carries a localhost DATABASE_URL for `deno task
+  // migrate`. If the plain value won, both services would dial localhost:5432
+  // inside their own container instead of reading the secret Compose mounted.
   const path = await Deno.makeTempFile();
-  await Deno.writeTextFile(
-    path,
-    "postgres://7r:from-the-file@postgres:5432/7r",
-  );
+  const fromFile = "postgres://7r:from-the-file@postgres:5432/7r";
+  await Deno.writeTextFile(path, fromFile);
 
   try {
     const config = loadConfig(coreSchema, {
       DATABASE_URL,
       DATABASE_URL_FILE: path,
     });
-    assertEquals(config.DATABASE_URL, DATABASE_URL);
+    assertEquals(config.DATABASE_URL, fromFile);
   } finally {
     await Deno.remove(path);
   }
+});
+
+Deno.test("a plain .env works when nothing is mounted", () => {
+  // The other half of that: local development sets no _FILE at all.
+  const config = loadConfig(coreSchema, { DATABASE_URL });
+  assertEquals(config.DATABASE_URL, DATABASE_URL);
+});
+
+Deno.test("a blank value reads as absent, not as an empty string", () => {
+  // Compose's `env_file:` turns `LOG_LEVEL=` into "", and "" is defined, so
+  // without this it would beat the default and fail the parse. A key someone
+  // left blank to fill in later must not crash the service that reads it.
+  assertEquals(
+    loadConfig(coreSchema, { DATABASE_URL, LOG_LEVEL: "" }).LOG_LEVEL,
+    "info",
+  );
+  assertEquals(loadConfig(syncSchema, { SYNC_DRY_RUN: "" }).SYNC_DRY_RUN, true);
 });
 
 Deno.test("an unreadable secret file fails loud rather than silently missing", () => {

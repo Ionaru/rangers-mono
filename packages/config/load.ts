@@ -20,13 +20,23 @@ export class ConfigError extends Error {
 }
 
 /**
- * Docker Compose `secrets:` are files, mounted at /run/secrets/*, never
- * environment variables (IMPLEMENTATION.md §2: secrets never go in the image).
- * So for any key `X`, `X_FILE` names a file whose contents are the real value.
- * This is the convention the postgres image itself uses.
+ * For any key `X`, `X_FILE` names a file whose contents are the real value.
+ * This is the convention the postgres image itself uses, and it is how a
+ * Docker Compose file-based secret, mounted at /run/secrets/*, becomes config.
  *
- * `X` set directly still wins, which is what makes local development with a
- * plain .env file work unchanged.
+ * Only the database password and URL are mounted that way (ADR 0014). Every
+ * other secret arrives as plain env, from the `.env` that Compose loads into
+ * `web` and `worker`.
+ *
+ * **A mounted `X_FILE` beats an `X` set directly**, and that order is
+ * load-bearing rather than arbitrary. The same `.env` also carries the
+ * localhost `DATABASE_URL` that the host-side tasks (`deno task migrate`,
+ * `web:dev`) need, so inside a container the two collide. Were the plain value
+ * to win, `web` and `worker` would quietly dial `localhost:5432` inside their
+ * own network namespace instead of reading the secret Compose mounted for them.
+ *
+ * Local development mounts nothing and sets no `X_FILE` at all, so a plain
+ * `.env` still works there unchanged.
  */
 function resolveSecretFiles(source: EnvSource): EnvSource {
   const resolved: EnvSource = { ...source };
@@ -35,7 +45,6 @@ function resolveSecretFiles(source: EnvSource): EnvSource {
     if (!key.endsWith("_FILE") || value === undefined || value === "") continue;
 
     const target = key.slice(0, -"_FILE".length);
-    if (resolved[target] !== undefined && resolved[target] !== "") continue;
 
     try {
       resolved[target] = Deno.readTextFileSync(value).trim();
@@ -62,7 +71,16 @@ export function loadConfig<T extends z.ZodType>(
   schema: T,
   source: EnvSource = Deno.env.toObject(),
 ): z.infer<T> {
-  const result = schema.safeParse(resolveSecretFiles(source));
+  // A key left blank in `.env` (`SYNC_DRY_RUN=`) arrives as "", which is
+  // *defined*, and so beats the schema's `.default()` and fails the parse. An
+  // unset key and a blank one mean the same thing to a human writing that file:
+  // not configured. Treat them the same, or the safe default (SYNC_DRY_RUN
+  // true) becomes a crash on a line someone meant to fill in later.
+  const configured = Object.fromEntries(
+    Object.entries(source).filter(([, value]) => value !== ""),
+  );
+
+  const result = schema.safeParse(resolveSecretFiles(configured));
 
   if (!result.success) {
     throw new ConfigError(

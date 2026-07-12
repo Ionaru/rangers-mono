@@ -79,10 +79,19 @@ services:
     restart: unless-stopped
     logging: *logging
     environment:
-      # Secrets are files, never image contents or plain env (IMPLEMENTATION §2).
+      # The DB password and URL stay file-based secrets; every other secret
+      # comes from .env below (ADR 0014). The two meet here: this .env also
+      # carries a localhost DATABASE_URL for the host-side `deno task` flows,
+      # and DATABASE_URL_FILE deliberately beats it (packages/config/load.ts),
+      # so the container cannot end up dialling localhost:5432 inside itself.
       DATABASE_URL_FILE: /run/secrets/database_url
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8085}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+    # On the server this file IS the secret store (ADR 0014), so its absence is
+    # a fault worth failing on, not something to shrug off: without it the
+    # service boots unconfigured. `environment:` above still wins key by key.
+    env_file:
+      - .env
     secrets:
       - database_url
     # 8085 is baked into the build by the Deno adapter, so it is a constant here,
@@ -110,6 +119,10 @@ services:
       DATABASE_URL_FILE: /run/secrets/database_url
       LOG_LEVEL: ${LOG_LEVEL:-info}
       WORKER_INTERNAL_PORT: 8080
+    # The Discord bot token, the TeamSpeak query password and the error-alert
+    # webhook all reach the worker through here (ADR 0014).
+    env_file:
+      - .env
     secrets:
       - database_url
     # No published port, ever. The internal API is reachable on the Compose
@@ -138,6 +151,9 @@ services:
     restart: "no"
     logging: *logging
     environment:
+      # No env_file, unlike web and worker: the migrator reads DATABASE_URL and
+      # nothing else, and that arrives from the mounted secret. Loading .env
+      # here would add a way for this to fail and buy nothing.
       DATABASE_URL_FILE: /run/secrets/database_url
     secrets:
       - database_url
