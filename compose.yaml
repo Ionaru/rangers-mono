@@ -51,6 +51,12 @@ services:
       - postgres_password
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # ADR 0011's "a cheap thing worth doing anyway (not a backup)", which it
+      # asked for and nobody built. The deploy dumps here before every migration
+      # (ADR 0013). Same box on purpose: this protects against the likely
+      # failure, a bad migration, not against losing the disk. The dumps are
+      # member PII, which is exactly why ADR 0011 refused to put them in git.
+      - ./backups:/backups
     # Loopback only. This exists so the local dev tasks (`deno task migrate`,
     # `deno task web:dev`) can reach the database from outside the network; it
     # is not an entry point for anything else.

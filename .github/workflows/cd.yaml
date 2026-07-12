@@ -205,8 +205,17 @@ jobs:
       # daemon-wide prune reaps every stopped container, every image not backing
       # a running one, and the shared build cache, so it breaks the next restart
       # of stacks this project does not own. Reclaiming disk on that box is the
-      # operator's call, not the deploy's. The deploy does exactly what
-      # ARCHITECTURE §6 sanctions: pull, migrate, up.
+      # operator's call, not the deploy's.
+      #
+      # Every step's exit code is checked explicitly, and that is not belt and
+      # braces. PowerShell does not stop on a failing native command, and
+      # `$ErrorActionPreference = 'Stop'` does NOT change that: it does not
+      # govern native commands unless $PSNativeCommandUseErrorActionPreference
+      # is on, which defaults to false in pwsh 7 and does not exist at all in
+      # Windows PowerShell 5.1. A bare `$LASTEXITCODE` check is the only thing
+      # that works on both. This used to be wrong here in the way that matters
+      # most: a failed migration was swallowed, `up` ran anyway, and the deploy
+      # went green with the new code live against the old schema.
       - uses: appleboy/ssh-action@v1.1.0
         with:
           command_timeout: 30m
@@ -214,15 +223,73 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SECRET }}
           script: |
+            # DEPLOY_PATH is a secret, so the box's directory layout is not
+            # published in a workflow file, and it has deliberately no fallback:
+            # an unset secret expands to an empty string, and `cd ''` would land
+            # in the SSH user's home directory and run the rest against whatever
+            # happened to be there.
             if (-not '${{ secrets.DEPLOY_PATH }}') { throw 'DEPLOY_PATH secret is not set' }
             cd '${{ secrets.DEPLOY_PATH }}'
+
+            # The images are pinned to this SHA, so the compose.yaml must be too.
+            # Unchecked, a failed switch deploys new images against an old file.
             git fetch -a
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             git switch -d ${{ needs.meta.outputs.sha_short }}
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
             $env:GHCR_REPO = '${{ needs.meta.outputs.repo }}'
             $env:RANGERS_BUILD_TAG = '${{ needs.meta.outputs.sha_short }}'
+
+            # Must be checked. `run` below has `--no-build`, but if the pull
+            # silently failed we would otherwise discover it mid-deploy.
             docker compose pull
-            docker compose --profile migrate run --rm migrate
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            # Postgres must be up for both the dump and the migrator. After an
+            # unattended reboot it may simply not be (ADR 0005, recorded risk 1).
+            docker compose up -d --wait postgres
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            # ADR 0011: "the realistic disaster is not losing the disk, it is a
+            # bad migration dropping a table." A migration that succeeds at doing
+            # the wrong thing is otherwise unrecoverable: there are no down
+            # migrations, and rolling the images back leaves the new schema in
+            # place. Restore with:
+            #   docker compose exec -T postgres pg_restore -U 7r -d 7r --clean --if-exists /backups/<file>
+            #
+            # Written inside the container, never piped through PowerShell: `>`
+            # is text-mode and would corrupt a binary -Fc dump.
+            $dump = 'pre-migrate-{0}-{1}.dump' -f (Get-Date -Format 'yyyyMMdd-HHmmss'), '${{ needs.meta.outputs.sha_short }}'
+            docker compose exec -T postgres sh -c "pg_dump -U 7r -d 7r -Fc -f /backups/$dump"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            # Stop the app before migrating (ADR 0013). `docker compose run` does
+            # not touch web and worker, so without this the previous release goes
+            # on serving against a schema it was not written for, and DDL queues
+            # behind its open transactions. A minute of downtime on a Saturday-
+            # evening unit's site is cheaper than the expand/contract discipline
+            # that would be needed to avoid it. Exits 0 when no container exists,
+            # so a first deploy on a fresh box is fine.
+            docker compose stop web worker
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            # The one-shot migrator (ADR 0008: never a boot step). --no-build
+            # because `run`, unlike `up`, will otherwise happily build the image
+            # from source on the box when the pinned tag is missing, and then
+            # migrate from whatever it just built.
+            docker compose --profile migrate run --rm --no-build migrate
+            if ($LASTEXITCODE -ne 0) { docker compose logs; exit $LASTEXITCODE }
+
             docker compose up --pull=never --no-build --wait --remove-orphans -d
             $deployExit = $LASTEXITCODE
             docker compose logs
             if ($deployExit -ne 0) { exit $deployExit }
+
+            # Keep the last 10 dumps. Disk on the box is the operator's, but an
+            # unbounded pile of PII is nobody's idea of a default. Errors are
+            # swallowed on purpose: the deploy has already succeeded by here, and
+            # failing it over housekeeping would be a lie about what happened.
+            Get-ChildItem './backups/*.dump' -ErrorAction SilentlyContinue |
+              Sort-Object LastWriteTime -Descending |
+              Select-Object -Skip 10 | Remove-Item -Force -ErrorAction SilentlyContinue

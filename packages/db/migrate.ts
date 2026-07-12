@@ -22,7 +22,21 @@ if (import.meta.main) {
   const migrationsFolder = fromFileUrl(new URL("./drizzle", import.meta.url));
 
   // The migrator requires a single connection.
-  const { db, sql } = createDb(DATABASE_URL, { max: 1 });
+  //
+  // The timeouts are the difference between a failed deploy and an outage. The
+  // deploy stops web and worker before this runs (ADR 0013), but Postgres will
+  // still make DDL wait behind any other lock holder, and its lock queue is
+  // FIFO: one blocked ALTER TABLE parks every subsequent query on that table
+  // behind it. Without a bound, that waits out the SSH step's 30-minute timeout
+  // with the table wedged the whole while. With one, it is a clean failure that
+  // rolls back, and the deploy goes red.
+  const { db, sql } = createDb(DATABASE_URL, {
+    max: 1,
+    connection: {
+      lock_timeout: 5_000,
+      statement_timeout: 300_000,
+    },
+  });
 
   try {
     console.log(`applying migrations from ${migrationsFolder}`);
