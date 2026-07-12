@@ -241,8 +241,14 @@ jobs:
             $env:GHCR_REPO = '${{ needs.meta.outputs.repo }}'
             $env:RANGERS_BUILD_TAG = '${{ needs.meta.outputs.sha_short }}'
 
-            # Must be checked. `run` below has `--no-build`, but if the pull
-            # silently failed we would otherwise discover it mid-deploy.
+            # Checking this is what stops the migrator building its own image.
+            # `docker compose run` has no --no-build (only --build; the negation
+            # does not exist), and it will happily build from source when the
+            # pinned tag is missing locally, then migrate from whatever it just
+            # built. It only builds when the image is ABSENT, so a pull that is
+            # verified to have succeeded is the guard. The migrate service shares
+            # the worker's image via the x-worker-image anchor, so a plain `pull`
+            # fetches it even though migrate sits behind a profile.
             docker compose pull
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -274,11 +280,10 @@ jobs:
             docker compose stop web worker
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-            # The one-shot migrator (ADR 0008: never a boot step). --no-build
-            # because `run`, unlike `up`, will otherwise happily build the image
-            # from source on the box when the pinned tag is missing, and then
-            # migrate from whatever it just built.
-            docker compose --profile migrate run --rm --no-build migrate
+            # The one-shot migrator (ADR 0008: never a boot step). Its exit code
+            # is the whole point of this script: it used to be discarded, so a
+            # failed migration still deployed, green, against the old schema.
+            docker compose --profile migrate run --rm migrate
             if ($LASTEXITCODE -ne 0) { docker compose logs; exit $LASTEXITCODE }
 
             docker compose up --pull=never --no-build --wait --remove-orphans -d
