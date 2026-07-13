@@ -37,12 +37,19 @@ export interface GuildMember {
  * offline or absent, and it never expires. Guild membership and roles come from
  * the bot token, never from the login (IMPLEMENTATION §4).
  *
- * It does need the **GUILD_MEMBERS privileged intent** enabled on `7R_Bot`'s
- * application. That is a toggle in the developer portal, not a permission, so no
- * amount of permission substitutes for it, Administrator included, and it is off
- * by default (ARCHITECTURE §7). Without it this is refused and nobody can log
- * in. That is a Phase 0 task, and this is the function that discovers whether it
- * was done.
+ * **On the GUILD_MEMBERS privileged intent.** ARCHITECTURE §7 says that intent
+ * is needed "for the REST member list", and it is: Phase 3's poll of
+ * `GET /guilds/{id}/members` is refused without it. Discord's reference attaches
+ * that requirement to *List* Guild Members, and **not** to *Get* Guild Member,
+ * which is this endpoint. So the intent probably does not gate the login, and an
+ * earlier version of this comment claiming "without it nobody can log in" was
+ * asserting more than anyone had checked.
+ *
+ * It is still a Phase 0 task (it is an application toggle, off by default, and no
+ * permission substitutes for it, Administrator included), and it is still
+ * required before Phase 3. It is simply not confirmed to be required *here*.
+ * `deno task phase0:check` settles it against the live application rather than
+ * against anyone's reading of the docs.
  */
 export async function getGuildMember(
   options: DiscordRestOptions,

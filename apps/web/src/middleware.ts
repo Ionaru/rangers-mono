@@ -88,11 +88,45 @@ export const onRequest = defineMiddleware(async (context, next) => {
    */
   const { DISCORD_GUILD_ID, DISCORD_BOT_TOKEN } = getDiscordConfig();
 
-  const guildMember = await getGuildMember(
-    { botToken: DISCORD_BOT_TOKEN },
-    DISCORD_GUILD_ID,
-    resolved.discordId,
-  );
+  let guildMember;
+  try {
+    guildMember = await getGuildMember(
+      { botToken: DISCORD_BOT_TOKEN },
+      DISCORD_GUILD_ID,
+      resolved.discordId,
+    );
+  } catch (cause) {
+    /**
+     * Discord answered, but not with an answer: a 403 (the bot's permissions or
+     * a privileged intent), a 401 (a bad token), a 429, or an outage.
+     *
+     * We cannot tell whether this person is one of us, so we do not guess. Fail
+     * closed: no Member row is written, and they are told the truth.
+     *
+     * Answered here rather than redirected, deliberately. A redirect would come
+     * straight back through this middleware, still with a session and still with
+     * no Member row, and hit this same call again: a redirect loop, in front of
+     * somebody who has done nothing wrong. Returning the response ends it.
+     *
+     * The most likely cause on day one is a Phase 0 step that was missed, so say
+     * so, and put it where an operator will see it (the logs) rather than only in
+     * front of a member who cannot act on it.
+     */
+    console.error(
+      "[web] the Discord guild check failed, so the login could not be completed.",
+      "This is usually a Phase 0 step: a bad DISCORD_BOT_TOKEN, the bot not being",
+      "in the guild, or the GUILD_MEMBERS privileged intent. Run `deno task",
+      "phase0:check` to find out which.",
+      cause,
+    );
+
+    return new Response(
+      "<!doctype html><meta charset=utf-8><title>Sign-in failed</title>" +
+        "<p>We could not check your membership with Discord, so we have not signed you in. " +
+        "This is our problem, not yours. Please try again in a few minutes.</p>",
+      { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } },
+    );
+  }
 
   if (!guildMember) {
     return context.redirect("/not-in-guild", 302);
