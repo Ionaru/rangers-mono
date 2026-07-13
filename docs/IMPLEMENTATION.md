@@ -37,10 +37,10 @@ PUBLIC_BASE_URL=https://7th-ranger.com
 
 # Discord
 DISCORD_GUILD_ID=305471712546390017
-DISCORD_CLIENT_ID=…                           # OAuth (web login)
-DISCORD_CLIENT_SECRET=…                        # secret
-DISCORD_BOT_TOKEN=…                            # secret; the 2019 one, reused (never leaked, ARCHITECTURE §7)
-DISCORD_PUBLIC_KEY=…                           # for interactions Ed25519 verify
+DISCORD_CLIENT_ID=…                            # 7R_Bot's application id: OAuth login and command registration
+DISCORD_CLIENT_SECRET=…                        # secret; same application
+DISCORD_BOT_TOKEN=…                            # secret; 7R_Bot's, not the 2019 bot's (ARCHITECTURE §7, ADR 0015)
+DISCORD_PUBLIC_KEY=…                           # interactions Ed25519 verify; same application as the token
 DISCORD_ADMIN_ROLE_IDS=…,…                     # admin is a single boolean derived from these
 
 # Steam (optional profile field)
@@ -209,15 +209,15 @@ Ranks/roles/badges are Discord roles (ADR 0002). Two ways they change, both writ
    - `/rank set @member <rank>`: enforces **rank exclusivity**: remove any other rank-kind role the member has, then add the chosen one.
    - `/link-force @member <ts_uid|steam_id>`: set an identity link by hand, stamped `manual` so it is visibly not self-verified (§4).
    - `/attendance claim <ts_uid> @member`: attribute a guest attendance session to a member. Rare: linking auto-backfills guests (§7), so this is only for leftovers.
-   - Role hierarchy: the bot's highest role must sit above every managed role, and managed (integration) roles are never assignable. Surface a clear error otherwise.
+   - Role hierarchy: `7R_Bot`'s highest role must sit above every managed role, and managed (integration) roles are never assignable. Surface a clear error otherwise. Administrator does **not** exempt it from this, and `7R_Bot`'s role was positioned for a `/loa` bot that wrote no roles at all, so assume it is too low until someone has looked (Phase 0).
 
 The platform DB does **not** store per-member role assignments; a member's current Discord roles are the truth. The `assignable` table only holds the definitions/mappings.
 
 Inspection commands (read-only, via REST): `/whohas <assignable>`, `/roles @member`, `/whoismissing <assignable>`, roster export.
 
-**Fetching the member list is a trap.** `GET /guilds/{id}/members` defaults to **`limit=1`**. Always pass `?limit=1000` explicitly and paginate with `after`. Omitting it does not error: the sync silently processes exactly one member and presents as "sync mostly doesn't work". The bot also needs the **GUILD_MEMBERS privileged intent** enabled in the developer portal; it is required for the REST member list, not only for the gateway.
+**Fetching the member list is a trap.** `GET /guilds/{id}/members` defaults to **`limit=1`**. Always pass `?limit=1000` explicitly and paginate with `after`. Omitting it does not error: the sync silently processes exactly one member and presents as "sync mostly doesn't work". The bot also needs the **GUILD_MEMBERS privileged intent** enabled on the `7R_Bot` application in the developer portal; it is required for the REST member list, not only for the gateway. It is an application toggle rather than a guild permission, so no amount of permission (Administrator included) substitutes for it, it is off by default, and a `/loa` bot had no reason to turn it on. Without it this poll is refused and Phase 3 quietly does nothing.
 
-Bot permissions: `CREATE_EVENTS` (1<<44) + `MANAGE_ROLES`.
+Bot permissions on `7R_Bot`: `CREATE_EVENTS` (1<<44) + `MANAGE_ROLES`. It currently holds Administrator, so nothing is blocked today; ARCHITECTURE §7 wants that dialled back to these two.
 
 ---
 
@@ -288,9 +288,9 @@ This reuses the legacy `record-operation-attendees` approach (sample the Operati
 3. **Verification must FAIL CLOSED: return 401 on *any* exception, never 200.** Wrap the whole verify step so a malformed header, a bad base64 decode, or a thrown `subtle.verify` all end as 401. Discord deliberately sends invalid signatures to test the endpoint and will **remove your interactions URL** if you ever answer one with 200. That is a silent, delayed bot death: nothing errors, the bot just stops receiving commands.
 4. Respond to `type:1` (PING) with `type:1` (PONG).
 5. Dispatch `type:2` (APPLICATION_COMMAND) to handlers; reply ephemerally where sensible (`flags: 64`). **Respond within 3 seconds** or ack with `type:5` (deferred) and follow up via REST. This matters on a cold container start, so prefer deferring anything that touches TeamSpeak or the guild member list.
-6. Register commands once (guild-scoped for instant updates during dev, global for release) with a `deno task register-commands`.
+6. Register commands once (guild-scoped for instant updates during dev, global for release) with a `deno task register-commands`. **`7R_Bot`'s application is not a blank slate: it may still carry the legacy `/loa`.** List what is there first (`GET /applications/{id}/commands` and `.../guilds/{guild}/commands`), then register deliberately. A bulk `PUT` replaces the whole scope it targets, so it drops a guild-scoped `/loa` for free (which is what we want: there is no LOA in this system, ADR 0010) but cannot touch a global one, which would survive and be routed at our endpoint with no handler behind it.
 
-Setting the Interactions Endpoint URL disables gateway `INTERACTION_CREATE`, which is fine (there is no gateway anyway, ADR 0003). Slash commands cannot collide with the old bot's `!` prefix commands, so the two bots coexist safely until the old one is retired.
+Setting the Interactions Endpoint URL on the `7R_Bot` application disables gateway `INTERACTION_CREATE` **for that application**, which is fine (there is no gateway anyway, ADR 0003), and takes over interaction delivery for every command it owns, `/loa` included. The legacy bot is untouched by any of this: different account, different token (ADR 0015), and its `!` prefix commands cannot collide with slash commands, so the two coexist safely until the old one is retired.
 
 ---
 
@@ -307,7 +307,7 @@ Setting the Interactions Endpoint URL disables gateway `INTERACTION_CREATE`, whi
 
 TeamSpeak sync comes early, not last. The site and the old bot already serve; hand-managed TeamSpeak groups are the actual recurring pain, and the content port must not be allowed to stall the useful part.
 
-0. **Prep (no code).** Harvest the 25 meme images: call `POST /api/v9/attachments/refresh-urls` with the bot token to get freshly-signed URLs, download, commit to the repo, serve from our own domain (the CDN links hardcoded in the old `fun.py` 404 for anonymous clients). **Create the 8 badge roles in Discord and backfill the 83 legacy grants** (32 members; every legacy user has a Discord id, so it is scriptable), without which badges cannot be Discord-authoritative. Confirm the reused Discord app / guild / GHCR. The bot token is reused as-is: it was never leaked (ARCHITECTURE §7).
+0. **Prep (no code).** Stand `7R_Bot` up as the platform's Discord application: collect its app id, client secret, bot token and public key into `.env`; enable the GUILD_MEMBERS intent; move its role above every Assignable role; dial its Administrator grant back to `CREATE_EVENTS` + `MANAGE_ROLES`; clear any surviving `/loa`. The 2019 bot's account is not reused (ARCHITECTURE §7, ADR 0015). Harvest the 25 meme images: call `POST /api/v9/attachments/refresh-urls` with a token that can read the messages those attachments live in (`7R_Bot` should qualify; if not, borrow the legacy token locally, once) to get freshly-signed URLs, download, commit to the repo, serve from our own domain (the CDN links hardcoded in the old `fun.py` 404 for anonymous clients). **Create the 8 badge roles in Discord and backfill the 83 legacy grants** (32 members; every legacy user has a Discord id, so it is scriptable), without which badges cannot be Discord-authoritative; this writes Discord roles, so it comes after the bot is set up. Confirm the guild and the GHCR namespace, which do not change.
 1. **Foundation.** Monorepo skeleton (Deno workspaces), `config`, `domain`, `db` (Drizzle schema + first migration), Compose with Postgres, CI to GHCR.
 2. **Identity (minimal web app).** Discord login (Better Auth), member profile, TeamSpeak linking (pick-from-list + poked code), Steam OpenID linking. No public content yet. **Import the legacy links here** (MIGRATION.md).
 3. **TeamSpeak sync.** ServerQuery worker, seed the `assignable` mapping from git config (sgids resolved live, by name), Discord to TS reconcile with `deno task sync:preview` first, then the blast-radius guard. **This is the phase that pays for the project.**

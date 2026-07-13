@@ -59,8 +59,9 @@ Turbo).
 exist and run. What is _not_ built is every feature: Discord login, identity
 linking, the TeamSpeak sync, the bot, attendance and the public content are
 Phases 2 to 6 of `ARCHITECTURE.md` §9. Phase 0 (harvest the meme images, create
-the 8 badge roles in Discord) is prep work with no code and is still
-outstanding.
+the 8 badge roles in Discord, and set the `7R_Bot` Discord application up as the
+platform's bot: credentials, intent, permissions, role position) is prep work
+with no code and is still outstanding.
 
 ## Development
 

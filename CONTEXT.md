@@ -12,6 +12,10 @@ _Avoid_: User, Account, Person.
 A Member's Discord account, identified by the Discord user snowflake (stored as a string). This is the **hub identity**: the site's only login, and the source of truth for roles.
 _Avoid_: Discord user, DiscordUser.
 
+**7R_Bot**:
+The Discord application the platform runs as. Its bot user serves the slash commands, grants roles, polls the guild and creates the weekly op event. Ours, already in the guild, previously the bot behind the legacy `/loa` (a feature that is not ported: ADR 0010, ADR 0015). It is **not** the 2019 bot from `joeyyyb/7r-discordbot`, whose commands we port and whose account we do not. It is also not the TeamSpeak ServerQuery client, whose nickname happens to be `7R Bot` (`TS_BOT_NICKNAME`): different system, different thing, and that nickname is not changing.
+_Avoid_: the bot (unqualified, in any sentence that also mentions TeamSpeak).
+
 **TeamSpeak link**:
 A Member's TeamSpeak identity (its client UID). One current link per member, self-service replaceable. Proven by a possession challenge (the pick-from-list + poked-code flow). This link is load-bearing: it drives role sync and it is how op attendance is credited to a person.
 _Avoid_: TS user, TeamSpeak account.

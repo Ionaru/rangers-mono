@@ -24,7 +24,7 @@ Because Discord is the source of truth for roles (ADR 0002), we import **identit
 ## Two gotchas, read first
 
 1. **Stale TeamSpeak sgids.** The legacy `teamspeakRank` table has duplicate group names with different ids (e.g. `Arma3 Member` is both `65` and `14297`; `Arma3 NCO` `66`/`14354`; `Arma3 Recruit` `68`/`26336`; `Arma3 Officer` `71`/`27548`; `Arma3 Reserve` `79`/`27767`). The TS server was rebuilt at some point, so the sgids stored on `rank`/`role`/`badge` may be dead. **Resolve every sgid by group NAME against a live `servergrouplist`**, do not trust the stored number. The seed task **prints the proposed name-to-sgid mapping to the terminal and waits for confirmation before any write**, and logs any name with no live match. There is no admin web UI (ADR 0009), so the terminal is where you confirm.
-2. **Badges have no Discord role, and that is a Phase 0 task.** All 8 `badge` rows have `discordRole = NULL`: badges only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so badges cannot work until they exist in Discord. **In Phase 0, before any code: create the 8 badge roles in Discord and backfill the 83 grants across the 32 members who hold them.** Every legacy user has a Discord id, so the backfill is scriptable (read `user_badges_badge`, map `userId` -> `discordUser`, assign the new role). Fill the resulting role ids into the badge table below.
+2. **Badges have no Discord role, and that is a Phase 0 task.** All 8 `badge` rows have `discordRole = NULL`: badges only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so badges cannot work until they exist in Discord. **In Phase 0, before any code: create the 8 badge roles in Discord and backfill the 83 grants across the 32 members who hold them.** Every legacy user has a Discord id, so the backfill is scriptable (read `user_badges_badge`, map `userId` -> `discordUser`, assign the new role). Fill the resulting role ids into the badge table below. The backfill writes Discord roles with `7R_Bot`'s token (ADR 0015), which means it needs `MANAGE_ROLES` **and** `7R_Bot`'s own role sitting above the 8 new badge roles. Create them below it, or every assignment 403s. Doing it by hand as a guild admin is a perfectly good answer for 83 grants.
 
 ---
 
@@ -95,7 +95,7 @@ The `Rotary Aviation` (69) and `Fixed-Wing Aviation` (70) TS groups also appear 
 
 ## Import order
 
-1. **Phase 0 (manual, no code):** create the 8 badge roles in Discord, backfill the 83 grants to the 32 members who hold them, and fill the role ids into the badge table above.
+1. **Phase 0 (manual, no code):** stand `7R_Bot` up as the platform's Discord app first (credentials into `.env`, GUILD_MEMBERS intent, `MANAGE_ROLES`, its role above every role it will manage: ADR 0015). Then create the 8 badge roles in Discord *below* it, backfill the 83 grants to the 32 members who hold them, and fill the role ids into the badge table above.
 2. **Phase 2:** import `member` (all 150) with their TeamSpeak link (99 of them), marked `tsLinkMethod='legacy_import'` and flagged for re-verification. Optionally seed the 23 Steam ids.
 3. **Phase 3, step 1:** resolve sgids. Pull a live `servergrouplist`, build `name -> current sgid`, print the mapping to the terminal, confirm, log any name with no live match.
 4. **Phase 3, step 2:** seed `assignable` (5 ranks, 3 roles, 8 badges) from the git-tracked config with the resolved sgids.

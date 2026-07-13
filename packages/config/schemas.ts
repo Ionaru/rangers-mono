@@ -58,12 +58,23 @@ export const webSchema = coreSchema.extend({
 });
 export type WebConfig = z.infer<typeof webSchema>;
 
-/** Phase 2 (login) and Phase 4 (bot). */
+/**
+ * Phase 2 (login) and Phase 4 (bot).
+ *
+ * All four app values come from ONE Discord application: 7R_Bot, ours, not the
+ * legacy 2019 bot's (ADR 0015). DISCORD_CLIENT_ID is that application's id, so
+ * it serves both the OAuth login and slash-command registration.
+ */
 export const discordSchema = z.object({
   DISCORD_GUILD_ID: z.string().min(1),
   DISCORD_CLIENT_ID: z.string().min(1),
   DISCORD_CLIENT_SECRET: z.string().min(1),
   DISCORD_BOT_TOKEN: z.string().min(1),
+  /**
+   * Ed25519 verify key for the interactions endpoint. Per-application: it must
+   * come from the same application as DISCORD_BOT_TOKEN, or every interaction
+   * 401s and Discord silently removes the endpoint URL (ADR 0003).
+   */
   DISCORD_PUBLIC_KEY: z.string().min(1),
   /** Admin is a single boolean derived from these role ids. No RBAC (ADR 0009). */
   DISCORD_ADMIN_ROLE_IDS: csv(),
