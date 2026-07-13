@@ -99,3 +99,38 @@ export function memoize<T>(load: () => T): () => T {
   let cached: T | undefined;
   return () => (cached ??= load());
 }
+
+/**
+ * Run several loaders and report EVERY problem across all of them, not the first
+ * group that happens to fail.
+ *
+ * A service needs more than one group of config (the worker needs a database, a
+ * port, a shared token and a whole TeamSpeak connection), and each group is its
+ * own schema. Calling them one after another means the first one throws and the
+ * rest are never evaluated, so an operator setting the box up fixes one missing
+ * variable, redeploys, and is told about the next: exactly the "five-minute
+ * deploy becomes an hour" that `ConfigError` exists to prevent, reintroduced one
+ * level up.
+ *
+ * Anything that is not a ConfigError is a real failure and is rethrown at once.
+ */
+export function loadAll<T extends readonly unknown[]>(
+  loaders: { [K in keyof T]: () => T[K] },
+): T {
+  const values: unknown[] = [];
+  const problems: string[] = [];
+
+  for (const load of loaders) {
+    try {
+      values.push(load());
+    } catch (error) {
+      if (!(error instanceof ConfigError)) throw error;
+      problems.push(...error.problems);
+      values.push(undefined);
+    }
+  }
+
+  if (problems.length > 0) throw new ConfigError(problems);
+
+  return values as unknown as T;
+}

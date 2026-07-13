@@ -1,8 +1,13 @@
 import {
+  type AlertConfig,
+  type CoreConfig,
   getAlertConfig,
   getCoreConfig,
   getTeamspeakConfig,
   getWorkerServerConfig,
+  loadAll,
+  type TeamspeakConfig,
+  type WorkerServerConfig,
 } from "@7r/config";
 import { closeDb, getDb, ping } from "@7r/db";
 import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
@@ -43,12 +48,21 @@ function log(message: string, extra: Record<string, unknown> = {}) {
 }
 
 async function main() {
-  // Fails loud here, at the entry point, if the environment is not what we need.
-  const core = getCoreConfig();
-  const { WORKER_INTERNAL_PORT, WORKER_INTERNAL_TOKEN } =
-    getWorkerServerConfig();
-  const ts = getTeamspeakConfig();
-  const { ERROR_ALERT_DISCORD_WEBHOOK } = getAlertConfig();
+  /**
+   * Fails loud here, at the entry point, if the environment is not what we need,
+   * and names EVERY missing value rather than the first one.
+   *
+   * The worker needs four separate groups of config, and one group per restart
+   * is how setting a box up turns into an afternoon: fix WORKER_INTERNAL_TOKEN,
+   * redeploy, be told about TS_QUERY_HOST, redeploy, be told about
+   * TS_QUERY_PASS. `loadAll` collects them.
+   */
+  const [core, workerServer, ts, alerts] = loadAll<
+    [CoreConfig, WorkerServerConfig, TeamspeakConfig, AlertConfig]
+  >([getCoreConfig, getWorkerServerConfig, getTeamspeakConfig, getAlertConfig]);
+
+  const { WORKER_INTERNAL_PORT, WORKER_INTERNAL_TOKEN } = workerServer;
+  const { ERROR_ALERT_DISCORD_WEBHOOK } = alerts;
 
   const db = getDb();
   const alert = makeAlerter(ERROR_ALERT_DISCORD_WEBHOOK, log);

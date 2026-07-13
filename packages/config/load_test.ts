@@ -1,8 +1,11 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { ConfigError, loadConfig, memoize } from "./load.ts";
+import { ConfigError, loadAll, loadConfig, memoize } from "./load.ts";
 import {
   coreSchema,
+  type DatabaseConfig,
   databaseSchema,
+  type SteamConfig,
+  steamSchema,
   syncSchema,
   teamspeakSchema,
   webSchema,
@@ -61,6 +64,49 @@ Deno.test("SYNC_DRY_RUN defaults to true", () => {
   assertEquals(
     loadConfig(syncSchema, { SYNC_DRY_RUN: "false" }).SYNC_DRY_RUN,
     false,
+  );
+});
+
+Deno.test("loadAll reports problems from every group, not just the first", () => {
+  // The worker needs four groups of config. One group per restart is how setting
+  // a box up becomes an afternoon: fix the token, redeploy, be told about the
+  // TeamSpeak host, redeploy, be told about the password.
+  const error = assertThrows(
+    () =>
+      loadAll([
+        () => loadConfig(databaseSchema, {}),
+        () => loadConfig(steamSchema, {}),
+      ]),
+    ConfigError,
+  );
+
+  assertEquals(error.problems.length, 2);
+  assert(error.problems.some((p) => p.startsWith("DATABASE_URL")));
+  assert(error.problems.some((p) => p.startsWith("STEAM_REALM")));
+});
+
+Deno.test("loadAll returns every value when the environment is complete", () => {
+  const [database, steam] = loadAll<[DatabaseConfig, SteamConfig]>([
+    () =>
+      loadConfig(databaseSchema, {
+        DATABASE_URL: "postgres://7r:pw@localhost:5432/7r",
+      }),
+    () => loadConfig(steamSchema, { STEAM_REALM: "https://7th-ranger.com" }),
+  ]);
+
+  assertEquals(database.DATABASE_URL, "postgres://7r:pw@localhost:5432/7r");
+  assertEquals(steam.STEAM_REALM, "https://7th-ranger.com");
+});
+
+Deno.test("loadAll rethrows anything that is not a config problem", () => {
+  // A ConfigError is "the operator has not filled this in yet". A TypeError is a
+  // bug, and swallowing it into a list of missing variables would hide it.
+  assertThrows(
+    () =>
+      loadAll([() => {
+        throw new TypeError("this is a bug, not a missing variable");
+      }]),
+    TypeError,
   );
 });
 
