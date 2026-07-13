@@ -10,11 +10,16 @@
     // get `Import "drizzle-kit" not a dependency`, and without nodeModulesDir
     // you get the actively misleading "Please install latest version of
     // drizzle-orm" even though it is installed and current (ADR 0008).
-    "drizzle-kit": "npm:drizzle-kit@0.31.10",
+    "drizzle-kit": "npm:drizzle-kit@1.0.0-rc.4",
     "@std/path": "jsr:@std/path@^1.1.6"
   },
   "tasks": {
-    "generate": "deno run -A npm:drizzle-kit@0.31.10 generate",
+    "generate": "deno run -A npm:drizzle-kit@1.0.0-rc.4 generate",
+    // One-shot, and it should never need running again: it converts a pre-1.0
+    // migrations folder (meta/_journal.json + flat .sql files) into 1.0's
+    // folder-per-migration layout. Kept as a task because it is the documented
+    // way back if the folder is ever restored from an old checkout.
+    "up": "deno run -A npm:drizzle-kit@1.0.0-rc.4 up",
     "migrate": "deno run --allow-net --allow-env --allow-read --allow-sys migrate.ts"
   }
 }

@@ -4,8 +4,9 @@
 #
 # This image doubles as the one-shot migrator (the `migrate` service in
 # compose.yaml overrides the command), which is why it carries
-# packages/db/drizzle/: the runtime migrator reads the .sql files AND
-# meta/_journal.json from disk.
+# packages/db/drizzle/: the runtime migrator reads that directory from disk. On
+# Drizzle 1.0 it is one folder per migration (`<timestamp>_<name>/migration.sql`
+# plus its snapshot). There is no meta/_journal.json any more (ADR 0016).
 
 FROM denoland/deno:2.9.2 AS runtime
 

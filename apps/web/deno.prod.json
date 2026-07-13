@@ -1,8 +1,8 @@
 {
   "nodeModulesDir": "none",
   "imports": {
-    "drizzle-orm": "npm:drizzle-orm@0.45.2",
-    "drizzle-orm/": "npm:/drizzle-orm@0.45.2/",
+    "drizzle-orm": "npm:drizzle-orm@1.0.0-rc.4",
+    "drizzle-orm/": "npm:/drizzle-orm@1.0.0-rc.4/",
     "postgres": "npm:postgres@3.4.9",
     "zod": "npm:zod@4.4.3",
     "zod/": "npm:/zod@4.4.3/"

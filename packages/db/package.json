@@ -8,7 +8,7 @@
   "dependencies": {
     "@7r/config": "workspace:*",
     "@7r/domain": "workspace:*",
-    "drizzle-orm": "0.45.2",
+    "drizzle-orm": "1.0.0-rc.4",
     "postgres": "3.4.9"
   }
 }

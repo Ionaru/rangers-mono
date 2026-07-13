@@ -53,8 +53,12 @@ The stack: `docker compose up -d postgres`, then
   twice over: `ssh2` leans on `node:crypto` for a cipher Deno has broken before,
   and the workspace symlinking this whole layout depends on only landed in Deno
   2.9.
-- **Drizzle stays on 0.45.x.** No `relations()` / `.query`, no global `casing`
-  option (ADR 0008). Regenerate migrations after any `schema.ts` change; CI
+- **Drizzle is on 1.0 (`1.0.0-rc.4`, an RC on purpose: ADR 0016).** Still no
+  `relations()` / `.query` and no global `casing` (ADR 0008; 1.0 removed the
+  first outright). `drizzle({ client: sql })`, never `drizzle(sql)`: 1.0 dropped
+  the bare-client overload and silently opens a connection from `PGHOST` instead.
+  Migrations are one folder each (`<timestamp>_<name>/migration.sql`); there is
+  no `meta/_journal.json` any more. Regenerate after any `schema.ts` change; CI
   fails if the committed SQL has drifted.
 - **`packages/domain` does no I/O.** The two functions the test suite exists for
   (the group reconcile, the sample-to-session reconstruction) are only testable

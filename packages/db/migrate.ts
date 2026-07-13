@@ -12,9 +12,17 @@ import { createDb } from "./client.ts";
  * generator and nothing else.
  *
  * The folder is resolved relative to this file, not to the working directory,
- * so `deno task migrate` and the migrate container behave identically. It must
- * contain both the .sql files and meta/_journal.json; the Dockerfile copies the
- * whole directory for exactly that reason.
+ * so `deno task migrate` and the migrate container behave identically. On
+ * Drizzle 1.0 it holds one directory per migration (`<timestamp>_<name>/`, with
+ * `migration.sql` and its snapshot inside); the Dockerfile copies the whole
+ * thing for exactly that reason. There is no meta/_journal.json any more.
+ *
+ * This call also performs the one-time upgrade of `drizzle.__drizzle_migrations`
+ * to 1.0's shape, adding `name` and `applied_at` and backfilling them on rows
+ * written by the old migrator. It matches those rows by timestamp (and by SQL
+ * hash as a tiebreaker) and throws if it cannot, rather than guessing, which is
+ * why the migrations folder was *converted* by `drizzle-kit up` and not
+ * regenerated: converting preserves both (ADR 0016).
  */
 if (import.meta.main) {
   // A database and nothing else: the migrator has no use for a base URL.
