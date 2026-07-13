@@ -38,7 +38,10 @@
     "web:build": "deno task --cwd apps/web build",
     "web:check": "deno task --cwd apps/web check",
     "web:preview": "deno task --cwd apps/web preview",
-    "worker:dev": "deno task --cwd apps/worker dev"
+    "worker:dev": "deno task --cwd apps/worker dev",
+    // Read-only. Connects and prints the virtual servers this instance actually has,
+    // because "invalid serverID" plus a stack trace is not an answer.
+    "ts:check": "deno task --cwd apps/worker ts:check"
   },
   "fmt": {
     "exclude": [

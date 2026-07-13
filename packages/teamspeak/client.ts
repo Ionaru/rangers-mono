@@ -83,7 +83,50 @@ export async function connectTeamspeak(
   // Selecting the virtual server is what turns a bare query connection into one
   // that can see clients. The nickname is set in the same call, because a query
   // client has no nickname until it has a server to have one on.
-  await teamspeak.useBySid(String(options.virtualServerId), options.nickname);
+  try {
+    await teamspeak.useBySid(String(options.virtualServerId), options.nickname);
+  } catch (cause) {
+    /**
+     * The most likely failure here, by some distance, is that
+     * `TS_VIRTUALSERVER_ID` names a virtual server that does not exist, and
+     * TeamSpeak's answer to that is the magnificently unhelpful "invalid
+     * serverID" plus a stack trace through the library.
+     *
+     * The `sid` is an internal counter, not the port people connect to, and it is
+     * NOT reliably 1: delete a virtual server and create another and the new one
+     * gets the next number. This unit's TeamSpeak was rebuilt at some point
+     * (MIGRATION.md notes the group ids come in two families because of it), so
+     * "surely it is 1" is exactly the assumption that breaks here.
+     *
+     * `serverlist` is an instance-level command and needs no server selected, so
+     * we can simply ask, and put the answer in the same message as the failure.
+     * The worker crash-loops on this, so the fix has to be legible in the log the
+     * operator is already staring at.
+     */
+    let available = "(could not list the virtual servers either)";
+    try {
+      const servers = await teamspeak.serverList();
+      available = servers.length === 0
+        ? "(this TeamSpeak instance has no virtual servers at all)"
+        : servers
+          .map((s) =>
+            `sid=${s.id} port=${s.port} status=${s.status} name=${s.name}`
+          )
+          .join("\n  ");
+    } catch {
+      /* keep the original failure; the list is a bonus, not the point */
+    }
+
+    teamspeak.forceQuit();
+
+    throw new Error(
+      `TeamSpeak refused to select virtual server ${options.virtualServerId} ` +
+        `(TS_VIRTUALSERVER_ID). The virtual servers this instance actually has:\n  ` +
+        available +
+        `\n\nThe sid is an internal id, not the voice port. Set TS_VIRTUALSERVER_ID to one of the sids above.`,
+      { cause },
+    );
+  }
 
   return teamspeak;
 }

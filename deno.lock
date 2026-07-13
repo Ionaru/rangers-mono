@@ -2595,6 +2595,11 @@
           ]
         }
       },
+      "apps/worker": {
+        "dependencies": [
+          "npm:ts3-nodejs-library@3.5.3"
+        ]
+      },
       "packages/config": {
         "packageJson": {
           "dependencies": [
