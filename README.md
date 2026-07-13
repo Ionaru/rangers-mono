@@ -58,9 +58,9 @@ Turbo).
 (schema + first migration), the two app shells, the Compose stack and CI to GHCR
 exist and run. What is _not_ built is every feature: Discord login, identity
 linking, the TeamSpeak sync, the bot, attendance and the public content are
-Phases 2 to 6 of `ARCHITECTURE.md` §9. Phase 0 (rotate the leaked bot token,
-harvest the meme images, create the 8 badge roles in Discord) is prep work with
-no code and is still outstanding.
+Phases 2 to 6 of `ARCHITECTURE.md` §9. Phase 0 (harvest the meme images, create
+the 8 badge roles in Discord) is prep work with no code and is still
+outstanding.
 
 ## Development
 

@@ -39,7 +39,7 @@ PUBLIC_BASE_URL=https://7th-ranger.com
 DISCORD_GUILD_ID=305471712546390017
 DISCORD_CLIENT_ID=…                           # OAuth (web login)
 DISCORD_CLIENT_SECRET=…                        # secret
-DISCORD_BOT_TOKEN=…                            # secret; ROTATED (the old one was leaked)
+DISCORD_BOT_TOKEN=…                            # secret; the 2019 one, reused (never leaked, ARCHITECTURE §7)
 DISCORD_PUBLIC_KEY=…                           # for interactions Ed25519 verify
 DISCORD_ADMIN_ROLE_IDS=…,…                     # admin is a single boolean derived from these
 
@@ -307,7 +307,7 @@ Setting the Interactions Endpoint URL disables gateway `INTERACTION_CREATE`, whi
 
 TeamSpeak sync comes early, not last. The site and the old bot already serve; hand-managed TeamSpeak groups are the actual recurring pain, and the content port must not be allowed to stall the useful part.
 
-0. **Prep (no code).** Rotate the leaked bot token. Harvest the 25 meme images: with the *new* token, call `POST /api/v9/attachments/refresh-urls` to get freshly-signed URLs, download, commit to the repo, serve from our own domain (the CDN links hardcoded in the old `fun.py` 404 for anonymous clients; order matters, rotate first). **Create the 8 badge roles in Discord and backfill the 83 legacy grants** (32 members; every legacy user has a Discord id, so it is scriptable), without which badges cannot be Discord-authoritative. Confirm the reused Discord app / guild / GHCR.
+0. **Prep (no code).** Harvest the 25 meme images: call `POST /api/v9/attachments/refresh-urls` with the bot token to get freshly-signed URLs, download, commit to the repo, serve from our own domain (the CDN links hardcoded in the old `fun.py` 404 for anonymous clients). **Create the 8 badge roles in Discord and backfill the 83 legacy grants** (32 members; every legacy user has a Discord id, so it is scriptable), without which badges cannot be Discord-authoritative. Confirm the reused Discord app / guild / GHCR. The bot token is reused as-is: it was never leaked (ARCHITECTURE §7).
 1. **Foundation.** Monorepo skeleton (Deno workspaces), `config`, `domain`, `db` (Drizzle schema + first migration), Compose with Postgres, CI to GHCR.
 2. **Identity (minimal web app).** Discord login (Better Auth), member profile, TeamSpeak linking (pick-from-list + poked code), Steam OpenID linking. No public content yet. **Import the legacy links here** (MIGRATION.md).
 3. **TeamSpeak sync.** ServerQuery worker, seed the `assignable` mapping from git config (sgids resolved live, by name), Discord to TS reconcile with `deno task sync:preview` first, then the blast-radius guard. **This is the phase that pays for the project.**

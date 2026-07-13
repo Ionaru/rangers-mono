@@ -22,7 +22,7 @@ An elaborate backup workstream to protect a few kilobytes whose loss costs a wee
 ## Considered and rejected
 
 - **Nightly `pg_dump -Fc` + restic to object storage, with a restore drill.** The original plan (the old "Phase 7 - Hardening"). Rejected as disproportionate once it became clear how little irreplaceable data there is.
-- **Dump to a private git repo.** Cheap and off-box, but it puts member PII (Discord IDs, TeamSpeak UIDs, Steam IDs) into a git repository. This project's own predecessor leaked a bot token into a repo for seven years. Rejected.
+- **Dump to a private git repo.** Cheap and off-box, but it puts member PII (Discord IDs, TeamSpeak UIDs, Steam IDs) into a git repository, permanently and by design: history is the whole point of git, so a dump committed once is a dump you cannot take back. "Private" is a setting, not a property, and it is one keystroke from not being true. Rejected. (This bullet originally rested on a second argument, that the predecessor leaked a bot token into a public repo for seven years. That turned out to be false: the repo was private throughout, ARCHITECTURE §7. The PII argument above never depended on it, and the decision stands.)
 
 ## Consequences
 
