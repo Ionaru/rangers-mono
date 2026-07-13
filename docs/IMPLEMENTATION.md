@@ -212,7 +212,7 @@ Ranks/roles/badges are Discord roles (ADR 0002). Two ways they change, both writ
    - `/rank set @member <rank>`: enforces **rank exclusivity**: remove any other rank-kind role the member has, then add the chosen one.
    - `/link-force @member <ts_uid|steam_id>`: set an identity link by hand, stamped `manual` so it is visibly not self-verified (§4).
    - `/attendance claim <ts_uid> @member`: attribute a guest attendance session to a member. Rare: linking auto-backfills guests (§7), so this is only for leftovers.
-   - Role hierarchy: `7R_Bot`'s highest role must sit above every managed role, and managed (integration) roles are never assignable. Surface a clear error otherwise. Administrator does **not** exempt it from this, and `7R_Bot`'s role was positioned for a `/loa` bot that wrote no roles at all, so assume it is too low until someone has looked (Phase 0).
+   - Role hierarchy: `7R_Bot`'s highest role must sit above every managed role, and managed (integration) roles are never assignable. Surface a clear error otherwise. Administrator does **not** exempt it from this, and `7R_Bot`'s role was positioned for a `/loa` bot that wrote no roles at all, so assume it is too low until someone has looked (Phase 0). **Somebody has now looked, and it is: measured 2026-07-14, its highest role is at position 28, below Officer (30) and NCO (29).** So every write to those two 403s while the bot looks perfectly healthy. It does outrank the other six. `deno task phase0:check` re-checks it.
 
 The platform DB does **not** store per-member role assignments; a member's current Discord roles are the truth. The `assignable` table only holds the definitions/mappings.
 
@@ -220,7 +220,7 @@ Inspection commands (read-only, via REST): `/whohas <assignable>`, `/roles @memb
 
 **Fetching the member list is a trap.** `GET /guilds/{id}/members` defaults to **`limit=1`**. Always pass `?limit=1000` explicitly and paginate with `after`. Omitting it does not error: the sync silently processes exactly one member and presents as "sync mostly doesn't work". The bot also needs the **GUILD_MEMBERS privileged intent** enabled on the `7R_Bot` application in the developer portal; it is required for the REST member list, not only for the gateway. It is an application toggle rather than a guild permission, so no amount of permission (Administrator included) substitutes for it, it is off by default, and a `/loa` bot had no reason to turn it on. Without it this poll is refused and Phase 3 quietly does nothing.
 
-Bot permissions on `7R_Bot`: `CREATE_EVENTS` (1<<44) + `MANAGE_ROLES`. It currently holds Administrator, so nothing is blocked today; ARCHITECTURE §7 wants that dialled back to these two.
+Bot permissions on `7R_Bot`: `CREATE_EVENTS` (1<<44) + `MANAGE_ROLES`. **Measured 2026-07-14 (`deno task phase0:check`): it holds `MANAGE_ROLES` and NOT Administrator, and it is missing `CREATE_EVENTS`.** The long-standing claim that it holds Administrator was wrong, so the outstanding task is to *add* `CREATE_EVENTS`, not to take anything away. Miss it and the weekly event 403s on create, silently.
 
 ---
 
