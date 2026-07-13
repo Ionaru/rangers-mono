@@ -20,6 +20,14 @@
     // folder-per-migration layout. Kept as a task because it is the documented
     // way back if the folder is ever restored from an old checkout.
     "up": "deno run -A npm:drizzle-kit@1.0.0-rc.4 up",
-    "migrate": "deno run --allow-net --allow-env --allow-read --allow-sys migrate.ts"
+    // --env-file, on the host-side tasks only. Deno does not read `.env` on its
+    // own, so without this every one of these is "export DATABASE_URL first, and
+    // discover you forgot by reading a stack trace". A real environment variable
+    // still beats the file, so an explicit `DATABASE_URL=... deno task migrate`
+    // keeps working and CI is untouched; a missing file is a warning, not an
+    // error. The containers never reach this: compose overrides the command and
+    // gets DATABASE_URL from the mounted secret instead (ADR 0014).
+    "migrate": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env migrate.ts",
+    "import:legacy": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env import-legacy.ts"
   }
 }

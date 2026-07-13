@@ -4,18 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "deno run -A npm:astro dev",
+    "dev": "deno run -A --env-file=../../.env npm:astro dev",
     "build": "deno run -A npm:astro build",
     "check": "deno run -A npm:astro check",
-    "preview": "deno run --allow-net --allow-read --allow-env ./dist/server/entry.mjs",
+    "preview": "deno run --allow-net --allow-read --allow-env --allow-sys --env-file=../../.env ./dist/server/entry.mjs",
     "astro": "deno run -A npm:astro"
   },
   "dependencies": {
     "@7r/config": "workspace:*",
     "@7r/db": "workspace:*",
+    "@7r/discord": "workspace:*",
     "@7r/domain": "workspace:*",
+    "@7r/identity": "workspace:*",
     "@deno/astro-adapter": "0.6.0",
-    "astro": "7.0.7"
+    "astro": "7.0.7",
+    "better-auth": "1.7.0-rc.1"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.9",

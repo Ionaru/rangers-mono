@@ -71,7 +71,6 @@ Deno.test("the TeamSpeak query port may never be 10011", () => {
     TS_QUERY_USER: "bot",
     TS_QUERY_PASS: "pw",
     TS_VIRTUALSERVER_ID: "1",
-    TS_OPERATIONS_CHANNEL_CID: "42",
   };
   assertEquals(
     loadConfig(teamspeakSchema, { ...base, TS_QUERY_PORT: "10022" })

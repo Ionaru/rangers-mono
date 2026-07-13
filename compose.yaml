@@ -119,8 +119,11 @@ services:
       DATABASE_URL_FILE: /run/secrets/database_url
       LOG_LEVEL: ${LOG_LEVEL:-info}
       WORKER_INTERNAL_PORT: 8080
-    # The Discord bot token, the TeamSpeak query password and the error-alert
-    # webhook all reach the worker through here (ADR 0014).
+    # The TeamSpeak query credentials, the shared WORKER_INTERNAL_TOKEN and the
+    # error-alert webhook all reach the worker through here (ADR 0014). From
+    # Phase 2 the worker holds the ServerQuery connection, so a missing TS_* or a
+    # missing WORKER_INTERNAL_TOKEN is a boot failure, by design: a worker that
+    # is up but cannot reach TeamSpeak can serve neither of its two routes.
     env_file:
       - .env
     secrets:
@@ -165,6 +168,58 @@ services:
       - --allow-read
       - --allow-sys
       - packages/db/migrate.ts
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # The legacy identity import (MIGRATION.md). A one-shot, run by hand, once,
+  # after the migrations and before anyone logs in:
+  #
+  #   docker compose --profile import run --rm import --dry-run
+  #   docker compose --profile import run --rm import
+  #
+  # Behind a profile for the same reason `migrate` is: a plain `docker compose
+  # up` must not be able to run it by accident.
+  #
+  # The dump is BIND-MOUNTED rather than baked in, and that is not an
+  # optimisation. It holds 150 members' Discord, TeamSpeak and Steam ids, so it
+  # is in .gitignore and in .dockerignore, and it therefore cannot be in the
+  # image at all (ARCHITECTURE §7, GDPR-lite). Copy it to ./data on the box, run
+  # this, and it never touches a registry. Read-only: nothing here writes to it.
+  import:
+    profiles: ["import"]
+    <<: *worker-image
+    restart: "no"
+    logging: *logging
+    environment:
+      # As `migrate`: DATABASE_URL from the mounted secret, and no env_file. The
+      # importer reads the database and a file on disk, and nothing else.
+      DATABASE_URL_FILE: /run/secrets/database_url
+    secrets:
+      - database_url
+    volumes:
+      - ./data:/app/data:ro
+    # `entrypoint`, not `command`, and that is the difference between being able
+    # to dry-run and not. `docker compose run <service> <args>` REPLACES the
+    # service's `command`, so with the script in `command:` a trailing --dry-run
+    # would blow the script away and run `deno --dry-run`. Arguments appended to
+    # a `run` are handed to the entrypoint instead, so putting the whole
+    # invocation here makes `... run --rm import --dry-run` mean what it says.
+    #
+    # The image's own entrypoint is repeated verbatim in front of it (/tini --
+    # docker-entrypoint.sh), because overriding the entrypoint drops it: tini is
+    # what reaps the process and forwards signals.
+    entrypoint:
+      - /tini
+      - --
+      - docker-entrypoint.sh
+      - run
+      - --cached-only
+      - --allow-net
+      - --allow-env
+      - --allow-read
+      - --allow-sys
+      - packages/db/import-legacy.ts
     depends_on:
       postgres:
         condition: service_healthy

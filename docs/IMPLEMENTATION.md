@@ -47,14 +47,17 @@ DISCORD_ADMIN_ROLE_IDS=…,…                     # admin is a single boolean d
 STEAM_REALM=https://7th-ranger.com
 # (Steam OpenID is stateless; no API key required for login. Optional STEAM_WEB_API_KEY for profile display.)
 
-# TeamSpeak ServerQuery
+# TeamSpeak ServerQuery (needed from PHASE 2, not Phase 3: the poke-link flow
+# needs a live connection to list online clients and poke one of them)
 TS_QUERY_HOST=ts.7th-ranger.com
 TS_QUERY_PORT=10022                            # SSH query; mandatory, the host is on the public internet
 TS_QUERY_USER=…                                # secret
 TS_QUERY_PASS=…                                # secret
 TS_VIRTUALSERVER_ID=1
-TS_OPERATIONS_CHANNEL_CID=…                    # the single Operations channel
 TS_BOT_NICKNAME=7R Bot                         # the ServerQuery client's nickname, set on connect
+TS_OPERATIONS_CHANNEL_CID=…                    # the single Operations channel. PHASE 5 (attendance) only:
+                                               # kept out of the group above so the link flow does not
+                                               # demand a channel id it never reads
 
 # Internal web -> worker API (Compose network only; never proxied, never public)
 WORKER_INTERNAL_URL=http://worker:8080
@@ -309,7 +312,7 @@ TeamSpeak sync comes early, not last. The site and the old bot already serve; ha
 
 0. **Prep (no code).** Stand `7R_Bot` up as the platform's Discord application: collect its app id, client secret, bot token and public key into `.env`; enable the GUILD_MEMBERS intent; move its role above every Assignable role; dial its Administrator grant back to `CREATE_EVENTS` + `MANAGE_ROLES`; clear any surviving `/loa`. The 2019 bot's account is not reused (ARCHITECTURE §7, ADR 0015). Harvest the 25 meme images: call `POST /api/v9/attachments/refresh-urls` with a token that can read the messages those attachments live in (`7R_Bot` should qualify; if not, borrow the legacy token locally, once) to get freshly-signed URLs, download, commit to the repo, serve from our own domain (the CDN links hardcoded in the old `fun.py` 404 for anonymous clients). **Create the 8 badge roles in Discord and backfill the 83 legacy grants** (32 members; every legacy user has a Discord id, so it is scriptable), without which badges cannot be Discord-authoritative; this writes Discord roles, so it comes after the bot is set up. Confirm the guild and the GHCR namespace, which do not change.
 1. **Foundation.** Monorepo skeleton (Deno workspaces), `config`, `domain`, `db` (Drizzle schema + first migration), Compose with Postgres, CI to GHCR.
-2. **Identity (minimal web app).** Discord login (Better Auth), member profile, TeamSpeak linking (pick-from-list + poked code), Steam OpenID linking. No public content yet. **Import the legacy links here** (MIGRATION.md).
+2. **Identity (minimal web app).** Discord login (Better Auth), member profile, TeamSpeak linking (pick-from-list + poked code), Steam OpenID linking. No public content yet. **Import the legacy links here** (MIGRATION.md). Note what this drags forward: the poke-link flow needs a **live ServerQuery connection**, so the TeamSpeak *transport* (`packages/teamspeak`, and the worker's `/internal/ts/*` API) lands in Phase 2, not Phase 3. Phase 3 then adds only the reconcile, on a connection that has already been exercised in production. The login is also gated on **guild membership**: a Discord account that is not in the guild gets told so, and no `member` row is written for it.
 3. **TeamSpeak sync.** ServerQuery worker, seed the `assignable` mapping from git config (sgids resolved live, by name), Discord to TS reconcile with `deno task sync:preview` first, then the blast-radius guard. **This is the phase that pays for the project.**
 4. **Discord bot.** Interactions endpoint, slash memes, role inspection, `/role` and `/rank set`, `/link-force`, the weekly scheduled-event job (which creates Operations).
 5. **Attendance.** Operations-channel sampling, session reconstruction, read-only member/site views, guest auto-backfill on link. No historical import.

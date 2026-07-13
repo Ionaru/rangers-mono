@@ -129,6 +129,15 @@ export const linkCode = pgTable("link_code", {
   targetTsUid: text("target_ts_uid").notNull(),
   expiresAt: tstz("expires_at").notNull(),
   consumedAt: tstz("consumed_at"),
+  /**
+   * Wrong guesses against this code. Not in IMPLEMENTATION §3's sketch, which
+   * says it is "illustrative, not final", and added because without it §4's
+   * "picking the wrong person fails safe" is only true against an attacker who
+   * does not retry. The code goes to the client you picked, so guessing it is
+   * the only way to claim someone else's TeamSpeak identity; a cap of a handful
+   * of attempts is what makes that a dead end rather than a slow one.
+   */
+  attempts: integer("attempts").notNull().default(0),
 }, (t) => [index("link_code_code_idx").on(t.code)]);
 
 export type Member = typeof member.$inferSelect;

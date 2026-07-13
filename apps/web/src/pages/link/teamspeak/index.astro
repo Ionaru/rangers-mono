@@ -1,0 +1,155 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { findLiveLinkCode, getDb } from "@7r/db";
+import { MAX_ATTEMPTS } from "@7r/identity";
+import {
+  fetchOnlineClients,
+  type OnlineClient,
+  WorkerUnavailableError,
+} from "../../../lib/worker-client.ts";
+
+/**
+ * The TeamSpeak link, in one page with two states.
+ *
+ * 1. No challenge outstanding: show the online clients and ask them to pick
+ *    themselves.
+ * 2. A challenge outstanding: ask for the code we just poked at them.
+ *
+ * The member does not choose which state they are in; the database does. That
+ * means a refresh, a back button, or a second tab all land on the truth rather
+ * than on a stale form.
+ */
+const member = Astro.locals.member!;
+const db = getDb();
+
+const pending = await findLiveLinkCode(db, member.id);
+
+let clients: OnlineClient[] = [];
+let workerDown = false;
+
+if (!pending) {
+  try {
+    clients = await fetchOnlineClients();
+  } catch (cause) {
+    /**
+     * The worker is down, so we have no idea who is online.
+     *
+     * Say exactly that. The temptation is to render an empty list, which reads
+     * as "you are not connected to TeamSpeak" and sends the member off to debug
+     * a client that was never broken (IMPLEMENTATION §4).
+     */
+    if (!(cause instanceof WorkerUnavailableError)) throw cause;
+    workerDown = true;
+  }
+}
+
+const error = Astro.url.searchParams.get("error");
+
+const ERRORS: Record<string, string> = {
+  wrong_code: "That is not the code. Check the poke and try again.",
+  expired: "That code expired. Start again.",
+  already_used: "That code has already been used. Start again.",
+  too_many_attempts: `Too many wrong guesses. The code is dead: start again.`,
+  ts_taken:
+    "That TeamSpeak identity is already linked to another member. If it is really yours, ask an admin.",
+  no_pending: "There was no code waiting. Start again.",
+  worker_down:
+    "We could not reach TeamSpeak. This is our problem, not yours. Try again in a few minutes.",
+};
+---
+
+<Base title="Link TeamSpeak" member={member}>
+  <h1>Link TeamSpeak</h1>
+
+  {error && ERRORS[error] && <p class="notice bad">{ERRORS[error]}</p>}
+
+  {
+    pending
+      ? (
+        <div class="panel">
+          <h2>Enter the code</h2>
+          <p class="muted">
+            We poked a code to the TeamSpeak client you picked. Type it in below.
+            It is good for five minutes, and you get {MAX_ATTEMPTS} tries.
+          </p>
+          <form method="post" action="/link/teamspeak/verify">
+            <input
+              type="text"
+              name="code"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              placeholder="ABC234"
+              required
+            />
+            <button type="submit">Link it</button>
+          </form>
+          {/* Not inside the <p>: a form is flow content and a paragraph may only
+              hold phrasing content, so a browser would close the <p> for us and
+              quietly restructure the DOM around it. */}
+          <p class="muted">Poked the wrong person?</p>
+          <form method="post" action="/link/teamspeak/restart">
+            <button type="submit" class="secondary">Start again</button>
+          </form>
+        </div>
+      )
+      : workerDown
+      ? (
+        <div class="panel">
+          <h2>TeamSpeak is unreachable</h2>
+          <p class="muted">
+            We could not reach our TeamSpeak connection, so we cannot see who is
+            online. <strong>This is our problem, not yours</strong>, and your own
+            TeamSpeak client is probably fine. Try again in a few minutes.
+          </p>
+        </div>
+      )
+      : clients.length === 0
+      ? (
+        <div class="panel">
+          <h2>Nobody is online to link</h2>
+          <p class="muted">
+            <strong>Connect to TeamSpeak first</strong>, then reload this page.
+            You should see yourself in the list.
+          </p>
+          <p class="muted">
+            Anyone already linked to another member is hidden, so if you are
+            connected and still not listed, your identity may already be linked.
+          </p>
+          <a class="button secondary" href="/link/teamspeak">Reload</a>
+        </div>
+      )
+      : (
+        <div class="panel">
+          <h2>Pick yourself</h2>
+          <p class="muted">
+            These are the people connected to TeamSpeak right now. Choose
+            yourself, and we will poke a code to that client. If you pick the
+            wrong person the code goes to <em>them</em>, so you simply will not
+            be able to finish.
+          </p>
+
+          {/* Its own route, because an .astro page only answers GET. */}
+          <form method="post" action="/link/teamspeak/start">
+            <ul class="clients">
+              {clients.map((client, index) => (
+                <li>
+                  <label>
+                    <input
+                      type="radio"
+                      name="clid"
+                      value={client.clid}
+                      required
+                      checked={index === 0 && clients.length === 1}
+                    />
+                    {" "}{client.nickname}
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <button type="submit">Poke me a code</button>
+          </form>
+        </div>
+      )
+  }
+</Base>

@@ -88,7 +88,15 @@ export const steamSchema = z.object({
 });
 export type SteamConfig = z.infer<typeof steamSchema>;
 
-/** Phase 3 (role sync) and Phase 5 (attendance sampling). */
+/**
+ * The ServerQuery connection itself. Phase 2 (the poke-link flow) onwards.
+ *
+ * This arrives a phase earlier than the docs' `(Phases 3 & 5)` labelling
+ * suggests, and deliberately: the TeamSpeak link flow needs a *live*
+ * ServerQuery connection to list the online clients and poke one of them
+ * (IMPLEMENTATION §4). There is no way to build identity linking without it, so
+ * the transport lands here and Phase 3 adds only the reconcile on top.
+ */
 export const teamspeakSchema = z.object({
   TS_QUERY_HOST: z.string().min(1),
   /**
@@ -105,22 +113,36 @@ export const teamspeakSchema = z.object({
   TS_QUERY_USER: z.string().min(1),
   TS_QUERY_PASS: z.string().min(1),
   TS_VIRTUALSERVER_ID: int(),
-  TS_OPERATIONS_CHANNEL_CID: int(),
   TS_BOT_NICKNAME: z.string().min(1).default("7R Bot"),
 });
 export type TeamspeakConfig = z.infer<typeof teamspeakSchema>;
 
 /**
+ * Phase 5. Split out of `teamspeakSchema` on purpose: the Operations channel is
+ * an *attendance* concept, and nothing in the link flow has any use for it.
+ * Folded in, it would force whoever sets up linking to invent a channel id to
+ * get past a fail-loud config, which is exactly the habit this package exists
+ * to prevent.
+ */
+export const attendanceChannelSchema = z.object({
+  TS_OPERATIONS_CHANNEL_CID: int(),
+});
+export type AttendanceChannelConfig = z.infer<typeof attendanceChannelSchema>;
+
+/**
  * The worker's own internal HTTP server. It listens on the Compose network
  * only: never proxied, never public.
- *
- * Phase 2 adds WORKER_INTERNAL_TOKEN here, when there is finally something
- * behind it worth authenticating (the TeamSpeak link flow). Phase 1 serves only
- * an unauthenticated /healthz, and requiring a secret that nothing reads yet is
- * how a fail-loud config teaches people to fill it with junk.
  */
 export const workerServerSchema = z.object({
   WORKER_INTERNAL_PORT: int().default(8080),
+  /**
+   * The other half of `workerClientSchema`'s token: web sends it, the worker
+   * checks it. Required now (Phase 2) rather than optional, because there is
+   * finally something behind it worth authenticating. An unauthenticated
+   * /internal/ts/poke is a way to spray a link code at any client on the
+   * server.
+   */
+  WORKER_INTERNAL_TOKEN: z.string().min(1),
 });
 export type WorkerServerConfig = z.infer<typeof workerServerSchema>;
 
@@ -158,8 +180,17 @@ export const syncSchema = z.object({
 });
 export type SyncConfig = z.infer<typeof syncSchema>;
 
-/** The worker posts its own errors here, so failures are visible without log-diving. */
+/**
+ * The worker posts its own errors here, so failures are visible without
+ * log-diving.
+ *
+ * Optional, unlike every other secret in this file. A missing webhook costs
+ * visibility, not correctness: the worker logs to stdout and carries on. Making
+ * it required would mean a worker that refuses to boot because nobody has
+ * created a Discord webhook yet, which is precisely how people learn to paste
+ * junk into a fail-loud config to get past it.
+ */
 export const alertSchema = z.object({
-  ERROR_ALERT_DISCORD_WEBHOOK: z.url("must be an absolute URL"),
+  ERROR_ALERT_DISCORD_WEBHOOK: z.url("must be an absolute URL").optional(),
 });
 export type AlertConfig = z.infer<typeof alertSchema>;

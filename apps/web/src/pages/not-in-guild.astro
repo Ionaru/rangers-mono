@@ -1,0 +1,30 @@
+---
+import Base from "../layouts/Base.astro";
+
+/**
+ * The guild gate's landing page.
+ *
+ * They have a Discord account and they signed in with it. They are simply not in
+ * the 7th Ranger Group's Discord server, so no Member row was created for them
+ * (middleware.ts). Membership of this unit is decided in Discord, and nowhere
+ * else (ADR 0002).
+ */
+---
+<Base title="Not a member">
+<h1>You are not in the 7R Discord</h1>
+
+<div class="panel">
+  <p>
+      This site is for members of the 7th Ranger Group. Your Discord account is
+      not in our server, so there is nothing here for you yet.
+    </p>
+  <p class="muted">
+      If you have just joined, or you think this is wrong, ask in Discord. If you
+      would like to join the unit, our recruitment information is on the main
+      site.
+    </p>
+  <form method="post" action="/signout">
+    <button type="submit" class="secondary">Sign out</button>
+  </form>
+</div>
+</Base>

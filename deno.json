@@ -3,6 +3,9 @@
     "./packages/config",
     "./packages/domain",
     "./packages/db",
+    "./packages/discord",
+    "./packages/teamspeak",
+    "./packages/identity",
     "./apps/web",
     "./apps/worker"
   ],
@@ -17,8 +20,11 @@
     // `deno check` cannot read .astro files, so apps/web is typechecked by
     // `astro check` instead. Both halves run, or the web app's strict tsconfig
     // is enforced nowhere outside an editor and `astro build` only transpiles.
-    "check": "deno check packages/config/mod.ts packages/domain/mod.ts packages/db/mod.ts packages/db/migrate.ts apps/worker/main.ts && deno task web:check",
-    "test": "deno test --allow-read --allow-env --allow-write=/tmp packages/",
+    "check": "deno check packages/config/mod.ts packages/domain/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts && deno task web:check",
+    // apps/ as well as packages/. The worker's internal API is the one
+    // authorisation boundary in the system, and it is pure request-handling, so
+    // it is testable even though the TeamSpeak connection behind it is not.
+    "test": "deno test --allow-read --allow-env --allow-write=/tmp packages/ apps/",
     "fmt": "deno fmt --unstable-component",
     "fmt:check": "deno fmt --check --unstable-component",
     "lint": "deno lint",

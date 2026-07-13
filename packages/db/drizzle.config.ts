@@ -16,7 +16,14 @@ import { defineConfig } from "drizzle-kit";
  */
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./schema.ts",
+  // Two files, one migration history. auth-schema.ts holds Better Auth's tables,
+  // which we do not own the shape of; keeping them out of schema.ts keeps the
+  // diff confined when Better Auth changes them. They still have to be listed
+  // here, or drizzle-kit would not see them, CI's drift gate would pass, and the
+  // tables would simply never be created.
+  schema: ["./schema.ts", "./auth-schema.ts"],
+  // Relative on purpose: 1.0's snapshot validator reads `./${path}`, so an
+  // absolute path here becomes `./absolute/path` and nothing is found.
   out: "./drizzle",
   dbCredentials: { url: Deno.env.get("DATABASE_URL") ?? "" },
 });

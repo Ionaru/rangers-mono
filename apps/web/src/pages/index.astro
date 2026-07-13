@@ -1,0 +1,29 @@
+---
+import Base from "../layouts/Base.astro";
+
+/**
+ * The only page a signed-out visitor sees. There is no public content in this
+ * phase: the current public site keeps serving until Phase 6 replaces it.
+ */
+if (Astro.locals.member) return Astro.redirect("/me", 302);
+---
+<Base title="Sign in">
+<h1>7R Platform</h1>
+
+<div class="panel">
+    <p>
+      Sign in with Discord to see your profile and link your TeamSpeak and Steam
+      identities.
+    </p>
+    <p class="muted">
+      You need to be a member of the 7th Ranger Group Discord server.
+    </p>
+    {/* A form, not a link: signing in is a state change, and it should not be
+        something a prefetcher or a crawler can trigger by following a GET.
+        It posts to our own route rather than to Better Auth's, which answers
+        with JSON: see src/pages/signin/discord.ts. */}
+    <form method="post" action="/signin/discord">
+      <button type="submit">Sign in with Discord</button>
+    </form>
+  </div>
+</Base>

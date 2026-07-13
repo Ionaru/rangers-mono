@@ -1,6 +1,8 @@
 {
   "nodeModulesDir": "none",
   "imports": {
+    "better-auth": "npm:better-auth@1.7.0-rc.1",
+    "better-auth/": "npm:/better-auth@1.7.0-rc.1/",
     "drizzle-orm": "npm:drizzle-orm@1.0.0-rc.4",
     "drizzle-orm/": "npm:/drizzle-orm@1.0.0-rc.4/",
     "postgres": "npm:postgres@3.4.9",

@@ -1,4 +1,5 @@
 export * from "./schema.ts";
+export * from "./auth-schema.ts";
 export * from "./client.ts";
 export * from "./queries.ts";
 

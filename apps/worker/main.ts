@@ -1,25 +1,33 @@
-import { getCoreConfig, getWorkerServerConfig } from "@7r/config";
+import {
+  getAlertConfig,
+  getCoreConfig,
+  getTeamspeakConfig,
+  getWorkerServerConfig,
+} from "@7r/config";
 import { closeDb, getDb, ping } from "@7r/db";
+import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
+import { makeAlerter } from "./alert.ts";
+import { createInternalApiHandler } from "./internal-api.ts";
 
 /**
  * The worker: one long-running Deno process.
  *
- * In Phase 1 it only proves it can boot, reach Postgres, and stay up. What it
- * grows into (ARCHITECTURE.md §2) is the process that holds the TeamSpeak
- * ServerQuery connection, reconciles server-groups, samples the Operations
- * channel, and creates the weekly Discord event.
+ * It holds the TeamSpeak ServerQuery connection, which is the reason it exists:
+ * the connection is stateful and singular, so exactly one process may own it,
+ * and the website asks that process questions over the internal API rather than
+ * opening a second one (ARCHITECTURE §2).
  *
- * The two survival rules below exist now rather than later precisely because
- * they are about *that* future: by the time a dropped TeamSpeak connection can
- * hurt, the guard has to already be there.
+ * From Phase 2 it serves the identity link flow. What it grows into is the
+ * group reconcile (Phase 3), the weekly Discord event (Phase 4) and the
+ * Operations-channel sampling (Phase 5), all on this same connection.
  */
 
 /**
  * Survival rule 1: an unhandled rejection must not kill the process.
  *
- * Deno's default is to exit. Once this process holds the ServerQuery
- * connection, a stray rejection anywhere would drop TeamSpeak sync and
- * attendance sampling with it. Log it, keep going.
+ * Deno's default is to exit. This process holds the ServerQuery connection, so a
+ * stray rejection anywhere would drop TeamSpeak linking, and later the sync and
+ * the attendance sampling with it. Log it, keep going.
  */
 addEventListener("unhandledrejection", (event) => {
   event.preventDefault();
@@ -37,42 +45,58 @@ function log(message: string, extra: Record<string, unknown> = {}) {
 async function main() {
   // Fails loud here, at the entry point, if the environment is not what we need.
   const core = getCoreConfig();
-  const { WORKER_INTERNAL_PORT } = getWorkerServerConfig();
+  const { WORKER_INTERNAL_PORT, WORKER_INTERNAL_TOKEN } =
+    getWorkerServerConfig();
+  const ts = getTeamspeakConfig();
+  const { ERROR_ALERT_DISCORD_WEBHOOK } = getAlertConfig();
+
   const db = getDb();
+  const alert = makeAlerter(ERROR_ALERT_DISCORD_WEBHOOK, log);
 
   // Connectivity only. Deliberately not a query against a table: booting must
   // not depend on the schema being migrated, or a fresh deploy crash-loops the
   // worker until someone remembers to run the one-shot migrator.
   await ping(db);
+
+  /**
+   * The TeamSpeak connection, and a boot failure here is FATAL, on purpose.
+   *
+   * Both of this worker's routes need it, so a worker that is up without it is a
+   * worker that can only return errors, while Compose reports it healthy and
+   * nobody is told. Crash instead: Compose restarts it, and the reason is in the
+   * logs. A connection that drops *later* is a different matter and must not
+   * kill anything (keepConnected reconnects indefinitely).
+   */
+  const teamspeak = await connectTeamspeak({
+    host: ts.TS_QUERY_HOST,
+    queryport: ts.TS_QUERY_PORT,
+    username: ts.TS_QUERY_USER,
+    password: ts.TS_QUERY_PASS,
+    virtualServerId: ts.TS_VIRTUALSERVER_ID,
+    nickname: ts.TS_BOT_NICKNAME,
+  });
+  keepConnected(teamspeak, log);
+
   log("worker started", {
     logLevel: core.LOG_LEVEL,
     port: WORKER_INTERNAL_PORT,
+    teamspeak: `${ts.TS_QUERY_HOST}:${ts.TS_QUERY_PORT}`,
   });
 
-  /**
-   * The internal API. Compose network only: never proxied, never public.
-   * Phase 2 adds GET /internal/ts/clients and POST /internal/ts/poke behind
-   * WORKER_INTERNAL_TOKEN; for now it is a health check and nothing else.
-   */
-  const server = Deno.serve({
-    port: WORKER_INTERNAL_PORT,
-    hostname: "0.0.0.0",
-    onListen: () => {},
-  }, async (request) => {
-    const { pathname } = new URL(request.url);
-
-    if (pathname !== "/healthz") {
-      return new Response("not found", { status: 404 });
-    }
-
-    try {
-      await ping(db);
-      return Response.json({ ok: true, db: "up" });
-    } catch (cause) {
-      log("health check failed", { error: String(cause) });
-      return Response.json({ ok: false, db: "down" }, { status: 503 });
-    }
-  });
+  const server = Deno.serve(
+    {
+      port: WORKER_INTERNAL_PORT,
+      hostname: "0.0.0.0",
+      onListen: () => {},
+    },
+    createInternalApiHandler({
+      db,
+      teamspeak,
+      token: WORKER_INTERNAL_TOKEN,
+      log,
+      alert,
+    }),
+  );
 
   const heartbeat = setInterval(() => log("heartbeat"), HEARTBEAT_MS);
 
@@ -81,13 +105,15 @@ async function main() {
    *
    * Compose sends SIGTERM and waits out its kill timeout on every deploy if the
    * process does not go. Deno's event loop stays alive while ANY of these is
-   * outstanding, and all four have bitten here already:
+   * outstanding, and all of them have bitten here already:
    *   - the heartbeat interval,
    *   - the HTTP server,
    *   - the signal listeners themselves (a registered listener is a live handle),
-   *   - postgres.js's idle connection pool.
-   * Releasing three of the four and wondering why the process hangs is a
-   * genuinely miserable afternoon. Release all of them.
+   *   - postgres.js's idle connection pool,
+   *   - and now the ServerQuery socket, which keepalives and so will never close
+   *     itself.
+   * Releasing all but one and wondering why the process hangs is a genuinely
+   * miserable afternoon. Release all of them.
    */
   const onSignal = () => void shutdown();
 
@@ -96,6 +122,11 @@ async function main() {
     clearInterval(heartbeat);
     Deno.removeSignalListener("SIGTERM", onSignal);
     Deno.removeSignalListener("SIGINT", onSignal);
+    // forceQuit, not quit: `quit` is a round-trip to a server that may be the
+    // very thing that is wedged, and we are leaving regardless. It also stops
+    // the "close" handler racing us into a reconnect on the way out.
+    teamspeak.removeAllListeners();
+    teamspeak.forceQuit();
     await server.shutdown();
     await closeDb();
   };
@@ -111,9 +142,9 @@ if (import.meta.main) {
   // Startup failures are fatal, and must stay fatal. The unhandledrejection
   // guard above deliberately swallows stray rejections so a passing error never
   // drops the TeamSpeak connection, but without this catch it would swallow a
-  // *boot* failure too (a port already in use, a bad config) and leave a worker
-  // that is up, silent, and doing nothing at all. Crash instead: Compose
-  // restarts it, and the error is visible.
+  // *boot* failure too (a port already in use, a bad config, TeamSpeak refusing
+  // the login) and leave a worker that is up, silent, and doing nothing at all.
+  // Crash instead: Compose restarts it, and the error is visible.
   try {
     await main();
   } catch (error) {

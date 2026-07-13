@@ -3,7 +3,11 @@
   "version": "0.0.1",
   "exports": "./main.ts",
   "tasks": {
-    "dev": "deno run --allow-net --allow-env --allow-read --allow-sys --watch main.ts",
+    // --env-file on the host tasks only: Deno does not read `.env` by itself.
+    // A real environment variable still wins over the file, and the container
+    // never runs these (its Dockerfile CMD invokes main.ts directly and gets
+    // its environment from Compose).
+    "dev": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env --watch main.ts",
     "start": "deno run --allow-net --allow-env --allow-read --allow-sys main.ts"
   }
 }

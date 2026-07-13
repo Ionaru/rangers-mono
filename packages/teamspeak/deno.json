@@ -1,0 +1,10 @@
+{
+  "name": "@7r/teamspeak",
+  "version": "0.0.1",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "imports": {
+    "ts3-nodejs-library": "npm:ts3-nodejs-library@3.5.3"
+  }
+}

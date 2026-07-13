@@ -1,0 +1,149 @@
+---
+import Base from "../layouts/Base.astro";
+
+/**
+ * The member's profile: their three identities, and the buttons to link and
+ * unlink the two that are not the login.
+ *
+ * Read-only otherwise, and that is the whole shape of the member area (ADR
+ * 0009): no admin panel, no role editing, no roster management. Roles live in
+ * Discord and are changed there.
+ */
+const member = Astro.locals.member!;
+
+/** Set by the link and unlink routes, so the member is told what happened. */
+const notice = Astro.url.searchParams.get("notice");
+const error = Astro.url.searchParams.get("error");
+
+const NOTICES: Record<string, string> = {
+  ts_linked: "TeamSpeak linked. Your identity is verified.",
+  ts_unlinked: "TeamSpeak unlinked.",
+  steam_linked: "Steam linked.",
+  steam_unlinked: "Steam unlinked.",
+};
+
+const ERRORS: Record<string, string> = {
+  ts_taken:
+    "That TeamSpeak identity is already linked to another member. If it is really yours, ask an admin.",
+  steam_taken:
+    "That Steam account is already linked to another member. If it is really yours, ask an admin.",
+  steam_failed: "Steam could not confirm that login. Nothing was changed.",
+  worker_down:
+    "We could not reach TeamSpeak. This is our problem, not yours. Try again in a few minutes.",
+};
+
+/**
+ * A link carried over from the old site is a claim, not a proof: nobody poked
+ * anybody to establish it. Say so, and invite them to fix it, rather than
+ * quietly presenting it as verified.
+ */
+const tsUnverified = member.tsLinkMethod === "legacy_import" ||
+  member.tsLinkMethod === "manual";
+const steamUnverified = member.steamLinkMethod === "manual";
+---
+
+<Base title="Profile" member={member}>
+  <h1>Your profile</h1>
+
+  {notice && NOTICES[notice] && <p class="notice ok">{NOTICES[notice]}</p>}
+  {error && ERRORS[error] && <p class="notice bad">{ERRORS[error]}</p>}
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <h2>Discord</h2>
+        <p class="muted">
+          {member.displayName} &middot; <code>{member.discordId}</code>
+        </p>
+      </div>
+      <span class="muted">how you sign in</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <h2>TeamSpeak</h2>
+        {member.tsUid
+          ? (
+            <p class="muted">
+              {member.tsNickname ?? "(no nickname)"} &middot;{" "}
+              <code>{member.tsUid}</code>
+              {tsUnverified
+                ? (
+                  <>
+                    <br />
+                    <strong>Not verified.</strong>{" "}
+                    {member.tsLinkMethod === "legacy_import"
+                      ? "Carried over from the old site."
+                      : "Set by an admin."}{" "}
+                    Re-link to prove it is yours.
+                  </>
+                )
+                : <><br />Verified.</>}
+            </p>
+          )
+          : (
+            <p class="muted">
+              Not linked. This is what gives you your TeamSpeak groups, so it is
+              worth doing.
+            </p>
+          )}
+      </div>
+
+      <div>
+        <a class="button" href="/link/teamspeak">
+          {member.tsUid ? "Re-link" : "Link TeamSpeak"}
+        </a>
+        {member.tsUid && (
+          <form class="inline" method="post" action="/unlink/teamspeak">
+            <button type="submit" class="secondary">Unlink</button>
+          </form>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <h2>Steam</h2>
+        {member.steamId
+          ? (
+            <p class="muted">
+              <code>{member.steamId}</code>
+              {steamUnverified
+                ? (
+                  <>
+                    <br />
+                    <strong>Not verified.</strong>{" "}
+                    Carried over from the old site. Re-link to prove it is yours.
+                  </>
+                )
+                : <><br />Verified.</>}
+            </p>
+          )
+          : (
+            <p class="muted">
+              Optional. It lets other members find you in Steam, and nothing else.
+            </p>
+          )}
+      </div>
+
+      <div>
+        <a class="button" href="/link/steam">
+          {member.steamId ? "Re-link" : "Link Steam"}
+        </a>
+        {member.steamId && (
+          <form class="inline" method="post" action="/unlink/steam">
+            <button type="submit" class="secondary">Unlink</button>
+          </form>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <form method="post" action="/signout">
+    <button type="submit" class="secondary">Sign out</button>
+  </form>
+</Base>

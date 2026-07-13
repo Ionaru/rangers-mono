@@ -54,14 +54,25 @@ Turbo).
 
 ## Status
 
-**Phase 1 (Foundation) is done.** The workspace, `config`, `domain`, `db`
-(schema + first migration), the two app shells, the Compose stack and CI to GHCR
-exist and run. What is _not_ built is every feature: Discord login, identity
-linking, the TeamSpeak sync, the bot, attendance and the public content are
-Phases 2 to 6 of `ARCHITECTURE.md` §9. Phase 0 (harvest the meme images, create
-the 8 badge roles in Discord, and set the `7R_Bot` Discord application up as the
-platform's bot: credentials, intent, permissions, role position) is prep work
-with no code and is still outstanding.
+**Phases 1 (Foundation) and 2 (Identity) are built.** The workspace, `config`,
+`domain`, `db`, the Compose stack and CI to GHCR came first. On top of them:
+Discord login (Better Auth), the member profile, TeamSpeak linking (pick
+yourself from the online list, the bot pokes you a code, you type it back),
+Steam OpenID linking, and the legacy import (150 members, 99 TeamSpeak links,
+23 Steam ids).
+
+**Phase 2 cannot actually be used until Phase 0 is done**, and Phase 0 is still
+outstanding. It is prep work with no code: set the `7R_Bot` Discord application
+up as the platform's bot (its four credentials into `.env`, the GUILD_MEMBERS
+intent enabled, its role moved above every Assignable role, its Administrator
+grant dialled back), register `<PUBLIC_BASE_URL>/api/auth/callback/discord` as
+its OAuth redirect, harvest the meme images, and create the 8 badge roles in
+Discord. Nobody can log in until the first of those is done, because the login
+gate asks Discord whether you are in the guild.
+
+Still to build: the TeamSpeak group sync (Phase 3, the one that pays for the
+project), the bot's slash commands (4), attendance (5) and the public content
+and handbook (6). See `ARCHITECTURE.md` §9.
 
 ## Development
 
