@@ -292,6 +292,27 @@ jobs:
             docker compose pull
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+            # Point the box's `latest` at what we just pulled.
+            #
+            # compose.yaml resolves `worker:${RANGERS_BUILD_TAG:-latest}`, and this
+            # deploy always pins the SHA, so `latest` on the box is never pulled and
+            # never updated. It therefore keeps whatever it was the last time anyone
+            # ran without a tag, which can be from another era entirely.
+            #
+            # That is not hypothetical. A `docker compose up -d worker` typed by hand
+            # on the box, with no tag set, silently started a months-old Phase 1
+            # worker: old enough to predate ADR 0014's secret precedence, so it dialled
+            # 127.0.0.1:5432 from inside its own network namespace and died on a
+            # database that was right there. It looked like a database fault. It was a
+            # deploy artefact.
+            #
+            # Re-tagging costs nothing (same layers, no transfer) and makes the
+            # obvious command the correct one.
+            docker tag "ghcr.io/${env:GHCR_REPO}/web:${env:RANGERS_BUILD_TAG}" "ghcr.io/${env:GHCR_REPO}/web:latest"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            docker tag "ghcr.io/${env:GHCR_REPO}/worker:${env:RANGERS_BUILD_TAG}" "ghcr.io/${env:GHCR_REPO}/worker:latest"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
             # Postgres must be up for both the dump and the migrator. After an
             # unattended reboot it may simply not be (ADR 0005, recorded risk 1).
             docker compose up -d --wait postgres

@@ -32,8 +32,23 @@ x-healthcheck-timing: &healthcheck-timing
 
 # One image, used twice: by the worker, and by the one-shot migrator, which is
 # that same image with the command overridden.
+#
+# Both defaults below are load-bearing, and both used to be wrong.
+#
+# GHCR_REPO must name the repository CI actually pushes to. The deploy always
+# overrides it (cd.yaml derives it from GITHUB_REPOSITORY), so a wrong default is
+# never exercised there and rots unnoticed: it only surfaces when a human types
+# `docker compose up` on the box, at which point compose resolves a DIFFERENT
+# image name, finds whatever ancient thing is cached under it, and runs that.
+# That happened, and it silently started a months-old worker.
+#
+# RANGERS_BUILD_TAG is the short commit SHA. The deploy pins it, so `latest` is
+# never pulled and the copy on the box is only as fresh as the last time somebody
+# ran without a tag. The deploy therefore re-tags what it pulled as `latest`
+# (cd.yaml), so a bare `docker compose up` on the box runs the code that is
+# actually deployed rather than an artefact from another era.
 x-worker-image: &worker-image
-  image: ghcr.io/${GHCR_REPO:-ionaru/rangers-platform}/worker:${RANGERS_BUILD_TAG:-latest}
+  image: ghcr.io/${GHCR_REPO:-ionaru/rangers-mono}/worker:${RANGERS_BUILD_TAG:-latest}
   build:
     context: .
     dockerfile: apps/worker/Dockerfile
@@ -72,7 +87,7 @@ services:
     # Named so the same compose file builds locally and pulls on the server.
     # RANGERS_BUILD_TAG is the short commit SHA CI pushes; unset, you get the
     # local build. Deploys pin it, so `docker compose pull && up` is exact.
-    image: ghcr.io/${GHCR_REPO:-ionaru/rangers-platform}/web:${RANGERS_BUILD_TAG:-latest}
+    image: ghcr.io/${GHCR_REPO:-ionaru/rangers-mono}/web:${RANGERS_BUILD_TAG:-latest}
     build:
       context: .
       dockerfile: apps/web/Dockerfile
