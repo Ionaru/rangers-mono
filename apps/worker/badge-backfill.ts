@@ -192,26 +192,32 @@ async function main() {
   }
 
   /**
-   * The important half of the output.
+   * The list to reconcile by hand, printed at the END of an --apply run and as a
+   * preview in a dry-run.
    *
    * These hold a badge on TeamSpeak but resolve to no member, because that
-   * TeamSpeak identity is not linked to any Discord account. They cannot be given
-   * the Discord role now. Nothing strips their badge today (see the header): the
-   * reconcile never touches an identity that is nobody's `ts_uid`. The trap is
-   * that a real member here who later LINKS this identity loses the badge by
-   * linking, because Discord will not carry it. So this is the list to reconcile
-   * by hand before Phase 3 leaves dry-run.
+   * TeamSpeak identity is not linked to any Discord account. Nothing strips their
+   * badge today: the reconcile never touches an identity that is nobody's
+   * `ts_uid`. The trap is that a real member here who later LINKS this identity
+   * loses the badge by linking, because Discord will not carry it.
+   *
+   * The wording is mode-aware on purpose, because the order of operations trips
+   * people up: **you cannot hand-grant a badge role that does not exist yet.** In
+   * a dry-run the roles have not been created, so the only correct instruction is
+   * "--apply first, then grant". Printing "grant them by hand" in a dry-run would
+   * send someone to Discord to look for roles that are not there.
    */
-  if (unmapped.length > 0) {
+  const printUnmapped = async (rolesExist: boolean) => {
+    if (unmapped.length === 0) return;
     const distinct = [...new Set(unmapped.map((o) => o.uid))];
 
     /**
      * Triage each unmapped identity against the people we already know. A nickname
-     * that matches a member who is linked under a DIFFERENT uid is almost
-     * certainly that member on a reinstalled client: grant them the Discord role
-     * and they keep the badge. A nickname that matches nobody is probably someone
-     * who left. The match is a hint for a human, never an automatic grant: two
-     * people can share a nickname, and a wrong grant is a wrong qualification.
+     * that matches a member linked under a DIFFERENT uid is almost certainly that
+     * member on a reinstalled client: grant them the Discord role and they keep
+     * the badge. A nickname that matches nobody is probably someone who left. It
+     * is a hint for a human, never an automatic grant: two people can share a
+     * nickname, and a wrong grant is a wrong qualification.
      */
     const linked = await listLinkedMembers(db);
     const guess = (nickname: string): string => {
@@ -226,18 +232,24 @@ async function main() {
     };
 
     console.log(
-      `\n${unmapped.length} unmapped grant(s) across ${distinct.length} TeamSpeak identit(ies).`,
+      `\n${unmapped.length} unmapped grant(s) across ${distinct.length} TeamSpeak identit(ies) -- HAND-GRANT NEEDED.`,
     );
-    console.log(
-      "Not linked to any member, so they get no Discord role. Nothing strips these today;",
-    );
-    console.log(
-      "the risk is that a real member here LOSES the badge if they later link this exact",
-    );
-    console.log(
-      "identity while Discord lacks it. Grant them the role by hand, or have them link and",
-    );
-    console.log("re-run this, before the sync leaves dry-run.\n");
+    if (rolesExist) {
+      console.log(
+        "The badge roles now exist. For each CURRENT member below, grant them the badge role",
+      );
+      console.log(
+        "by hand in Discord, before the sync leaves dry-run. People who left, ignore.",
+      );
+    } else {
+      console.log(
+        "You cannot grant these yet: the roles do not exist until you --apply. So --apply",
+      );
+      console.log(
+        "first (it creates the roles and grants the mapped members), THEN hand-grant these.",
+      );
+    }
+    console.log("");
 
     // Grouped by identity, not by badge, so a human sees one person at a time.
     for (const uid of distinct) {
@@ -246,9 +258,10 @@ async function main() {
       console.log(`    badges: ${held.map((o) => o.badge).join(", ")}`);
       console.log(`  ${guess(held[0].nickname)}\n`);
     }
-  }
+  };
 
   if (!apply) {
+    await printUnmapped(false);
     console.log(
       "\n--- dry run. Nothing was written. Pass --apply to do it. ---",
     );
@@ -291,6 +304,10 @@ async function main() {
     const role = roleByBadge.get(badge);
     console.log(`| ${badge} | ${role?.id ?? "NOT CREATED"} | ... |`);
   }
+
+  // The leftover, printed LAST so it is the final thing on screen: the roles now
+  // exist, so this is the actionable to-do, not a warning to scroll back for.
+  await printUnmapped(true);
 }
 
 if (import.meta.main) {
