@@ -32,7 +32,7 @@ Because Discord is the source of truth for roles (ADR 0002), we import **identit
 
    New roles are created at the **bottom** of the Discord role list, which is what puts them below `7R_Bot` and therefore assignable at all (hierarchy is not bypassed by any permission).
 
-   **Watch the unmapped.** A TeamSpeak identity holding a badge that resolves to no Member cannot be given a Discord role, and once Discord is the source of truth the reconcile will *strip that group off them*. Every unmapped holder is a badge somebody is about to lose. The backfill prints them; link them first, or grant the role by hand.
+   **Watch the unmapped.** A TeamSpeak identity holding a badge that resolves to no Member cannot be given a Discord role. It is **not** stripped by the reconcile, which only iterates members that have a linked `ts_uid` and so never touches an identity that is nobody's `ts_uid`. The trap is later and conditional: a real member here who *links this exact identity* while Discord lacks the badge **loses it by linking**, because the reconcile then sees a TeamSpeak group with no Discord counterpart. So reconcile this list by hand before the sync leaves dry-run: grant the Discord role to the real people, or have them link and re-run the backfill (idempotent). People who have left the unit never link, so their badge lingers harmlessly on a dead identity.
 
 ---
 

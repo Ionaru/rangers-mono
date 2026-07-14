@@ -419,3 +419,38 @@ export async function membersByTsUid(
     }]),
   );
 }
+
+/** A linked member, reduced to what nickname triage needs. */
+export interface LinkedMemberLite {
+  displayName: string;
+  tsNickname: string | null;
+  tsUid: string;
+}
+
+/**
+ * Every linked member, for matching an unlinked TeamSpeak nickname against people
+ * we already know.
+ *
+ * The badge backfill uses this to triage its unmapped holders: an unmapped
+ * TeamSpeak identity whose nickname matches a member who is linked under a
+ * *different* uid is almost certainly that member on a reinstalled client, which
+ * is a very different problem (grant the Discord role, they keep it) from a
+ * stranger who left the unit (ignore). Names are a hint, not proof: a human
+ * confirms before granting.
+ */
+export async function listLinkedMembers(db: Db): Promise<LinkedMemberLite[]> {
+  const rows = await db
+    .select({
+      displayName: member.displayName,
+      tsNickname: member.tsNickname,
+      tsUid: member.tsUid,
+    })
+    .from(member)
+    .where(sql`${member.tsUid} is not null`);
+
+  return rows.map((r) => ({
+    displayName: r.displayName,
+    tsNickname: r.tsNickname,
+    tsUid: r.tsUid!,
+  }));
+}
