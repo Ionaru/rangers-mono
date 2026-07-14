@@ -1,4 +1,9 @@
-import { discordFetch, discordJson, type DiscordRestOptions } from "./rest.ts";
+import {
+  DiscordApiError,
+  discordFetch,
+  discordJson,
+  type DiscordRestOptions,
+} from "./rest.ts";
 
 /**
  * Writing Discord roles.
@@ -79,9 +84,15 @@ export async function addMemberRole(
   );
 
   if (!response.ok) {
-    throw new Error(
-      `could not give ${userId} role ${roleId}: ${response.status} ${await response
-        .text()}`,
+    // A DiscordApiError, not a bare Error, so the status survives: a bulk caller
+    // needs to tell a 404 (the member left the guild, skip them) from a 403 (a
+    // hierarchy or permission problem, which is a real fault) without parsing a
+    // string. A 404 on this endpoint means the member is not in the guild: the
+    // role exists (we may have just made it) and the guild exists.
+    throw new DiscordApiError(
+      response.status,
+      `/guilds/${guildId}/members/${userId}/roles/${roleId}`,
+      await response.text(),
     );
   }
 }

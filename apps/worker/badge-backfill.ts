@@ -16,6 +16,7 @@ import {
 import {
   addMemberRole,
   createGuildRole,
+  DiscordApiError,
   type DiscordRestOptions,
   listGuildRoles,
   type Role,
@@ -73,7 +74,7 @@ interface Grant {
   nickname: string;
 }
 
-async function main() {
+async function main(): Promise<number> {
   const apply = Deno.args.includes("--apply");
 
   const [discord, ts] = loadAll<[DiscordConfig, TeamspeakConfig]>([
@@ -265,7 +266,7 @@ async function main() {
     console.log(
       "\n--- dry run. Nothing was written. Pass --apply to do it. ---",
     );
-    return;
+    return 0;
   }
 
   // ------------------------------------------------ do it
@@ -284,14 +285,53 @@ async function main() {
     console.log(`  created role ${badgeDisplayName(badge)} (${role.id})`);
   }
 
+  /**
+   * Grant, tolerating the members who have left the guild.
+   *
+   * Some of the 32 hold a badge on TeamSpeak and have a linked identity, but have
+   * since left the Discord guild (they came in via the legacy import, which does
+   * not know who is still around). Discord answers a role grant to a non-member
+   * with a 404, and a bulk backfill must NOT abort the other 79 grants because of
+   * one leaver. A 404 is skipped and named; anything else is collected and made
+   * to fail the run, so a systematic problem (every grant 403ing on hierarchy) is
+   * loud rather than buried.
+   */
   let granted = 0;
+  const leftGuild = new Set<string>();
+  const failures: string[] = [];
+
   for (const grant of resolved) {
     const role = roleByBadge.get(grant.badge)!;
-    await addMemberRole(auth, guildId, grant.discordId, role.id, REASON);
-    granted++;
+    try {
+      await addMemberRole(auth, guildId, grant.discordId, role.id, REASON);
+      granted++;
+    } catch (error) {
+      if (error instanceof DiscordApiError && error.status === 404) {
+        // Not in the guild. Log once per person, not once per badge.
+        if (!leftGuild.has(grant.discordId)) {
+          leftGuild.add(grant.discordId);
+          console.log(
+            `  skipped ${grant.who} (${grant.discordId}): no longer in the guild`,
+          );
+        }
+      } else {
+        failures.push(
+          `${grant.who} / ${grant.badge}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
   }
 
-  console.log(`  granted ${granted} role(s)\n`);
+  console.log(
+    `\n  granted ${granted} role(s); skipped ${leftGuild.size} member(s) who left the guild`,
+  );
+
+  if (failures.length > 0) {
+    console.log(`\n  ${failures.length} grant(s) FAILED unexpectedly:`);
+    for (const failure of failures) console.log(`    ${failure}`);
+  }
 
   /**
    * Phase 3's seed needs these, and MIGRATION.md's badge table still says TODO in
@@ -308,12 +348,18 @@ async function main() {
   // The leftover, printed LAST so it is the final thing on screen: the roles now
   // exist, so this is the actionable to-do, not a warning to scroll back for.
   await printUnmapped(true);
+
+  // A member who left the guild is expected; an unexpected grant failure is not,
+  // and the run should fail so it is noticed.
+  return failures.length;
 }
 
 if (import.meta.main) {
+  let failed = 0;
   try {
-    await main();
+    failed = await main() ?? 0;
   } finally {
     await closeDb();
   }
+  if (failed > 0) Deno.exit(1);
 }

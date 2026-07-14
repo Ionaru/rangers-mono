@@ -68,16 +68,18 @@ Steam is a plain profile field: it proves account ownership via Steam OpenID and
 
 **Badges** (kind=`badge`, additive, **discordRoleId MISSING, create in Phase 0 and fill in**). A Badge is a **training qualification** a member earned. Medic and the two aviation badges are qualifications, not staff roles.
 
+Discord role ids created by `deno task badges:backfill` on 2026-07-15 (the role is named with a 🎖️ prefix in Discord; the canonical name here and on TeamSpeak stays plain).
+
 | name | discordRoleId | legacy sgid | TS group name |
 |---|---|---|---|
-| Leadership | TODO | 73 | Leadership |
-| Armoured | TODO | 78 | Armoured |
-| Marksman | TODO | 77 | Marksman |
-| Medic | TODO | 76 | Medic |
-| Heavy Weapons | TODO | 74 | Heavy Weapons |
-| Fixed-Wing Aviation | TODO | 70 | Fixed-Wing Aviation |
-| Rotary Aviation | TODO | 69 | Rotary Aviation |
-| Engineer | TODO | 75 | Engineer |
+| Leadership | 1526736084996718796 | 73 | Leadership |
+| Armoured | 1526736083172462633 | 78 | Armoured |
+| Marksman | 1526736080987226162 | 77 | Marksman |
+| Medic | 1526736079737192549 | 76 | Medic |
+| Heavy Weapons | 1526736084267175977 | 74 | Heavy Weapons |
+| Fixed-Wing Aviation | 1526736093804757024 | 70 | Fixed-Wing Aviation |
+| Rotary Aviation | 1526736092861300936 | 69 | Rotary Aviation |
+| Engineer | 1526736082207641680 | 75 | Engineer |
 
 The `Rotary Aviation` (69) and `Fixed-Wing Aviation` (70) TS groups also appear in the legacy ranks list; they are badges here. Resolve all of them by name against the live server.
 
