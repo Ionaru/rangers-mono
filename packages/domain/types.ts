@@ -44,6 +44,43 @@ export const BADGES = [
 export type Badge = typeof BADGES[number];
 
 /**
+ * The emoji every badge role wears in Discord, so the eight of them stand out as
+ * a family among the ranks and staff roles in the member list. One medal for all
+ * eight, on purpose: it reads as "these are qualifications" at a glance, and the
+ * text still tells them apart.
+ *
+ * This is the **only** place the canonical name and the Discord display name
+ * diverge, and it is deliberately the only place. The name `Medic` is what
+ * everything else keys on: the TeamSpeak group is `Medic`, the `assignable` row
+ * is `Medic`, the sync matches Discord roles by their snowflake and TeamSpeak
+ * groups by that name. The emoji never reaches any of them. `badgeDisplayName` /
+ * `badgeFromDisplayName` are the seam that keeps this cosmetic layer from leaking
+ * into the matching logic.
+ */
+export const BADGE_EMOJI = "🎖️";
+
+/** The name a badge role carries in Discord: emoji, a space, then the canonical name. */
+export function badgeDisplayName(badge: Badge): string {
+  return `${BADGE_EMOJI} ${badge}`;
+}
+
+/**
+ * A Discord role name back to the canonical badge, or `undefined` if it is not a
+ * badge role.
+ *
+ * Tolerates the bare canonical name as well as the emoji form, so it is correct
+ * against a role created before the emoji convention (or one a human made by
+ * hand), and so re-running the backfill after a rename does not create a
+ * duplicate. The `assignable` matching never uses this (it is by snowflake); this
+ * is only for the two Phase 0 tools that read Discord role names directly.
+ */
+export function badgeFromDisplayName(roleName: string): Badge | undefined {
+  return BADGES.find((badge) =>
+    roleName === badge || roleName === badgeDisplayName(badge)
+  );
+}
+
+/**
  * How a TeamSpeak link was established.
  * - `poke`: the member proved possession (pick-from-list + poked code).
  * - `manual`: an admin force-linked it (`/link-force`). Visibly not self-verified.

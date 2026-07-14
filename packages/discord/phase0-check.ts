@@ -1,5 +1,6 @@
 import { getDiscordConfig, getWebConfig, loadAll } from "@7r/config";
 import type { DiscordConfig, WebConfig } from "@7r/config";
+import { badgeFromDisplayName, BADGES } from "@7r/domain";
 import { discordJson, type DiscordRestOptions } from "./rest.ts";
 
 /**
@@ -41,17 +42,13 @@ const KNOWN_ASSIGNABLES = [
   { kind: "role", name: "Mission maker", id: "432647098517684246" },
 ];
 
-/** The eight badges, which exist only as TeamSpeak groups until Phase 0 creates them in Discord. */
-const BADGE_NAMES = [
-  "Leadership",
-  "Armoured",
-  "Marksman",
-  "Medic",
-  "Heavy Weapons",
-  "Fixed-Wing Aviation",
-  "Rotary Aviation",
-  "Engineer",
-];
+/**
+ * The eight badges, from `@7r/domain` so there is one source of truth for the
+ * names (this file used to keep its own copy). A badge role wears an emoji in
+ * Discord ("🎖️ Medic"), so it is matched with `badgeFromDisplayName`, not by
+ * string equality: a raw `r.name === "Medic"` would report every badge missing.
+ */
+const BADGE_NAMES = BADGES;
 
 /**
  * Permission bits, as BigInt, and that is not fussiness.
@@ -223,7 +220,7 @@ async function main() {
       .filter((a) => !HAND_ASSIGNED.includes(a.name))
       .map((a) => byId.get(a.id))
       .filter(Boolean) as Role[],
-    ...roles.filter((r) => BADGE_NAMES.includes(r.name) && !r.managed),
+    ...roles.filter((r) => badgeFromDisplayName(r.name) && !r.managed),
   ];
 
   const outranked = mustOutrank.filter((r) => r.position >= botTop);
@@ -276,9 +273,15 @@ async function main() {
       }\n     These ids come from a 2019 dump. A role that was deleted and recreated has a new id, so Phase 3 would seed an Assignable that matches nobody, silently. Nobody had checked these.`,
   );
 
-  const foundBadges = BADGE_NAMES.filter((name) =>
-    roles.some((r) => r.name === name && !r.managed)
+  // Match by canonical badge recovered from the display name, so an emoji-bearing
+  // "🎖️ Medic" counts as found rather than reporting all 8 missing.
+  const presentBadges = new Set(
+    roles
+      .filter((r) => !r.managed)
+      .map((r) => badgeFromDisplayName(r.name))
+      .filter(Boolean),
   );
+  const foundBadges = BADGE_NAMES.filter((name) => presentBadges.has(name));
 
   record(
     foundBadges.length === BADGE_NAMES.length ? "ok" : "fail",
@@ -287,7 +290,7 @@ async function main() {
       ? "all 8 found"
       : `missing: ${
         BADGE_NAMES.filter((b) => !foundBadges.includes(b)).join(", ")
-      }\n     Badges only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so until these exist, 8 of the 16 Assignables can never sync. Create them BELOW 7R_Bot's role, then backfill the 83 grants across 32 members, then fill the ids into docs/MIGRATION.md (all 8 rows still say TODO).`,
+      }\n     Badges only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so until these exist, 8 of the 16 Assignables can never sync. Run \`deno task badges:backfill\` (dry-run first): it creates them below 7R_Bot, mirrors the live TeamSpeak groups, and prints the ids for docs/MIGRATION.md.`,
   );
 
   // ---------------------------------------------------------------- surviving /loa

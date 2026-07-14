@@ -7,12 +7,18 @@ import {
   listLinkedMembers,
   membersByTsUid,
 } from "@7r/db";
-import { BADGES } from "@7r/domain";
+import {
+  type Badge,
+  badgeDisplayName,
+  badgeFromDisplayName,
+  BADGES,
+} from "@7r/domain";
 import {
   addMemberRole,
   createGuildRole,
   type DiscordRestOptions,
   listGuildRoles,
+  type Role,
 } from "@7r/discord";
 import {
   connectTeamspeak,
@@ -62,7 +68,7 @@ import {
 const REASON = "7R Platform: Phase 0 badge backfill, sourced from TeamSpeak";
 
 interface Grant {
-  badge: string;
+  badge: Badge;
   uid: string;
   nickname: string;
 }
@@ -127,7 +133,7 @@ async function main() {
 
   const members = await membersByTsUid(db);
 
-  const resolved: { badge: string; discordId: string; who: string }[] = [];
+  const resolved: { badge: Badge; discordId: string; who: string }[] = [];
   const unmapped: Grant[] = [];
 
   for (const grant of grants) {
@@ -145,12 +151,21 @@ async function main() {
 
   // ------------------------------------------------ what Discord has
 
+  /**
+   * Keyed by CANONICAL badge, recovered from the Discord display name, so every
+   * lookup below stays in canonical terms while the role on Discord wears its
+   * emoji. `badgeFromDisplayName` also matches a bare "Medic", so a role created
+   * before the emoji convention is still recognised and not duplicated.
+   */
   const existing = await listGuildRoles(auth, guildId);
-  const roleByName = new Map(
-    existing.filter((r) => !r.managed).map((r) => [r.name, r]),
+  const roleByBadge = new Map<Badge, Role>(
+    existing
+      .filter((r) => !r.managed)
+      .map((r) => [badgeFromDisplayName(r.name), r] as const)
+      .filter((entry): entry is [Badge, Role] => entry[0] !== undefined),
   );
 
-  const toCreate = BADGES.filter((badge) => !roleByName.has(badge));
+  const toCreate = BADGES.filter((badge) => !roleByBadge.has(badge));
 
   // ------------------------------------------------ the plan
 
@@ -158,7 +173,7 @@ async function main() {
   for (const badge of BADGES) {
     const holders = resolved.filter((r) => r.badge === badge);
     const orphans = unmapped.filter((g) => g.badge === badge);
-    const role = roleByName.get(badge);
+    const role = roleByBadge.get(badge);
     console.log(
       `  ${badge.padEnd(20)} ${String(holders.length).padStart(3)} to grant` +
         (orphans.length ? `, ${orphans.length} unmapped` : "") +
@@ -245,19 +260,20 @@ async function main() {
   console.log("\napplying...\n");
 
   for (const badge of toCreate) {
-    // Created at the bottom of the role list, which is what puts it below
-    // 7R_Bot and therefore assignable at all.
+    // Created with its emoji DISPLAY name, at the bottom of the role list, which
+    // is what puts it below 7R_Bot and therefore assignable at all. Everything
+    // else keys on the canonical badge, so `roleByBadge` stays canonical.
     const role = await createGuildRole(auth, guildId, {
-      name: badge,
+      name: badgeDisplayName(badge),
       reason: REASON,
     });
-    roleByName.set(badge, role);
-    console.log(`  created role ${badge} (${role.id})`);
+    roleByBadge.set(badge, role);
+    console.log(`  created role ${badgeDisplayName(badge)} (${role.id})`);
   }
 
   let granted = 0;
   for (const grant of resolved) {
-    const role = roleByName.get(grant.badge)!;
+    const role = roleByBadge.get(grant.badge)!;
     await addMemberRole(auth, guildId, grant.discordId, role.id, REASON);
     granted++;
   }
@@ -266,12 +282,13 @@ async function main() {
 
   /**
    * Phase 3's seed needs these, and MIGRATION.md's badge table still says TODO in
-   * all eight rows. Print them in the shape it wants, so nobody has to go and
-   * copy sixteen snowflakes out of the Discord client by hand.
+   * all eight rows. Print them in the shape it wants (the CANONICAL name, which is
+   * what the seed and the TeamSpeak group use, not the emoji display name), so
+   * nobody has to go and copy sixteen snowflakes out of the Discord client by hand.
    */
   console.log("Paste these into the badge table in docs/MIGRATION.md:\n");
   for (const badge of BADGES) {
-    const role = roleByName.get(badge);
+    const role = roleByBadge.get(badge);
     console.log(`| ${badge} | ${role?.id ?? "NOT CREATED"} | ... |`);
   }
 }
