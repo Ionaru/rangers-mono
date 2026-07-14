@@ -203,11 +203,26 @@ async function main() {
   );
 
   /**
+   * Officer and NCO are hand-assigned by the people who hold them, on purpose,
+   * and `7R_Bot` cannot be raised above them (raising a role requires holding one
+   * above it). So they are NOT in the set the bot must outrank: a bot that cannot
+   * promote somebody to Officer is the unit's stated intent, not a defect
+   * (ARCHITECTURE §7).
+   *
+   * What actually matters: Phase 3's sync only ever *reads* Discord roles and
+   * writes TeamSpeak, so hierarchy does not touch it at all. Hierarchy binds only
+   * the roles we WRITE: the badges, the staff roles, and the lower ranks.
+   *
    * Strictly greater, never "at least". Equal positions are legal in Discord and
    * are broken by id, in a direction the docs do not specify. A tie is not a pass.
    */
+  const HAND_ASSIGNED = ["Officer", "NCO"];
+
   const mustOutrank = [
-    ...KNOWN_ASSIGNABLES.map((a) => byId.get(a.id)).filter(Boolean) as Role[],
+    ...KNOWN_ASSIGNABLES
+      .filter((a) => !HAND_ASSIGNED.includes(a.name))
+      .map((a) => byId.get(a.id))
+      .filter(Boolean) as Role[],
     ...roles.filter((r) => BADGE_NAMES.includes(r.name) && !r.managed),
   ];
 
@@ -219,9 +234,9 @@ async function main() {
       : outranked.length === 0
       ? "ok"
       : "fail",
-    "7R_Bot outranks every Assignable role it must write",
+    "7R_Bot outranks every Assignable role it must WRITE",
     outranked.length === 0
-      ? `the bot's highest role is at position ${botTop}, above all ${mustOutrank.length} Assignable roles found`
+      ? `the bot's highest role is at position ${botTop}, above all ${mustOutrank.length} of the roles it writes. Officer and NCO sit above it, which is deliberate: they are hand-assigned, the sync never writes a Discord role, and new badge roles land below the bot by construction. The only cost is that Phase 4's /rank set cannot promote to or demote from those two.`
       : `the bot's highest role is at position ${botTop}, and it does NOT outrank: ${
         outranked.map((r) => `${r.name} (${r.position})`).join(", ")
       }\n     MANAGE_ROLES only writes roles BELOW the bot's own, and Administrator does not exempt it. Every write to these 403s while the bot looks perfectly healthy.`,

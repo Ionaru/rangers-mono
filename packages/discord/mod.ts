@@ -15,3 +15,4 @@
  */
 export * from "./rest.ts";
 export * from "./guild.ts";
+export * from "./roles.ts";

@@ -196,6 +196,58 @@ export async function listClients(
   }));
 }
 
+/** A server group, reduced to what the mapping needs. */
+export interface ServerGroup {
+  sgid: string;
+  name: string;
+}
+
+/**
+ * Every server group on the virtual server.
+ *
+ * Resolved by NAME, never by the ids in the legacy dump: that dump holds two
+ * families of ids for the same group names, because the server was rebuilt at
+ * some point, and the stored numbers may be dead (MIGRATION.md).
+ */
+export async function listServerGroups(
+  teamspeak: TeamspeakConnection,
+): Promise<ServerGroup[]> {
+  const groups = await teamspeak.serverGroupList();
+  return groups.map((group) => ({ sgid: group.sgid, name: group.name }));
+}
+
+/** A TeamSpeak identity that holds a server group. */
+export interface ServerGroupMember {
+  /** The durable database id on the TeamSpeak server. */
+  cldbid: string;
+  /** The identity, which is what `member.ts_uid` stores. */
+  uid: string;
+  nickname: string;
+}
+
+/**
+ * Who currently holds a server group.
+ *
+ * This is what makes TeamSpeak usable as a *source* of truth for the one thing it
+ * is still the truth for: the badges. Badges never existed as Discord roles, so
+ * the live TeamSpeak groups are the only current record of who has earned what
+ * (the legacy database's grants are years out of date).
+ *
+ * `servergroupclientlist -names` hands back the client's unique identifier
+ * directly, so the uid needs no second lookup and this stays one call per group.
+ */
+export async function listServerGroupMembers(
+  teamspeak: TeamspeakConnection,
+  sgid: string,
+): Promise<ServerGroupMember[]> {
+  const entries = await teamspeak.serverGroupClientList(sgid);
+  return entries.map((entry) => ({
+    cldbid: entry.cldbid,
+    uid: entry.clientUniqueIdentifier,
+    nickname: entry.clientNickname,
+  }));
+}
+
 /**
  * Poke a client: a dialog box in their TeamSpeak, which is the only channel we
  * have to them.

@@ -39,14 +39,46 @@ export async function discordFetch(
   path: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  return await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bot ${botToken}`,
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
-  });
+  /**
+   * Retry a 429, and only a 429.
+   *
+   * The project reads Discord about once every three minutes, which is why it
+   * does not carry `@discordjs/rest` and its rate-limit bucketing (IMPLEMENTATION
+   * §1). But a one-shot backfill fires eighty role writes down the same route in
+   * a few seconds, and Discord will absolutely rate-limit that. Honouring
+   * `retry_after` costs six lines; being throttled halfway through a backfill and
+   * not knowing which grants landed costs an afternoon.
+   *
+   * Bounded, because a retry loop against an API that keeps saying no is how an
+   * IP gets itself temporarily banned: Discord restricts addresses that make more
+   * than 10,000 invalid (401/403/429) requests in ten minutes.
+   */
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json",
+        ...init.headers,
+      },
+    });
+
+    if (response.status !== 429) return response;
+
+    // `retry_after` is seconds, and a float. Read the body rather than the
+    // header: the header is per-bucket, the body is what Discord wants us to do.
+    const body = await response.json().catch(() => ({})) as {
+      retry_after?: number;
+    };
+    const waitMs = Math.ceil((body.retry_after ?? 1) * 1000) + 100;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+  }
+
+  throw new DiscordApiError(
+    429,
+    path,
+    "still rate limited after 5 attempts; stopping rather than digging in",
+  );
 }
 
 /** As `discordFetch`, but a non-2xx throws and the body is parsed. */

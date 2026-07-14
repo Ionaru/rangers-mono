@@ -382,3 +382,40 @@ export async function upsertLegacyMember(
     inserted: row.createdAt.getTime() === row.updatedAt.getTime(),
   };
 }
+
+/**
+ * Every member who has a linked TeamSpeak identity, keyed by that identity.
+ *
+ * This is the bridge that lets TeamSpeak answer a question about Discord. It is
+ * needed exactly once, for the badge backfill: badges never existed as Discord
+ * roles, so the live TeamSpeak groups are the only current record of who has
+ * earned what, and this is what turns a TeamSpeak uid back into a person we can
+ * give a Discord role to.
+ *
+ * After that backfill, the arrow reverses for good: Discord becomes authoritative
+ * for badges like every other Assignable (ADR 0002), and the sync only ever
+ * writes TeamSpeak.
+ */
+export async function membersByTsUid(
+  db: Db,
+): Promise<
+  Map<string, { id: string; discordId: string; displayName: string }>
+> {
+  const rows = await db
+    .select({
+      id: member.id,
+      discordId: member.discordId,
+      displayName: member.displayName,
+      tsUid: member.tsUid,
+    })
+    .from(member)
+    .where(sql`${member.tsUid} is not null`);
+
+  return new Map(
+    rows.map((row) => [row.tsUid!, {
+      id: row.id,
+      discordId: row.discordId,
+      displayName: row.displayName,
+    }]),
+  );
+}

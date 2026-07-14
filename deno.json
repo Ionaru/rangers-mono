@@ -41,7 +41,10 @@
     "worker:dev": "deno task --cwd apps/worker dev",
     // Read-only. Connects and prints the virtual servers this instance actually has,
     // because "invalid serverID" plus a stack trace is not an answer.
-    "ts:check": "deno task --cwd apps/worker ts:check"
+    "ts:check": "deno task --cwd apps/worker ts:check",
+    // Phase 0, one-shot. Reads the live TeamSpeak badge groups (the only current
+    // record of who holds what) and mirrors them into Discord. Dry-run by default.
+    "badges:backfill": "deno task --cwd apps/worker badges:backfill"
   },
   "fmt": {
     "exclude": [
