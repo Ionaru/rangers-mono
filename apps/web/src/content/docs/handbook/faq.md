@@ -21,7 +21,7 @@ It depends on the mission. Our loadouts cover three settings:
   marines.
 - **Retro** - the 1980s to 2000s, including Delta Force and US Army and Marine
   units of the period.
-- **SOG** - the Vietnam war (MACV-SOG, Navy SEALs and LRRPs).
+- **SOG** - the Vietnam War (MACV-SOG, Navy SEALs and LRRPs).
 
 We usually play Western and allied forces, and the exact faction is picked per
 mission.
@@ -68,7 +68,7 @@ We're mainly infantry, and we don't field these in every op.
 ### I'm completely new to Arma, is that okay?
 
 Absolutely. We accept and have members of all skill levels, and our mentoring
-program will make sure you know what to do in our ops. You'll also be paired with
+programme will make sure you know what to do in our ops. You'll also be paired with
 a more experienced member for your first op, to guide you along and watch your
 back.
 

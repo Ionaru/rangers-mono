@@ -2,7 +2,7 @@
 title: Procedures and Regulations
 ---
 
-This page is outlining our regulations and procedures we expect our members to follow.
+This page outlines the regulations and procedures we expect our members to follow.
 
 ## Procedures
 

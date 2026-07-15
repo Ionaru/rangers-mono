@@ -45,7 +45,7 @@ differently, so pick the one that fits the ground and the threat.
 
 **Use when**
 
-- Used as a platoon formation
+- In a platoon staggered column
 - Moving along a road while not expecting hostiles
 - In limited terrain
 

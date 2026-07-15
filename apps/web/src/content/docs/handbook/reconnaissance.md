@@ -12,10 +12,10 @@ title: Reconnaissance
 
 ## Tasks & Responsibilities
 
-- **Reconnaissance** - The Recon Team usually is operating ahead of the other ground teams. Gathering as much intel about enemy position and movements as possible prior to the arrival of the main ground force. Infiltrating behind enemy lines. They are the eyes and ears of the ground command based on which decisions are made.
-- **Overwatch** - Overwatching and cover the advance of ground teams while being on standby to eliminate threats.
-- **Direct Target Elimination** - Directly engaging high-value targets. Including high threats for other units e.g. AA-Launchers prior to arrival of Aviation Elements.
-- **Indirect Target Elimination** - Coordinating with other Support Elements e.g. Aviation and guide their efforts to engage and eliminate targets. Providing important information and guidance assisting with target acquisition and damage assessment.
+- **Reconnaissance** - The Recon Team usually is operating ahead of the other ground teams. Gathering as much intel about enemy positions and movements as possible prior to the arrival of the main ground force. Infiltrating behind enemy lines. They are the eyes and ears of the ground command based on which decisions are made.
+- **Overwatch** - Overwatch and cover the advance of ground teams while being on standby to eliminate threats.
+- **Direct Target Elimination** - Directly engaging high-value targets. Including high threats for other units e.g. AA-Launchers prior to the arrival of Aviation Elements.
+- **Indirect Target Elimination** - Coordinating with other Support Elements e.g. Aviation and guiding their efforts to engage and eliminate targets. Providing important information and guidance assisting with target acquisition and damage assessment.
 
 ## Guidelines
 
@@ -23,16 +23,16 @@ title: Reconnaissance
   - Avoid skylining, always have a background where you blend in.
   - Avoid hasty movements. Moving individuals are easier to spot, especially when moving fast.
   - After an engagement relocate yourself.
-- **Communication** - Gathered information need to be efficiently communicated to other Elements. This is being executed by utilizing both markers and short audio messages.
-- **Precision** - When cleared to engage a target precision is key. Other than self-defence mission specific ROE will handle how and when to engage.
-- **Survival** - Due to operating behind enemy lines the Recon Team will most likely not receive any direct support by other units. Therefor they need to break contact whenever there is a threat of them being stuck. Transition between slow pace stealth movements and quickly breaking contact is required.
+- **Communication** - Gathered information needs to be efficiently communicated to other Elements. This is done using both markers and short audio messages.
+- **Precision** - When cleared to engage a target, precision is key. Other than self-defence, mission-specific ROE will handle how and when to engage.
+- **Survival** - Due to operating behind enemy lines the Recon Team will most likely not receive any direct support by other units. Therefore they need to break contact whenever there is a threat of them being stuck. Transition between slow-paced stealth movements and quickly breaking contact is required.
 
 ## Sniper Weapon Switching
 
 The Recon Sniper may carry two primary weapons. A Personal Defence Weapon (PDW) and a Sniper Rifle.
 
-- **Gun Back** - The Sniper Rifle is on default loaded into his Gun Back (Backpack). He is carrying his PDW.
-- **Switching Weapons** - Place the PDW into your inventory. Use ACE Self-Interaction to take the Sniper Rifle out of your Gun Back. When done, place the Sniper Rifle in your Gun Back with ACE Self-Interaction and take the PDW out of your inventory. It is not possible to switch a weapon your carry directly with the weapon in the Gun Back.
+- **Gun Back** - The Sniper Rifle is by default loaded into his Gun Back (Backpack). He is carrying his PDW.
+- **Switching Weapons** - Place the PDW into your inventory. Use ACE Self-Interaction to take the Sniper Rifle out of your Gun Back. When done, place the Sniper Rifle in your Gun Back with ACE Self-Interaction and take the PDW out of your inventory. It is not possible to switch a weapon you carry directly with the weapon in the Gun Back.
 
 ## Marksmanship
 
@@ -40,12 +40,12 @@ Accuracy is vital when engaging targets, especially at range. When breaking stea
 
 ### Influencing Factors
 
-- **Temperature & Humidity** - Lower Temperatures cause more drag due to higher air density slowing down the bullet. High Humidity is reducing the drag.
+- **Temperature & Humidity** - Lower Temperatures cause more drag due to higher air density slowing down the bullet. High Humidity reduces the drag.
 - **Barometric Pressure** - Describes the density of air. Higher Pressure results in more drag.
 - **Range** - Direct distance to Target.
 - **Direct wind** - Headwinds and Tailwinds.
   - Headwinds: Bullet gets slowed down which increases drop.
-  - Tailwinds: Bullet gets carried by the wind and arrives quicker, therefor less drop.
+  - Tailwinds: Bullet gets carried by the wind and arrives quicker, therefore less drop.
 - **Crosswind** - Deviates the bullet to the side.
 
 ### Calculations & Scope Adjustments
@@ -62,13 +62,13 @@ In order to make adjustments you first need to get the required parameters.
     - Barometric Pressure
   - Crosswinds
     - Crosswind
-      - Set the heading to the target direction. Either by auto set with pointing at the target or by manual set.
+      - Set the heading to the target direction. Either by auto set by pointing at the target or by manual set.
       - Point the Kestrel towards the wind direction. Read the crosswind value.
       - If the wind direction is from left to right relative to your target location you need to make a negative horizontal adjustment and if the wind direction is from the right make a positive horizontal adjustment.
     - Headwind / Tailwind
-      - When using Crosswind function point the Kestrel at the target. Read of the wind towards target direction. If the wind is coming from a direction behind you, it is Tailwind, when it comes from the front it is Headwind.
-- **Range card** - Lists of Bullet Drop at certain ranges. Furthermore, it lists Crosswind Adjustments and Target Lead Adjustments.
+      - When using the Crosswind function, point the Kestrel at the target. Read off the wind towards target direction. If the wind is coming from a direction behind you, it is Tailwind, when it comes from the front it is Headwind.
+- **Range card** - Lists Bullet Drop at certain ranges. Furthermore, it lists Crosswind Adjustments and Target Lead Adjustments.
   - Use all previously gained data to read the appropriate values out of the Range card.
-  - Recommended is to start with the vertical adjustment (range).
+  - It is recommended to start with the vertical adjustment (range).
 
 ![RangeCard](/wiki/images/RangeCard.png)

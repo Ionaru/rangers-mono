@@ -4,7 +4,7 @@ title: Qualifications
 
 ## General
 
-Qualifications allow members to certify their skills in certain areas. The infantry qualification is mandatory for all members, others qualifications are voluntary.
+Qualifications allow members to certify their skills in certain areas. The infantry qualification is mandatory for all members; other qualifications are voluntary.
 
 <img src="/wiki/images/ExpInf.png" width="100" alt="ExpInf.png">
 
@@ -63,7 +63,7 @@ Content:
     - Accurate up to 800m
   - Sniper Rifle
     - Accurate up to 1000m
-  - Anti-Material-Rifle
+  - Anti-Materiel Rifle
 - Concealed Movement
 
 <img src="/wiki/images/CE.png" width="100" alt="CE.png">
@@ -76,7 +76,7 @@ Content:
 
 - Repair
 - Fortification Construction
-  - Setting up Defenses
+  - Setting up Defences
   - Fortifying Positions
 - Explosives
   - Knowledge about common types of explosives
@@ -101,12 +101,12 @@ Content:
 
 ## Rotary Aviation
 
-Requirements: Infantryman Qualification, Copilot Qualification, Participation in at least one training session. This certification is mandatory to fly rotary aircraft in our operations.
+Requirements: Infantryman Qualification, Co-Pilot Qualification, Participation in at least one training session. This certification is mandatory to fly rotary aircraft in our operations.
 
 Content:
 
 - Theory
-  - Micro DAGR
+  - MicroDAGR
   - Pre-flight planning
   - Basic Knowledge about helicopters (Mainly UH-60, MH-9 / AH-9, and CH-47)
   - Communication Procedures
@@ -116,21 +116,21 @@ Content:
   - Safe, reliable, and timely insertion and exfiltration of personnel
   - Sling Loading
   - Operating FRIES
-  - Emergency Maneuvers and Procedures
+  - Emergency Manoeuvres and Procedures
   - Formation Flight
   - Scouting
   - Safe, reliable, and timely Close Air Support
   - Operation and procedures of attack helicopters
   - Performing all of the above in day and nighttime conditions, under fire, and in difficult weather
 
-## Copilot Rotary Aviation
+## Co-Pilot Rotary Aviation
 
-Requirements: Infantryman Qualification, Participation in at least one training session. This certification is mandatory to be a copilot in a rotary aircraft in our operations.
+Requirements: Infantryman Qualification, Participation in at least one training session. This certification is mandatory to be a co-pilot in a rotary aircraft in our operations.
 
 Content:
 
 - Theory
-  - Micro DAGR
+  - MicroDAGR
   - Pre-flight planning
   - Basic Knowledge about helicopters (Mainly UH-60, MH-9 / AH-9, and CH-47)
   - Communication Procedures
@@ -138,7 +138,7 @@ Content:
 - Practice
   - Safe handling of a helicopter in flight
   - Safe landings in easy conditions
-  - Operating the helicopter mounted camera for scouting and designating targets
+  - Operating the helicopter-mounted camera for scouting and designating targets
   - Assistance to the pilot when doing
     - Sling Loading
     - FRIES Operation
@@ -151,9 +151,9 @@ Content:
 
 ## Armoured
 
-Requirements: Infantryman Qualification, two crew man, leadership qualification is recommended but not mandatory.
+Requirements: Infantryman Qualification, two crewmen, leadership qualification is recommended but not mandatory.
 
-Can be done during an OP or scheduled Privately.
+Can be done during an OP or scheduled privately.
 
 Content:
 
@@ -168,23 +168,23 @@ Content:
   - Knowledge about basic Tank Terminology
     - Hull down, Hide position, Jockeying etc.
   - Knowing how to perform emergency repairs, how to perform regular repairs and where to get said repairs.
-  - Knowing what Targets are a priority and which are not (Tank RoE).
+  - Knowing what Targets are a priority and which are not (Tank ROE).
   - Coordination with other elements.
 - Practice
   - Leading the crew.
-  - Upholding the General RoE and the Tank RoE (Rules of Engagement)
+  - Upholding the General ROE and the Tank ROE (Rules of Engagement).
   - Positioning of the Vehicle.
   - Attacking enemy Positions.
   - Providing Safe Fire Support.
 
 <img src="/wiki/images/WING.png" width="100" alt="WING.png">
 
-## Fixed Wing Aviation
+## Fixed-Wing Aviation
 
-Requirements: Infantryman Qualification, Participation in at least one training session. This certification will allow you to fly fixed wing aircraft in our operations.
+Requirements: Infantryman Qualification, Participation in at least one training session. This certification will allow you to fly fixed-wing aircraft in our operations.
 
 - Theory
-  - Micro DAGR
+  - MicroDAGR
   - Pre-flight planning
   - Basic knowledge about jets
   - Basic knowledge of weapon systems
@@ -195,7 +195,7 @@ Requirements: Infantryman Qualification, Participation in at least one training 
   - Safe, quick and reliable CAS
   - Ability to use the appropriate munitions for every task received
   - Safe airfield and carrier operations
-  - Emergency maneuvers and procedures
-  - Basic combat maneuvers
+  - Emergency manoeuvres and procedures
+  - Basic combat manoeuvres
   - Scouting
   - Performing all of the above during day and night, under fire, and in bad weather
