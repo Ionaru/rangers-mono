@@ -1,8 +1,9 @@
 ---
 /**
  * The briefing generator. Prerendered + a vanilla `<script>` island, no
- * framework (the tool is a form, a string build, copy and a share link). The
- * SQF itself is built by the pure, byte-for-byte-tested lib/briefing.ts.
+ * framework (the tool is a form, a string build, copy to clipboard and a
+ * briefing.sqf download). The SQF itself is built by the pure,
+ * byte-for-byte-tested lib/briefing.ts.
  */
 export const prerender = true;
 import PublicLayout from "../layouts/PublicLayout.astro";
@@ -82,9 +83,9 @@ const groups = [
       <p class="eyebrow">Tool</p>
       <h1 class="h-section">Briefing Generator</h1>
       <p class="lede">
-        Fill in the briefing, copy the SQF, and drop it into your mission's{" "}
-        <code>briefing.sqf</code>. Everything runs in your browser: nothing is
-        saved or sent.
+        Fill in every field, then copy the SQF or download it as{" "}
+        <code>briefing.sqf</code>, and drop it into your mission. Everything runs
+        in your browser: nothing is saved or sent.
       </p>
     </div>
   </section>
@@ -135,8 +136,8 @@ const groups = [
             <span class="sq" aria-hidden="true"></span> briefing.sqf
           </span>
           <div class="output__actions">
-            <button id="share-btn" class="btn btn--ghost" type="button">
-              Share
+            <button id="download-btn" class="btn btn--ghost" type="button">
+              Download
             </button>
             <button id="copy-btn" class="btn btn--primary" type="button">
               Copy SQF
@@ -161,7 +162,9 @@ import {
 const form = document.getElementById("briefing-form") as HTMLFormElement;
 const out = document.getElementById("sqf-output") as HTMLPreElement;
 const copyBtn = document.getElementById("copy-btn") as HTMLButtonElement;
-const shareBtn = document.getElementById("share-btn") as HTMLButtonElement;
+const downloadBtn = document.getElementById(
+  "download-btn",
+) as HTMLButtonElement;
 const status = document.getElementById("tool-status") as HTMLParagraphElement;
 
 const field = (name: string) =>
@@ -184,37 +187,6 @@ const render = () => {
   out.textContent = buildBriefingSqf(read());
 };
 
-// URL sharing: the eight inputs, base64url(JSON) in the hash. Client-only, so
-// it never reaches the server or a log. Unicode-safe.
-const b64urlEncode = (s: string) => {
-  const bytes = new TextEncoder().encode(s);
-  let bin = "";
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin).replaceAll("+", "-").replaceAll("/", "_").replaceAll(
-    "=",
-    "",
-  );
-};
-const b64urlDecode = (s: string) => {
-  const bin = atob(s.replaceAll("-", "+").replaceAll("_", "/"));
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-};
-
-const loadFromHash = () => {
-  const m = location.hash.match(/^#d=(.+)$/);
-  if (!m) return;
-  try {
-    const data = JSON.parse(b64urlDecode(m[1])) as Record<string, unknown>;
-    for (const name of BRIEFING_FIELDS) {
-      const el = field(name);
-      if (el && typeof data[name] === "string") el.value = data[name] as string;
-    }
-  } catch {
-    // A malformed link just leaves the form blank; not worth an error.
-  }
-};
-
 // Clipboard access needs a secure context, page focus, and permission, any of
 // which can be missing. Degrade to a clear instruction instead of throwing an
 // unhandled rejection that leaves the buttons silently doing nothing.
@@ -235,29 +207,63 @@ const copyText = async (text: string, ok: string) => {
   }
 };
 
-form.addEventListener("input", render);
+// Copy and Download both need every field filled. Rather than a quiet one-liner,
+// outline every empty field, say how many are left, and jump to the first one.
+// Returns false (and does the marking) when anything is empty.
+const requireAll = (): boolean => {
+  const missing = BRIEFING_FIELDS.filter((n) =>
+    !(field(n)?.value ?? "").trim()
+  );
+  for (const n of BRIEFING_FIELDS) field(n)?.removeAttribute("aria-invalid");
+  if (missing.length === 0) {
+    status.classList.remove("output__status--error");
+    setStatus("");
+    return true;
+  }
+  for (const n of missing) field(n)?.setAttribute("aria-invalid", "true");
+  status.classList.add("output__status--error");
+  setStatus(`Every field is required. ${missing.length} still empty.`);
+  const first = field(missing[0]);
+  first?.focus();
+  first?.scrollIntoView({ block: "center", behavior: "smooth" });
+  return false;
+};
+
+// Typing in a flagged field clears its outline; once none are left, drop the notice.
+form.addEventListener("input", (e) => {
+  const target = e.target as Element | null;
+  if (target?.hasAttribute("aria-invalid")) {
+    target.removeAttribute("aria-invalid");
+    if (!form.querySelector("[aria-invalid]")) {
+      status.classList.remove("output__status--error");
+      setStatus("");
+    }
+  }
+  render();
+});
 
 copyBtn.addEventListener("click", () => {
-  const data = read();
-  const missing = BRIEFING_FIELDS.filter((n) => !data[n].trim());
-  if (missing.length) {
-    field(missing[0])?.focus();
-    setStatus("Fill in every field before copying.");
-    return;
-  }
+  if (!requireAll()) return;
   copyText(
-    buildBriefingSqf(data),
+    buildBriefingSqf(read()),
     "Copied. Paste it into your mission's briefing.sqf.",
   );
 });
 
-shareBtn.addEventListener("click", () => {
-  const encoded = b64urlEncode(JSON.stringify(read()));
-  history.replaceState(null, "", `#d=${encoded}`);
-  copyText(location.href, "Shareable link copied to your clipboard.");
+downloadBtn.addEventListener("click", () => {
+  if (!requireAll()) return;
+  const blob = new Blob([buildBriefingSqf(read())], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "briefing.sqf";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  setStatus("Downloaded briefing.sqf.");
 });
 
-loadFromHash();
 render();
 </script>
 
@@ -317,6 +323,13 @@ render();
 .field textarea:focus {
   outline: none;
   border-color: var(--accent-2);
+}
+/* An empty required field after a Copy/Download attempt: a red outline so it is
+   obvious which fields still need filling in (kept red even while focused). */
+.field input[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+  border-color: var(--bad);
+  box-shadow: 0 0 0 1px var(--bad);
 }
 .field input::placeholder,
 .field textarea::placeholder {
@@ -387,6 +400,9 @@ render();
   font: 600 0.74rem/1.3 var(--mono);
   letter-spacing: 0.04em;
   color: var(--accent-2);
+}
+.output__status--error {
+  color: var(--bad);
 }
 @media (max-width: 52rem) {
   .tool__grid {

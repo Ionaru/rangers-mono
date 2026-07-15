@@ -26,6 +26,7 @@
   --text: #e9ede9;
   --muted: #8b968f;
   --faint: #5c665f;
+  --bad: #e0847f;
 
   /* Brand green: the one accent. `--accent` fills the square; `--accent-2` is
      the brighter tint for green text and interactive states on a dark ground;
