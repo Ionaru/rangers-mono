@@ -1,40 +1,52 @@
 import { defineMiddleware } from "astro:middleware";
-import { getDiscordConfig } from "@7r/config";
-import { findMemberForAuthUser, getDb, upsertMemberOnLogin } from "@7r/db";
-import { displayNameOf, getGuildMember } from "@7r/discord";
-import { getAuth } from "./lib/auth.ts";
 
 /**
- * Resolve the session, resolve the Member behind it, and enforce the guild gate.
+ * Resolve the session, resolve the Member behind it, and gate the member area.
  *
- * Every page below can then assume `locals.member` is a Member of this unit, or
- * that it was redirected away.
+ * Phase 3 makes most of the site public (homepage, handbook, briefing
+ * generator). So the model is inverted from Phase 2: instead of a default-deny
+ * allowlist, only the **member area** needs a session. Everything else is
+ * public, and a public page still gets `locals.member` populated when a session
+ * happens to exist, so its nav can be login-aware.
+ *
+ * Two structural rules make this work with Starlight:
+ *
+ * 1. **Prerendered routes are skipped.** The handbook (Starlight), the briefing
+ *    generator and the about page are prerendered: static files at runtime that
+ *    never reach this middleware. Astro still runs middleware while
+ *    *prerendering* them at build time, where there is no session and no
+ *    database, so `context.isPrerendered` short-circuits before any I/O.
+ * 2. **The heavy modules are imported dynamically, below that guard.** Astro
+ *    bundles this middleware into the prerender step, and a *static* `import` of
+ *    `@7r/db` (drizzle-orm) or Better Auth would be pulled in with it and fail
+ *    to resolve there. Dynamic imports keep the prerender bundle backend-free.
  */
 
 /**
- * What a signed-out visitor may reach. Everything else needs a session.
- *
- * `/signin/discord` has to be in here, and forgetting it is a good bug: the
- * route that *starts* the login is naturally reached without a session, so
- * gating it on one makes signing in redirect you to the page you were already
- * on, forever, with no error anywhere.
+ * The member area: the only routes that require a signed-in Member. Everything
+ * else is public. `/api/auth/*` is deliberately absent (Better Auth's own
+ * surface, incl. the OAuth callback, must be reachable without a session).
  */
-const PUBLIC_PATHS = new Set([
-  "/",
-  "/signin/discord",
-  "/not-in-guild",
-  "/healthz",
-]);
-
-function isPublic(pathname: string): boolean {
-  // /api/auth/* is Better Auth's own surface, and the OAuth callback lands there
-  // before any session exists.
-  return PUBLIC_PATHS.has(pathname) || pathname.startsWith("/api/auth/");
+function needsSession(pathname: string): boolean {
+  return (
+    pathname === "/me" ||
+    pathname.startsWith("/me/") ||
+    pathname.startsWith("/link/") ||
+    pathname.startsWith("/unlink/") ||
+    pathname === "/signout"
+  );
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const auth = getAuth();
-  const session = await auth.api.getSession({
+  // Prerendered public content (handbook, briefing generator, about) is static
+  // at runtime and never hits this middleware then; at build time there is no
+  // session or DB to consult. Skip before importing or touching anything.
+  if (context.isPrerendered) return next();
+
+  const gated = needsSession(context.url.pathname);
+
+  const { getAuth } = await import("./lib/auth.ts");
+  const session = await getAuth().api.getSession({
     headers: context.request.headers,
   });
 
@@ -42,10 +54,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.session = session?.session ?? null;
   context.locals.member = null;
 
+  // No session: public routes proceed; the member area bounces to the homepage.
   if (!session) {
-    return isPublic(context.url.pathname) ? next() : context.redirect("/", 302);
+    return gated ? context.redirect("/", 302) : next();
   }
 
+  const { findMemberForAuthUser, getDb, upsertMemberOnLogin } = await import(
+    "@7r/db"
+  );
   const db = getDb();
 
   /**
@@ -59,8 +75,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (!resolved) {
     // A session whose user has no Discord account row. Better Auth creates the
     // two together for a social sign-in, so this is not reachable by logging in;
-    // it means the account was deleted underneath the session.
-    return context.redirect("/", 302);
+    // it means the account was deleted underneath the session. Treat as signed
+    // out: block the member area, let public routes through.
+    return gated ? context.redirect("/", 302) : next();
   }
 
   if (resolved.member) {
@@ -69,7 +86,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   /**
-   * First login: they have a Discord account but no Member row yet.
+   * A session with a Discord account but no Member row yet. On a public route we
+   * do not force the question: they browse as a signed-in-but-unresolved
+   * visitor (no `locals.member`), and no Discord call is made. The guild gate
+   * below only runs when they actually reach the member area.
+   */
+  if (!gated) {
+    return next();
+  }
+
+  /**
+   * First member-area access: they have a Discord account but no Member row.
    *
    * **This is the guild gate, and it is the only thing between "has a Discord
    * account" and "is one of us".** Ask Discord, as the bot, whether they are in
@@ -86,6 +113,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
    * leaves a half-created user and a 500, is not something the docs commit to,
    * and this needs no unverified behaviour to work.
    */
+  const { getDiscordConfig } = await import("@7r/config");
+  const { displayNameOf, getGuildMember } = await import("@7r/discord");
   const { DISCORD_GUILD_ID, DISCORD_BOT_TOKEN } = getDiscordConfig();
 
   let guildMember;

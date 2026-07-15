@@ -1,0 +1,399 @@
+---
+/**
+ * The briefing generator. Prerendered + a vanilla `<script>` island, no
+ * framework (the tool is a form, a string build, copy and a share link). The
+ * SQF itself is built by the pure, byte-for-byte-tested lib/briefing.ts.
+ */
+export const prerender = true;
+import PublicLayout from "../layouts/PublicLayout.astro";
+
+const groups = [
+  {
+    heading: "Situation",
+    fields: [
+      {
+        name: "situation",
+        label: "Situation",
+        area: true,
+        placeholder: "The situation leading up to this mission.",
+      },
+      {
+        name: "enemyForces",
+        label: "Enemy forces",
+        placeholder: "Which factions are hostile to us?",
+      },
+      {
+        name: "friendlyForces",
+        label: "Friendly forces",
+        placeholder: "Which factions are friendly or neutral to us?",
+      },
+    ],
+  },
+  {
+    heading: "Mission",
+    fields: [
+      {
+        name: "mission",
+        label: "Mission",
+        area: true,
+        placeholder: "What are we going to accomplish?",
+      },
+    ],
+  },
+  {
+    heading: "Execution",
+    fields: [
+      {
+        name: "commandersIntent",
+        label: "Commander's intent",
+        area: true,
+        placeholder:
+          "A brief overview of how we plan to accomplish the mission.",
+      },
+      {
+        name: "movementPlan",
+        label: "Movement plan",
+        area: true,
+        placeholder: "Insertion, transport and reinsertion methods.",
+      },
+      {
+        name: "fireSupportPlan",
+        label: "Fire support plan",
+        area: true,
+        placeholder: "What fire support is available? Any supply drops?",
+      },
+    ],
+  },
+  {
+    heading: "Credits",
+    fields: [
+      { name: "credits", label: "Your name", placeholder: "Mission maker" },
+    ],
+  },
+];
+---
+<PublicLayout
+  title="Briefing Generator"
+  current="briefing"
+  description="Write an Arma 3 mission briefing and export it straight to SQF."
+>
+  <section class="section section--tight page-head">
+    <div class="wrap">
+      <p class="eyebrow">Tool</p>
+      <h1 class="h-section">Briefing Generator</h1>
+      <p class="lede">
+        Fill in the briefing, copy the SQF, and drop it into your mission's{" "}
+        <code>briefing.sqf</code>. Everything runs in your browser: nothing is
+        saved or sent.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <hr class="rule" />
+  </div>
+
+  <section class="section tool">
+    <div class="wrap tool__grid">
+      <form id="briefing-form" novalidate>
+        {
+          groups.map((g) => (
+            <fieldset class="group">
+              <legend class="group__legend">
+                <span class="sq" aria-hidden="true" /> {g.heading}
+              </legend>
+              {g.fields.map((f) => (
+                <div class="field">
+                  <label for={f.name}>{f.label}</label>
+                  {"area" in f && f.area
+                    ? (
+                      <textarea
+                        id={f.name}
+                        name={f.name}
+                        rows="4"
+                        placeholder={f.placeholder}
+                      />
+                    )
+                    : (
+                      <input
+                        id={f.name}
+                        name={f.name}
+                        type="text"
+                        placeholder={f.placeholder}
+                      />
+                    )}
+                </div>
+              ))}
+            </fieldset>
+          ))
+        }
+      </form>
+
+      <aside class="output">
+        <div class="output__bar">
+          <span class="output__label">
+            <span class="sq" aria-hidden="true"></span> briefing.sqf
+          </span>
+          <div class="output__actions">
+            <button id="share-btn" class="btn btn--ghost" type="button">
+              Share
+            </button>
+            <button id="copy-btn" class="btn btn--primary" type="button">
+              Copy SQF
+            </button>
+          </div>
+        </div>
+        <pre id="sqf-output" class="output__code"></pre>
+        <p id="tool-status" class="output__status" role="status"
+          aria-live="polite"></p>
+      </aside>
+    </div>
+  </section>
+</PublicLayout>
+
+<script>
+import {
+  BRIEFING_FIELDS,
+  type BriefingInput,
+  buildBriefingSqf,
+} from "../lib/briefing.ts";
+
+const form = document.getElementById("briefing-form") as HTMLFormElement;
+const out = document.getElementById("sqf-output") as HTMLPreElement;
+const copyBtn = document.getElementById("copy-btn") as HTMLButtonElement;
+const shareBtn = document.getElementById("share-btn") as HTMLButtonElement;
+const status = document.getElementById("tool-status") as HTMLParagraphElement;
+
+const field = (name: string) =>
+  form.elements.namedItem(name) as
+    | HTMLInputElement
+    | HTMLTextAreaElement
+    | null;
+
+const read = (): BriefingInput => {
+  const data = {} as BriefingInput;
+  for (const name of BRIEFING_FIELDS) data[name] = field(name)?.value ?? "";
+  return data;
+};
+
+const setStatus = (msg: string) => {
+  status.textContent = msg;
+};
+
+const render = () => {
+  out.textContent = buildBriefingSqf(read());
+};
+
+// URL sharing: the eight inputs, base64url(JSON) in the hash. Client-only, so
+// it never reaches the server or a log. Unicode-safe.
+const b64urlEncode = (s: string) => {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replaceAll("+", "-").replaceAll("/", "_").replaceAll(
+    "=",
+    "",
+  );
+};
+const b64urlDecode = (s: string) => {
+  const bin = atob(s.replaceAll("-", "+").replaceAll("_", "/"));
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+};
+
+const loadFromHash = () => {
+  const m = location.hash.match(/^#d=(.+)$/);
+  if (!m) return;
+  try {
+    const data = JSON.parse(b64urlDecode(m[1])) as Record<string, unknown>;
+    for (const name of BRIEFING_FIELDS) {
+      const el = field(name);
+      if (el && typeof data[name] === "string") el.value = data[name] as string;
+    }
+  } catch {
+    // A malformed link just leaves the form blank; not worth an error.
+  }
+};
+
+// Clipboard access needs a secure context, page focus, and permission, any of
+// which can be missing. Degrade to a clear instruction instead of throwing an
+// unhandled rejection that leaves the buttons silently doing nothing.
+const copyText = async (text: string, ok: string) => {
+  if (!navigator.clipboard) {
+    setStatus(
+      "Copying needs a secure (https) page. Select the SQF and copy it manually.",
+    );
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    setStatus(ok);
+  } catch {
+    setStatus(
+      "Couldn't copy automatically. Select the text and copy it manually.",
+    );
+  }
+};
+
+form.addEventListener("input", render);
+
+copyBtn.addEventListener("click", () => {
+  const data = read();
+  const missing = BRIEFING_FIELDS.filter((n) => !data[n].trim());
+  if (missing.length) {
+    field(missing[0])?.focus();
+    setStatus("Fill in every field before copying.");
+    return;
+  }
+  copyText(
+    buildBriefingSqf(data),
+    "Copied. Paste it into your mission's briefing.sqf.",
+  );
+});
+
+shareBtn.addEventListener("click", () => {
+  const encoded = b64urlEncode(JSON.stringify(read()));
+  history.replaceState(null, "", `#d=${encoded}`);
+  copyText(location.href, "Shareable link copied to your clipboard.");
+});
+
+loadFromHash();
+render();
+</script>
+
+<style>
+.page-head .lede {
+  margin-top: 1.2rem;
+}
+.tool__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: start;
+}
+.group {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0 0 1.8rem;
+  padding: 1.4rem 0 0;
+}
+.group__legend {
+  font: 700 0.78rem/1 var(--mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0;
+}
+.field {
+  margin-top: 1.1rem;
+}
+.field label {
+  display: block;
+  font: 600 0.72rem/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.field input,
+.field textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.8rem;
+  resize: vertical;
+}
+.field textarea {
+  min-height: 5.5rem;
+  line-height: 1.5;
+}
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent-2);
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted);
+}
+
+.output {
+  position: sticky;
+  top: 5.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+}
+/* Don't stick on short viewports, where the panel would run past the fold. */
+@media (max-height: 40rem) {
+  .output {
+    position: static;
+  }
+}
+.output__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.output__label {
+  font: 600 0.75rem/1 var(--mono);
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.output__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.output__actions .btn {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.72rem;
+  min-height: 40px;
+}
+.output__code {
+  margin: 0;
+  padding: 1rem;
+  max-height: 60vh;
+  overflow: auto;
+  font: 0.82rem/1.55 var(--mono);
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.output__code:empty::before {
+  content: "Fill in the briefing to generate SQF.";
+  color: var(--muted);
+}
+.output__status {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  min-height: 1.2rem;
+  border-top: 1px solid var(--line);
+  font: 600 0.74rem/1.3 var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--accent-2);
+}
+@media (max-width: 52rem) {
+  .tool__grid {
+    grid-template-columns: 1fr;
+  }
+  .output {
+    position: static;
+  }
+}
+</style>

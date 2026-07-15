@@ -1,0 +1,15 @@
+---
+/**
+ * Starlight `ThemeProvider` override. The site is dark-only, so force
+ * `data-theme="dark"` and skip Starlight's OS/localStorage detection entirely.
+ *
+ * Without this, a visitor whose OS prefers light resolves to `data-theme="light"`,
+ * and every Starlight component that uses a variable we don't override in
+ * handbook.css (the mobile menu background `--sl-color-black`, the search modal,
+ * the menu button) keeps Starlight's light value and renders white on our dark
+ * surfaces. Inlined to avoid a flash of the wrong theme.
+ */
+---
+<script is:inline>
+document.documentElement.dataset.theme = "dark";
+</script>

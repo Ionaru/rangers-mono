@@ -1,0 +1,253 @@
+---
+/**
+ * About / recruitment. Prerendered public content (static at runtime, so it
+ * never touches the member-area middleware).
+ */
+export const prerender = true;
+import PublicLayout from "../layouts/PublicLayout.astro";
+
+// A real sequence, an operation runs in this order, so numbering it is honest.
+const opFlow = [
+  [
+    "Assignment",
+    "Gather in the lobby; command sets the composition and slots.",
+  ],
+  ["Briefing", "The mission maker walks the situation, mission and plan."],
+  ["Setup", "Radios tested, loadouts drawn, gear checked."],
+  ["Insertion", "Move to the area of operations. Weapons loaded on the move."],
+  ["Execution", "Run the plan. Adapt when it meets the enemy."],
+  [
+    "Exfil & debrief",
+    "Extract, then a short honest debrief. What worked, what didn't.",
+  ],
+];
+
+// Also a real sequence: our recruitment steps.
+const joinSteps = [
+  ["Apply", "Introduce yourself on our Discord. We read every application."],
+  [
+    "Interview",
+    "A relaxed TeamSpeak chat so we can meet and answer questions.",
+  ],
+  ["Set up", "Install the modset and the ACRE TeamSpeak plugin."],
+  ["Mentoring", "A hands-on session to bring you up to our standard."],
+  ["Your first op", "Slot into a buddy team and deploy."],
+];
+---
+<PublicLayout
+  title="About"
+  current="about"
+  description="Who the 7th Ranger Group is, how an operation runs, and how to join."
+>
+  <section class="section section--tight page-head">
+    <div class="wrap">
+      <p class="eyebrow">About</p>
+      <h1 class="h-section">A standing unit, run for the long haul</h1>
+      <p class="lede">
+        The 7th Ranger Group has run weekly Arma 3 operations for years. We take
+        the soldiering seriously and take ourselves lightly. Here's how we work,
+        and how you join us.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <hr class="rule" />
+  </div>
+
+  <section class="section">
+    <div class="wrap two-col">
+      <div class="section__head">
+        <p class="eyebrow">The night</p>
+        <h2 class="h-section">How an operation runs</h2>
+        <p>
+          One operation a week, every Saturday from 20:00 CET/CEST. It is
+          planned, briefed and debriefed, not a deathmatch. A single night runs
+          roughly like this.
+        </p>
+      </div>
+      <ol class="steps">
+        {
+          opFlow.map(([t, d], i) => (
+            <li class="step">
+              <span class="step__n">{String(i + 1).padStart(2, "0")}</span>
+              <div>
+                <h3>{t}</h3>
+                <p>{d}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--panel">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow">Progression</p>
+        <h2 class="h-section">How you grow</h2>
+        <p>
+          There's no ladder to climb on a clock. You take on more as you're
+          ready, mentored the whole way, with weekly and on-demand training that
+          includes rotary and qualification courses.
+        </p>
+      </div>
+      <dl class="facts">
+        <div class="fact">
+          <dt>At your pace</dt>
+          <dd>
+            No rigid ranks. You grow into the group as you're ready, and there's
+            always a place for anyone stepping back for a while.
+          </dd>
+        </div>
+        <div class="fact">
+          <dt>Roles</dt>
+          <dd>
+            Jobs you pick up when you're capable and willing: recruiter,
+            instructor, mission maker.
+          </dd>
+        </div>
+        <div class="fact">
+          <dt>Qualifications</dt>
+          <dd>
+            Earned through training: Medic, Marksman, Engineer, Armoured, Heavy
+            Weapons, Leadership, and rotary and fixed-wing aviation.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow">Kit</p>
+        <h2 class="h-section">What you'll run</h2>
+        <p>
+          We keep the barrier to entry low: a curated modset, a dedicated server,
+          and tools built in-house so ops run smoothly.
+        </p>
+      </div>
+      <dl class="facts">
+        <div class="fact">
+          <dt>Modset</dt>
+          <dd>
+            About 50 GB, curated: ACRE2 radio, ACE3, RHS Escalation and our own
+            additions, installed and updated through the Steam Workshop.
+          </dd>
+        </div>
+        <div class="fact">
+          <dt>Medical</dt>
+          <dd>
+            A custom model built on ACE3 Basic Medical, with expanded injuries
+            and treatment.
+          </dd>
+        </div>
+        <div class="fact">
+          <dt>Framework</dt>
+          <dd>
+            An in-house mission framework and AI tuning built for coordinated,
+            challenging play.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two-col">
+      <div class="section__head">
+        <p class="eyebrow">Recruiting now</p>
+        <h2 class="h-section">How to join</h2>
+        <p>
+          No milsim experience needed. Most of us started with none. You'll need
+          to be 18 or over, own Arma 3, and bring a working microphone and the
+          readiness to play as part of a team. We ask for roughly one operation a
+          week and a willingness to
+          improve; recruits finish a short Infantry Qualification Course to become
+          full members. We teach the rest.
+        </p>
+        <div class="hero__actions">
+          <a
+            class="btn btn--primary"
+            href="https://discord.gg/vbFMQXe"
+            rel="noopener"
+          >
+            Submit an application
+          </a>
+          <a class="btn btn--ghost" href="/handbook/getting-started">
+            Recruitment process
+          </a>
+        </div>
+      </div>
+      <ol class="steps">
+        {
+          joinSteps.map(([t, d], i) => (
+            <li class="step">
+              <span class="step__n">{String(i + 1).padStart(2, "0")}</span>
+              <div>
+                <h3>{t}</h3>
+                <p>{d}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+</PublicLayout>
+
+<style>
+.page-head .lede {
+  margin-top: 1.2rem;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+.two-col .section__head {
+  margin-bottom: 0;
+  position: sticky;
+  top: 5.5rem;
+}
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.step {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: 1.1rem;
+  padding: 1.4rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.step__n {
+  font: 600 0.85rem/1.4 var(--mono);
+  color: var(--accent-2);
+  letter-spacing: 0.05em;
+}
+.step h3 {
+  font-size: 1.15rem;
+  margin: 0 0 0.35rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.step p {
+  margin: 0;
+  color: var(--muted);
+}
+@media (max-width: 46rem) {
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .two-col .section__head {
+    position: static;
+  }
+}
+</style>

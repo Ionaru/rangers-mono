@@ -1,0 +1,204 @@
+---
+/**
+ * The one site header, shared by the standard layout (PublicLayout) and the
+ * Starlight handbook (via HandbookHeader). Keeping it in one place is what stops
+ * the two from drifting apart.
+ *
+ * The only thing that legitimately differs between the two is the mobile layout,
+ * because the handbook also has a docs sidebar + hamburger:
+ *  - `variant="bar"`  (PublicLayout): nav wraps to a second full-width row on
+ *    mobile; there is no hamburger.
+ *  - `variant="docs"` (handbook): the nav hides on mobile (it lives in the
+ *    hamburger menu via HandbookMobileMenuFooter), and the search slot is used.
+ *
+ * Styles are component-scoped, so Astro injects them on every page that renders
+ * this component, in both CSS contexts. They rely only on the shared tokens
+ * (tokens.css), which both contexts load.
+ */
+interface Props {
+  current?: "home" | "handbook" | "briefing" | "about";
+  member?: { displayName: string } | null;
+  variant?: "bar" | "docs";
+}
+
+const { current, member = null, variant = "bar" } = Astro.props;
+
+const nav = [
+  { key: "handbook", label: "Handbook", href: "/handbook/" },
+  { key: "briefing", label: "Briefing", href: "/briefing-generator" },
+  { key: "about", label: "About", href: "/about" },
+] as const;
+---
+<div class:list={["site-nav", `site-nav--${variant}`]}>
+  <a class="site-nav__brand" href="/" aria-label="7th Ranger Group, home">
+    <img src="/brand/logo.png" alt="" width="48" height="48" />
+    <span class="site-nav__name">7th Ranger Group</span>
+  </a>
+
+  <div class="site-nav__right">
+    <slot name="search" />
+    <nav class="site-nav__nav" aria-label="Primary">
+      {
+        nav.map((i) => (
+          <a href={i.href} aria-current={current === i.key ? "page" : undefined}>
+            {i.label}
+          </a>
+        ))
+      }
+      {
+        member
+          ? <a class="site-nav__cta" href="/me">{member.displayName}</a>
+          : (
+            <form method="post" action="/signin/discord">
+              <button class="site-nav__cta" type="submit">Sign in</button>
+            </form>
+          )
+      }
+    </nav>
+  </div>
+</div>
+
+<style>
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+/* bar: SiteNav owns the bar height (PublicLayout's .site-header has none).
+   docs: fill Starlight's already-sized header exactly; giving it its own
+   min-height would overhang below the header's border. */
+.site-nav--bar {
+  min-height: 4rem;
+}
+.site-nav--docs {
+  height: 100%;
+}
+.site-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: none;
+  text-decoration: none;
+}
+.site-nav__brand img {
+  height: 1.6rem;
+  width: auto;
+}
+.site-nav__name {
+  font: 700 0.78rem/1 var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text);
+  white-space: nowrap;
+}
+.site-nav__right {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.site-nav__nav {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  font: 600 0.76rem/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.site-nav__nav a {
+  color: var(--muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+.site-nav__nav a:hover,
+.site-nav__nav a[aria-current="page"] {
+  color: var(--text);
+}
+.site-nav__nav a[aria-current="page"] {
+  position: relative;
+}
+.site-nav__nav a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -0.8rem;
+  top: 50%;
+  width: 0.5em;
+  height: 0.5em;
+  transform: translateY(-50%);
+  background: var(--accent);
+}
+.site-nav__cta {
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.85rem;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  max-width: min(42vw, 12rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-nav__cta:hover {
+  border-color: var(--accent-2);
+}
+
+/* bar variant (PublicLayout): on mobile the nav drops to its own full-width
+   row below the wordmark (no hamburger). */
+@media (max-width: 40rem) {
+  .site-nav--bar {
+    flex-wrap: wrap;
+    padding-block: 0.55rem;
+    gap: 0.4rem 1rem;
+  }
+  .site-nav--bar .site-nav__right {
+    order: 3;
+    width: 100%;
+    margin-inline-start: 0;
+  }
+  .site-nav--bar .site-nav__nav {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.25rem 0.75rem;
+  }
+}
+@media (max-width: 22rem) {
+  .site-nav--bar .site-nav__name {
+    display: none;
+  }
+}
+
+/* docs variant (Starlight handbook): the gutter is desktop-only (Starlight's
+   own header padding covers mobile, where it also reserves the hamburger); the
+   nav hides on mobile and moves into the hamburger menu. */
+.site-nav--docs {
+  padding-inline: 0;
+}
+@media (min-width: 50rem) {
+  .site-nav--docs {
+    padding-inline: var(--gutter);
+  }
+}
+@media (max-width: 50rem) {
+  .site-nav--docs .site-nav__nav {
+    display: none;
+  }
+}
+@media (max-width: 30rem) {
+  .site-nav--docs .site-nav__name {
+    display: none;
+  }
+}
+</style>
