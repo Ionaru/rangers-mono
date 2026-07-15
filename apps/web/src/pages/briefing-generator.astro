@@ -1,12 +1,14 @@
 ---
 /**
- * The briefing generator. Prerendered + a vanilla `<script>` island, no
- * framework (the tool is a form, a string build, copy to clipboard and a
- * briefing.sqf download). The SQF itself is built by the pure,
+ * The briefing generator. Server-rendered (not prerendered) so the header can
+ * greet a signed-in member, like the homepage; the tool itself is still a
+ * vanilla `<script>` island with no framework (a form, a string build, copy to
+ * clipboard and a briefing.sqf download). The SQF itself is built by the pure,
  * byte-for-byte-tested lib/briefing.ts.
  */
-export const prerender = true;
 import PublicLayout from "../layouts/PublicLayout.astro";
+
+const member = Astro.locals.member;
 
 const groups = [
   {
@@ -77,6 +79,7 @@ const groups = [
   title="Briefing Generator"
   current="briefing"
   description="Write an Arma 3 mission briefing and export it straight to SQF."
+  member={member}
 >
   <section class="section section--tight page-head">
     <div class="wrap">

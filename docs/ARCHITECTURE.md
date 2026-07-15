@@ -114,7 +114,7 @@ Fixes vs the legacy: operations are real rows with real windows (the legacy `ope
 
 ### 4.1 Website (`apps/web`, Astro 7 on Deno)
 
-- **Public, static/prerendered:** landing/recruitment, about, handbook, briefing generator.
+- **Public:** landing/recruitment, about, handbook, briefing generator. The handbook is prerendered (static at runtime); the others are server-rendered so the header can greet a signed-in member. The handbook, being static, does the same swap client-side (`/api/nav-member`).
 - **Handbook:** **Starlight**, Markdown in `content/handbook/` (migrate the current 21 files, ~31k words, 96 images, **and restore the older dropped sections** FAQ / Loadouts / Formations / Extended handbook, after a content sanity-check). Edited via GitHub/PR. The loadout Google Sheet stays external (linked from the handbook).
   - Astro renders Markdown natively; Starlight is not needed for that. It is here for the **sidebar nav and the built-in Pagefind search**, which is the whole value for a 31k-word document people look things up in. Today's table of contents is hand-maintained in `index.md`.
   - **No `starlight-versions`.** Nobody asked to browse historical handbook versions, and git history already answers "what did it say before". Dropped rather than carried.

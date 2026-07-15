@@ -4,8 +4,9 @@
  * member-area `Base.astro` (which stays deliberately plain). Owns the 7R visual
  * identity, the tokens, the header wordmark, the footer.
  *
- * `member` is passed on SSR pages (the homepage) so the header can greet a
- * signed-in member; prerendered pages omit it and show a sign-in affordance.
+ * `member` is passed by the SSR pages (homepage, about, briefing generator) so
+ * the header can greet a signed-in member. (The handbook is Starlight and stays
+ * prerendered; it makes its header login-aware client-side instead.)
  */
 import "../styles/tokens.css";
 import "../styles/public.css";

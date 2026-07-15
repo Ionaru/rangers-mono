@@ -27,3 +27,57 @@ const shouldRenderSearch = config.pagefind;
   min-width: 0;
 }
 </style>
+
+<script>
+/**
+ * Make the handbook header login-aware. The handbook is prerendered (Starlight),
+ * so its header is static and always renders the signed-out "Sign in" form, in
+ * two places: the top nav (SiteNav) and the mobile hamburger menu
+ * (HandbookMobileMenuFooter). Ask the server who we are and, if signed in,
+ * replace each sign-in form with a link to /me, rebuilding the same element the
+ * server-rendered pages emit for a signed-in member.
+ *
+ * A brief flash of "Sign in" before the swap is the accepted cost of keeping the
+ * handbook static (the whole app is otherwise no-JS; Starlight already ships its
+ * own client JS here, so this adds nothing new in kind).
+ */
+async function showMemberInNav() {
+  let displayName: string | null = null;
+  try {
+    const res = await fetch("/api/nav-member", {
+      headers: { accept: "application/json" },
+    });
+    if (!res.ok) return;
+    ({ displayName } = await res.json());
+  } catch {
+    return; // Offline, or the endpoint failed: leave the sign-in form untouched.
+  }
+  if (!displayName) return;
+
+  for (
+    const form of document.querySelectorAll<HTMLFormElement>(
+      'form[action="/signin/discord"]',
+    )
+  ) {
+    const button = form.querySelector("button");
+    const link = document.createElement("a");
+    // Inherit the replaced control's class and Astro scoped-style markers so the
+    // component's own <style> rules match the new element. This reproduces the
+    // exact CTA the server-rendered homepage renders for a member (top nav), and
+    // a plain nav link in the mobile menu (which has no member variant of its own).
+    if (button) {
+      link.className = button.className;
+      for (const name of button.getAttributeNames()) {
+        if (name.startsWith("data-astro-")) {
+          link.setAttribute(name, button.getAttribute(name) ?? "");
+        }
+      }
+    }
+    link.href = "/me";
+    link.textContent = displayName;
+    form.replaceWith(link);
+  }
+}
+
+showMemberInNav();
+</script>

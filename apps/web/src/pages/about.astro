@@ -1,10 +1,12 @@
 ---
 /**
- * About / recruitment. Prerendered public content (static at runtime, so it
- * never touches the member-area middleware).
+ * About / recruitment. Server-rendered (not prerendered) so the header can greet
+ * a signed-in member, exactly like the homepage. Signed-out visitors still reach
+ * it fine: /about is on the middleware's public path, not the member area.
  */
-export const prerender = true;
 import PublicLayout from "../layouts/PublicLayout.astro";
+
+const member = Astro.locals.member;
 
 // A real sequence, an operation runs in this order, so numbering it is honest.
 const opFlow = [
@@ -38,6 +40,7 @@ const joinSteps = [
   title="About"
   current="about"
   description="Who the 7th Ranger Group is, how an operation runs, and how to join."
+  member={member}
 >
   <section class="section section--tight page-head">
     <div class="wrap">

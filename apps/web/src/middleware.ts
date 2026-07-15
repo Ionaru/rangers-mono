@@ -11,11 +11,12 @@ import { defineMiddleware } from "astro:middleware";
  *
  * Two structural rules make this work with Starlight:
  *
- * 1. **Prerendered routes are skipped.** The handbook (Starlight), the briefing
- *    generator and the about page are prerendered: static files at runtime that
- *    never reach this middleware. Astro still runs middleware while
- *    *prerendering* them at build time, where there is no session and no
- *    database, so `context.isPrerendered` short-circuits before any I/O.
+ * 1. **Prerendered routes are skipped.** The handbook (Starlight) is prerendered:
+ *    static files at runtime that never reach this middleware. (The about and
+ *    briefing-generator pages used to be too, but are now server-rendered so
+ *    their header can greet a signed-in member.) Astro still runs middleware
+ *    while *prerendering* the handbook at build time, where there is no session
+ *    and no database, so `context.isPrerendered` short-circuits before any I/O.
  * 2. **The heavy modules are imported dynamically, below that guard.** Astro
  *    bundles this middleware into the prerender step, and a *static* `import` of
  *    `@7r/db` (drizzle-orm) or Better Auth would be pulled in with it and fail
@@ -38,9 +39,9 @@ function needsSession(pathname: string): boolean {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  // Prerendered public content (handbook, briefing generator, about) is static
-  // at runtime and never hits this middleware then; at build time there is no
-  // session or DB to consult. Skip before importing or touching anything.
+  // Prerendered public content (the Starlight handbook) is static at runtime and
+  // never hits this middleware then; at build time there is no session or DB to
+  // consult. Skip before importing or touching anything.
   if (context.isPrerendered) return next();
 
   const gated = needsSession(context.url.pathname);
