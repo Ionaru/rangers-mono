@@ -17,7 +17,7 @@ The Discord application the platform runs as. Its bot user serves the slash comm
 _Avoid_: the bot (unqualified, in any sentence that also mentions TeamSpeak).
 
 **TeamSpeak link**:
-A Member's TeamSpeak identity (its client UID). One current link per member, self-service replaceable. Proven by a possession challenge (the pick-from-list + poked-code flow). This link is load-bearing: it drives role sync and it is how op attendance is credited to a person.
+A Member's TeamSpeak identity (its client UID). One current link per member, self-service replaceable. Proven by a possession challenge (the pick-from-list + poked-code flow, run via `/link` in Discord: ADR 0017). This link is load-bearing: it drives role sync and it is how op attendance is credited to a person.
 _Avoid_: TS user, TeamSpeak account.
 
 **Steam link**:
