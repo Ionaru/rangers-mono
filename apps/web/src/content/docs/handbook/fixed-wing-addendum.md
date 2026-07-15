@@ -123,6 +123,20 @@ If you are hit but still able to stir the aircraft toward your closest base, let
   - He can engage any of them freely and can disregard any other task until he feels safe enough or the threats have been dealt with. If FAC/PL informs the pilot to avoid engaging those targets because ground assets might be able to do it then the pilot will simply avoid the dangerous area and wait for clearance from the FAC to return.
 - Remember that once these threats have been dealt with, their wreck and following ammo explosions represent a danger to infantry. Make an effort to engage when friendlies are a safe distance away.
 
+### Rules of engagement
+
+The mandatory rules of engagement for fighter pilots during our missions are:
+
+- Close communication with the FAC to ensure IFF and avoid mass casualties
+- No engagement of civilian-occupied areas
+- No engagement of enemies closer than 100 metres to friendlies
+- No destruction of cultural or religious buildings
+- No engagement of medical personnel and ambulances
+- No engagement of targets closer than 100 metres to fragile objectives
+- No engagement without an order from the SL or PL
+- Use the right munition for the task
+- No "tricks" over friendly units and no dangerous flying; you are not here to show off
+
 ### Terms the pilot and FAC should know
 
 - Bugout - out of fuel or ordnance, must go back to base
