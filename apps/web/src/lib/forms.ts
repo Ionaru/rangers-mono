@@ -14,8 +14,13 @@ import { getWebConfig } from "@7r/config";
  * hidden-field CSRF token would be a session-state store, a rotation policy and
  * a way for the back button to break the page, to defend against something the
  * cookie policy has already refused.
+ *
+ * Returns the 403 for the caller to `return`, or `undefined` to proceed. It
+ * returns rather than throws on purpose: Astro does not turn a `Response` thrown
+ * from an endpoint into that response, it surfaces it as a 500, so the handler
+ * has to return this itself.
  */
-export function assertSameOrigin(request: Request): void {
+export function sameOriginGuard(request: Request): Response | undefined {
   const { PUBLIC_BASE_URL } = getWebConfig();
   const expected = new URL(PUBLIC_BASE_URL).origin;
 
@@ -25,8 +30,12 @@ export function assertSameOrigin(request: Request): void {
   const origin = request.headers.get("Origin");
 
   if (origin !== expected) {
-    throw new Response("cross-origin form submission refused", { status: 403 });
+    return new Response("cross-origin form submission refused", {
+      status: 403,
+    });
   }
+
+  return undefined;
 }
 
 /**

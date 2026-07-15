@@ -13,6 +13,13 @@ export default defineConfig({
   site: "https://7th-ranger.com",
   output: "server",
   adapter: deno({ port: 8085 }),
+  // Astro's built-in checkOrigin (default-on under output:"server") rebuilds
+  // url.origin from the request as Deno sees it behind nginx: plain http over
+  // the loopback hop, so it 403s the https Origin on scheme alone. Our own
+  // assertSameOrigin (src/lib/forms.ts) compares Origin against PUBLIC_BASE_URL
+  // and is called by every mutating route, so this layer is both redundant and
+  // wrong for this proxy topology.
+  security: { checkOrigin: false },
   integrations: [
     starlight({
       title: "7R Handbook",

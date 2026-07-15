@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { clearTeamspeakLink, getDb } from "@7r/db";
-import { assertSameOrigin, redirectWith } from "../../lib/forms.ts";
+import { redirectWith, sameOriginGuard } from "../../lib/forms.ts";
 
 /**
  * Unlink TeamSpeak.
@@ -14,7 +14,8 @@ import { assertSameOrigin, redirectWith } from "../../lib/forms.ts";
  * the intended consequence, not a bug.
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  assertSameOrigin(request);
+  const blocked = sameOriginGuard(request);
+  if (blocked) return blocked;
 
   await clearTeamspeakLink(getDb(), locals.member!.id);
 

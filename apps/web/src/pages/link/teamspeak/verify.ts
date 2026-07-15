@@ -8,7 +8,7 @@ import {
   recordLinkCodeAttempt,
 } from "@7r/db";
 import { verifyLinkCode } from "@7r/identity";
-import { assertSameOrigin, redirectWith } from "../../../lib/forms.ts";
+import { redirectWith, sameOriginGuard } from "../../../lib/forms.ts";
 import { fetchOnlineClients } from "../../../lib/worker-client.ts";
 
 /**
@@ -22,7 +22,8 @@ import { fetchOnlineClients } from "../../../lib/worker-client.ts";
  * does the I/O the verdict asks for and nothing else.
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  assertSameOrigin(request);
+  const blocked = sameOriginGuard(request);
+  if (blocked) return blocked;
 
   const member = locals.member!;
   const db = getDb();

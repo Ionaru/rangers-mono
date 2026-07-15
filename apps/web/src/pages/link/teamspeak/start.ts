@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { createLinkCode, getDb } from "@7r/db";
 import { CODE_TTL_MS, generateLinkCode, pokeMessage } from "@7r/identity";
-import { assertSameOrigin, redirectWith } from "../../../lib/forms.ts";
+import { redirectWith, sameOriginGuard } from "../../../lib/forms.ts";
 import {
   fetchOnlineClients,
   pokeLinkCode,
@@ -23,7 +23,8 @@ import {
  * heart of the flow.
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  assertSameOrigin(request);
+  const blocked = sameOriginGuard(request);
+  if (blocked) return blocked;
 
   const member = locals.member!;
   const form = await request.formData();

@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { assertSameOrigin } from "../lib/forms.ts";
+import { sameOriginGuard } from "../lib/forms.ts";
 import { getAuth } from "../lib/auth.ts";
 
 /**
@@ -12,7 +12,8 @@ import { getAuth } from "../lib/auth.ts";
  * they signed out while still holding a valid session.
  */
 export const POST: APIRoute = async ({ request }) => {
-  assertSameOrigin(request);
+  const blocked = sameOriginGuard(request);
+  if (blocked) return blocked;
 
   const response = await getAuth().api.signOut({
     headers: request.headers,

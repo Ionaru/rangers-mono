@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { assertSameOrigin } from "../../lib/forms.ts";
+import { sameOriginGuard } from "../../lib/forms.ts";
 import { getAuth } from "../../lib/auth.ts";
 
 /**
@@ -18,7 +18,8 @@ import { getAuth } from "../../lib/auth.ts";
  * started. Drop it and every login fails at the callback with a state mismatch.
  */
 export const POST: APIRoute = async ({ request }) => {
-  assertSameOrigin(request);
+  const blocked = sameOriginGuard(request);
+  if (blocked) return blocked;
 
   const response = await getAuth().api.signInSocial({
     body: { provider: "discord", callbackURL: "/me" },

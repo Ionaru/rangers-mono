@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { consumeLinkCode, findLiveLinkCode, getDb } from "@7r/db";
-import { assertSameOrigin, redirectWith } from "../../../lib/forms.ts";
+import { redirectWith, sameOriginGuard } from "../../../lib/forms.ts";
 
 /**
  * Abandon the outstanding challenge.
@@ -13,7 +13,8 @@ import { assertSameOrigin, redirectWith } from "../../../lib/forms.ts";
  * but they cannot get back to the pick-list to issue one.
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  assertSameOrigin(request);
+  const blocked = sameOriginGuard(request);
+  if (blocked) return blocked;
 
   const db = getDb();
   const pending = await findLiveLinkCode(db, locals.member!.id);
