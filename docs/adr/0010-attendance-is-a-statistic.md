@@ -8,7 +8,7 @@ Because nothing acts on it, the platform models **no absence at all**. There is 
 
 - Asked what attendance is *for*, the answer was: a number on a profile. Nothing consumes it.
 - The legacy's LOA feature existed to *excuse* absence, which only makes sense when absence has consequences. With no consequences, LOA has no job to do.
-- The planning need LOA also served (who is turning up on Saturday, so squads can be sized) is met for free by **Discord scheduled-event RSVP**. The weekly job already creates the Saturday event (ADR 0003's bot, Phase 4), and Discord's native "Interested" list sits in the tool the unit already has open. Zero schema, zero UI, zero migration.
+- The planning need LOA also served (who is turning up on Saturday, so squads can be sized) is met for free by **Discord scheduled-event RSVP**. The weekly job already creates the Saturday event (ADR 0003's bot, Phase 5), and Discord's native "Interested" list sits in the tool the unit already has open. Zero schema, zero UI, zero migration.
 - Corroborating evidence: the legacy attendance recorder's last write was **2024-07-27**, and the unit ran for two years without noticing. That is what a decoration looks like.
 
 ## Considered and rejected

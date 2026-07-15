@@ -37,7 +37,7 @@ function overlapMinutes(span: SessionSpan, window: AttendanceWindow): number {
  *
  * Spans are summed, not merged. A TeamSpeak identity is in exactly one channel
  * at a time, so its spans cannot overlap; if they ever do, that is a bug in the
- * reconstruction (Phase 5) and should be fixed there rather than papered over
+ * reconstruction (Phase 6) and should be fixed there rather than papered over
  * here.
  */
 export function creditedMinutes(

@@ -14,7 +14,7 @@ COPY apps/ ./apps/
 
 # `deno ci` installs strictly from deno.lock and fails if the lockfile is stale.
 #
-# Never add `--allow-scripts` / `deno approve-scripts` here. From Phase 3 the
+# Never add `--allow-scripts` / `deno approve-scripts` here. From Phase 4 the
 # TeamSpeak client pulls ssh2 -> cpu-features, whose ignored build script wants
 # python and node-gyp. The "ignored build scripts" warning is correct behaviour:
 # the library runs pure JS with zero native addons. Silencing it means putting a

@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 
 /**
  * The only page a signed-out visitor sees. There is no public content in this
- * phase: the current public site keeps serving until Phase 6 replaces it.
+ * phase: the current public site keeps serving until Phase 3 replaces it.
  */
 if (Astro.locals.member) return Astro.redirect("/me", 302);
 ---

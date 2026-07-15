@@ -78,7 +78,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
    *
    * This costs one Discord API call per person, ever. Every subsequent request
    * finds the Member row above and never gets here. A member who later *leaves*
-   * the guild is not this function's problem: Phase 3's role sync stamps
+   * the guild is not this function's problem: Phase 4's role sync stamps
    * `disabled_at` on them (ARCHITECTURE §4.4).
    *
    * Deliberately NOT done in a Better Auth `databaseHooks.user.create.before`

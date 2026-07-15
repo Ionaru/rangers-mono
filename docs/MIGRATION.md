@@ -15,7 +15,7 @@ Source: `data/Dump20260711.sql` (the abandoned rangers-site MySQL DB). Real row 
 | `permission` | 7 |
 | `application`, `incident`, `incident_users_user` | 0 (stub tables, never built) |
 
-The import is a one-shot script. The identity links land in **Phase 2** (identity), the Assignable mapping seed lands in **Phase 3** (TeamSpeak sync). There is no attendance import phase: attendance starts from zero.
+The import is a one-shot script. The identity links land in **Phase 2** (identity), the Assignable mapping seed lands in **Phase 4** (TeamSpeak sync). There is no attendance import phase: attendance starts from zero.
 
 Because Discord is the source of truth for roles (ADR 0002), we import **identity links** and **assignable definitions** only. We do **not** import per-member role/rank/badge assignments (a member's current Discord roles are the truth), and we do **not** import history (attendance, operations, LOA).
 
@@ -107,8 +107,8 @@ The `Rotary Aviation` (69) and `Fixed-Wing Aviation` (70) TS groups also appear 
 
 1. **Phase 0 (manual, no code):** stand `7R_Bot` up as the platform's Discord app first (credentials into `.env`, GUILD_MEMBERS intent, `MANAGE_ROLES`, its role above every role it will manage: ADR 0015). Then create the 8 badge roles in Discord *below* it, backfill the 83 grants to the 32 members who hold them, and fill the role ids into the badge table above.
 2. **Phase 2:** import `member` (all 150) with their TeamSpeak link (99 of them), marked `tsLinkMethod='legacy_import'` and flagged for re-verification. Optionally seed the 23 Steam ids.
-3. **Phase 3, step 1:** resolve sgids. Pull a live `servergrouplist`, build `name -> current sgid`, print the mapping to the terminal, confirm, log any name with no live match.
-4. **Phase 3, step 2:** seed `assignable` (5 ranks, 3 roles, 8 badges) from the git-tracked config with the resolved sgids.
-5. **Phase 3, step 3:** verify. Run `deno task sync:preview` (the dry-run) and confirm the preview matches expectations before enabling live sync. The blast-radius guard stays on afterwards.
+3. **Phase 4, step 1:** resolve sgids. Pull a live `servergrouplist`, build `name -> current sgid`, print the mapping to the terminal, confirm, log any name with no live match.
+4. **Phase 4, step 2:** seed `assignable` (5 ranks, 3 roles, 8 badges) from the git-tracked config with the resolved sgids.
+5. **Phase 4, step 3:** verify. Run `deno task sync:preview` (the dry-run) and confirm the preview matches expectations before enabling live sync. The blast-radius guard stays on afterwards.
 
 Keep the script idempotent (upsert by natural key: `member.discordId`, `assignable.discordRoleId`) so it can be re-run after the badge Discord roles are filled in, or after a sgid mapping is corrected.

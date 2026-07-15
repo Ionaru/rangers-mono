@@ -26,7 +26,7 @@ import { discordJson, type DiscordRestOptions } from "./rest.ts";
  *     that: the worker treats a failed connect at boot as fatal),
  *   - whether a `/loa` registered by the *2019* application still exists. Command
  *     endpoints are namespaced per application, so `7R_Bot`'s token cannot see
- *     another app's commands. If members still see a stale `/loa` after Phase 4,
+ *     another app's commands. If members still see a stale `/loa` after Phase 5,
  *     that is where it lives, and only the old app's credentials can remove it.
  */
 
@@ -121,7 +121,7 @@ async function main() {
     "DISCORD_CLIENT_ID belongs to the same application as the bot token",
     discord.DISCORD_CLIENT_ID === app.id
       ? `both are ${app.id}`
-      : `.env says ${discord.DISCORD_CLIENT_ID}, but the token belongs to ${app.id}. The four Discord values must all come from ONE application, or Phase 4 dies silently.`,
+      : `.env says ${discord.DISCORD_CLIENT_ID}, but the token belongs to ${app.id}. The four Discord values must all come from ONE application, or Phase 5 dies silently.`,
   );
 
   // ---------------------------------------------------------------- OAuth redirect
@@ -159,7 +159,7 @@ async function main() {
 
   /**
    * The authoritative probe. Discord's reference attaches the intent requirement
-   * to *List* Guild Members, which is this call, and it is what Phase 3's poll
+   * to *List* Guild Members, which is this call, and it is what Phase 4's poll
    * uses. A 403 here means the intent is off.
    *
    * The application's own flags are the secondary signal: they say *why*, and
@@ -185,7 +185,7 @@ async function main() {
           ? "agree"
           : "do not show it, but the call works, which is what matters"
       })`
-      : `GET /guilds/{id}/members returned ${memberListProbe.status}. This is an APPLICATION TOGGLE (Developer Portal -> Bot -> Privileged Gateway Intents -> Server Members Intent), not a guild permission: no amount of permission substitutes for it, Administrator included. Phase 3's role sync will quietly do nothing without it.`,
+      : `GET /guilds/{id}/members returned ${memberListProbe.status}. This is an APPLICATION TOGGLE (Developer Portal -> Bot -> Privileged Gateway Intents -> Server Members Intent), not a guild permission: no amount of permission substitutes for it, Administrator included. Phase 4's role sync will quietly do nothing without it.`,
   );
 
   // ---------------------------------------------------------------- role hierarchy
@@ -206,7 +206,7 @@ async function main() {
    * promote somebody to Officer is the unit's stated intent, not a defect
    * (ARCHITECTURE §7).
    *
-   * What actually matters: Phase 3's sync only ever *reads* Discord roles and
+   * What actually matters: Phase 4's sync only ever *reads* Discord roles and
    * writes TeamSpeak, so hierarchy does not touch it at all. Hierarchy binds only
    * the roles we WRITE: the badges, the staff roles, and the lower ranks.
    *
@@ -233,7 +233,7 @@ async function main() {
       : "fail",
     "7R_Bot outranks every Assignable role it must WRITE",
     outranked.length === 0
-      ? `the bot's highest role is at position ${botTop}, above all ${mustOutrank.length} of the roles it writes. Officer and NCO sit above it, which is deliberate: they are hand-assigned, the sync never writes a Discord role, and new badge roles land below the bot by construction. The only cost is that Phase 4's /rank set cannot promote to or demote from those two.`
+      ? `the bot's highest role is at position ${botTop}, above all ${mustOutrank.length} of the roles it writes. Officer and NCO sit above it, which is deliberate: they are hand-assigned, the sync never writes a Discord role, and new badge roles land below the bot by construction. The only cost is that Phase 5's /rank set cannot promote to or demote from those two.`
       : `the bot's highest role is at position ${botTop}, and it does NOT outrank: ${
         outranked.map((r) => `${r.name} (${r.position})`).join(", ")
       }\n     MANAGE_ROLES only writes roles BELOW the bot's own, and Administrator does not exempt it. Every write to these 403s while the bot looks perfectly healthy.`,
@@ -270,7 +270,7 @@ async function main() {
       ? "all 5 ranks and 3 roles found in the guild"
       : `not in the guild: ${
         missingAssignables.map((a) => `${a.name} (${a.id})`).join(", ")
-      }\n     These ids come from a 2019 dump. A role that was deleted and recreated has a new id, so Phase 3 would seed an Assignable that matches nobody, silently. Nobody had checked these.`,
+      }\n     These ids come from a 2019 dump. A role that was deleted and recreated has a new id, so Phase 4 would seed an Assignable that matches nobody, silently. Nobody had checked these.`,
   );
 
   // Match by canonical badge recovered from the display name, so an emoji-bearing
@@ -311,7 +311,7 @@ async function main() {
     globalLoa ? "warn" : "ok",
     "No surviving GLOBAL /loa on this application",
     globalLoa
-      ? "a GLOBAL /loa is registered. Phase 4's bulk PUT replaces only the scope it targets, so a global command SURVIVES it, and once the interactions URL points at us it is routed to an endpoint with no handler behind it. Delete it explicitly."
+      ? "a GLOBAL /loa is registered. Phase 5's bulk PUT replaces only the scope it targets, so a global command SURVIVES it, and once the interactions URL points at us it is routed to an endpoint with no handler behind it. Delete it explicitly."
       : `global commands: ${
         globalCommands.map((c) => `/${c.name}`).join(", ") || "(none)"
       }`,
@@ -319,9 +319,9 @@ async function main() {
 
   record(
     "ok",
-    "Guild-scoped commands (a /loa here dies for free in Phase 4)",
+    "Guild-scoped commands (a /loa here dies for free in Phase 5)",
     `${guildCommands.map((c) => `/${c.name}`).join(", ") || "(none)"}${
-      guildLoa ? "  <- /loa present, but Phase 4's bulk PUT removes it" : ""
+      guildLoa ? "  <- /loa present, but Phase 5's bulk PUT removes it" : ""
     }`,
   );
 }

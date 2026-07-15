@@ -203,7 +203,7 @@ export async function consumeLinkCode(
  * a TeamSpeak identity that sat in the Operations channel before its owner ever
  * linked was recorded as a Guest (`member_id is null`), and this is the moment
  * it becomes theirs (IMPLEMENTATION §4 and §7, ADR 0007, ADR 0009). It writes
- * nothing today because attendance does not exist until Phase 5. It is here
+ * nothing today because attendance does not exist until Phase 6. It is here
  * anyway, because the alternative is remembering to come back for it.
  *
  * `member_id is null` in the WHERE is what makes it safe to run twice, and what

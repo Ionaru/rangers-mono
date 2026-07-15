@@ -3,7 +3,7 @@
  *
  * Phase 2 needs exactly two operations, and both are read-only as far as the
  * TeamSpeak server is concerned: list the online clients, and poke one of them.
- * Phase 3 adds the group reconcile on top of this same connection, and Phase 5
+ * Phase 4 adds the group reconcile on top of this same connection, and Phase 6
  * the Operations-channel sampling.
  */
 export * from "./client.ts";

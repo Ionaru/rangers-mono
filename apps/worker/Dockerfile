@@ -28,7 +28,7 @@ USER deno
 
 # Installs strictly from deno.lock and fails if it is stale.
 #
-# Never add `--allow-scripts` / `deno approve-scripts`. From Phase 3 the
+# Never add `--allow-scripts` / `deno approve-scripts`. From Phase 4 the
 # TeamSpeak client pulls ssh2 -> cpu-features, whose ignored build script wants
 # python and node-gyp. The warning is correct behaviour: the library runs pure
 # JS with zero native addons and only --allow-net.
