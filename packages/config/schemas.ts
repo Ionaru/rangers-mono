@@ -6,7 +6,7 @@ import { DEFAULT_ATTENDANCE_MIN_MINUTES } from "@7r/domain";
  *
  * Each service composes only the groups it actually uses, so Phase 1's web and
  * worker do not demand a TeamSpeak query password that nothing will read until
- * Phase 3. Adding a group to a service is the deliberate act of saying "this
+ * Phase 4. Adding a group to a service is the deliberate act of saying "this
  * service now needs TeamSpeak".
  */
 
@@ -59,7 +59,7 @@ export const webSchema = coreSchema.extend({
 export type WebConfig = z.infer<typeof webSchema>;
 
 /**
- * Phase 2 (login) and Phase 4 (bot).
+ * Phase 2 (login) and Phase 5 (bot).
  *
  * All four app values come from ONE Discord application: 7R_Bot, ours, not the
  * legacy 2019 bot's (ADR 0015). DISCORD_CLIENT_ID is that application's id, so
@@ -95,7 +95,7 @@ export type SteamConfig = z.infer<typeof steamSchema>;
  * suggests, and deliberately: the TeamSpeak link flow needs a *live*
  * ServerQuery connection to list the online clients and poke one of them
  * (IMPLEMENTATION §4). There is no way to build identity linking without it, so
- * the transport lands here and Phase 3 adds only the reconcile on top.
+ * the transport lands here and Phase 4 adds only the reconcile on top.
  */
 export const teamspeakSchema = z.object({
   TS_QUERY_HOST: z.string().min(1),
@@ -118,7 +118,7 @@ export const teamspeakSchema = z.object({
 export type TeamspeakConfig = z.infer<typeof teamspeakSchema>;
 
 /**
- * Phase 5. Split out of `teamspeakSchema` on purpose: the Operations channel is
+ * Phase 6. Split out of `teamspeakSchema` on purpose: the Operations channel is
  * an *attendance* concept, and nothing in the link flow has any use for it.
  * Folded in, it would force whoever sets up linking to invent a channel id to
  * get past a fail-loud config, which is exactly the habit this package exists
@@ -153,7 +153,7 @@ export const workerClientSchema = z.object({
 });
 export type WorkerClientConfig = z.infer<typeof workerClientSchema>;
 
-/** Phase 4 (the weekly event) and Phase 5 (attendance). Saturday only. */
+/** Phase 5 (the weekly event) and Phase 6 (attendance). Saturday only. */
 export const opsSchema = z.object({
   OP_TIMEZONE: z.string().min(1).default("Europe/Amsterdam"),
   OP_WEEKLY_CRON: z.string().min(1).default("0 20 * * 6"),
@@ -165,7 +165,7 @@ export const opsSchema = z.object({
 });
 export type OpsConfig = z.infer<typeof opsSchema>;
 
-/** Phase 3. */
+/** Phase 4. */
 export const syncSchema = z.object({
   ROLE_SYNC_INTERVAL_SECONDS: int().default(300),
   /** Starts true. Flip it only after a preview looks right (ADR 0009). */

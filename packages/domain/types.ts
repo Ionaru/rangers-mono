@@ -4,8 +4,8 @@
  *
  * This package holds domain types and pure rules. It performs no I/O, imports
  * no driver, and reads no environment. Keep it that way: the two functions the
- * test suite exists for (the TeamSpeak group reconcile in Phase 3 and the
- * sample-to-session reconstruction in Phase 5) are only testable without a live
+ * test suite exists for (the TeamSpeak group reconcile in Phase 4 and the
+ * sample-to-session reconstruction in Phase 6) are only testable without a live
  * server because they take plain data in and return plain data out.
  */
 

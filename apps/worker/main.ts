@@ -23,8 +23,8 @@ import { createInternalApiHandler } from "./internal-api.ts";
  * opening a second one (ARCHITECTURE §2).
  *
  * From Phase 2 it serves the identity link flow. What it grows into is the
- * group reconcile (Phase 3), the weekly Discord event (Phase 4) and the
- * Operations-channel sampling (Phase 5), all on this same connection.
+ * group reconcile (Phase 4), the weekly Discord event (Phase 5) and the
+ * Operations-channel sampling (Phase 6), all on this same connection.
  */
 
 /**

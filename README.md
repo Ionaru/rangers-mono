@@ -70,9 +70,14 @@ its OAuth redirect, harvest the meme images, and create the 8 badge roles in
 Discord. Nobody can log in until the first of those is done, because the login
 gate asks Discord whether you are in the guild.
 
-Still to build: the TeamSpeak group sync (Phase 3, the one that pays for the
-project), the bot's slash commands (4), attendance (5) and the public content
-and handbook (6). See `ARCHITECTURE.md` §9.
+**The plan was re-cut on 2026-07-15: public content is next, as the MVP.**
+The homepage, the handbook and the briefing generator (Phase 3) are what the
+current website serves, so once they exist the domain switches over to the new
+stack — and everything built afterwards lands on the real website instead of a
+shadow deployment. The cutover does not wait on Phase 0: the public pages are
+static content and need no Discord application (only logging in does). Then
+come the TeamSpeak group sync (Phase 4, the one that pays for the project),
+the bot's slash commands (5) and attendance (6). See `ARCHITECTURE.md` §9.
 
 ## Development
 

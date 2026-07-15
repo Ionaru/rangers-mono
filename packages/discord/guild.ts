@@ -11,7 +11,7 @@ import {
  * dependency for one endpoint.
  */
 export interface GuildMember {
-  /** The Discord role ids they hold. Phase 3's reconcile is built on this. */
+  /** The Discord role ids they hold. Phase 4's reconcile is built on this. */
   roles: string[];
   /** Their per-guild nickname, if they set one. */
   nick: string | null;
@@ -38,7 +38,7 @@ export interface GuildMember {
  * the bot token, never from the login (IMPLEMENTATION §4).
  *
  * **On the GUILD_MEMBERS privileged intent.** ARCHITECTURE §7 says that intent
- * is needed "for the REST member list", and it is: Phase 3's poll of
+ * is needed "for the REST member list", and it is: Phase 4's poll of
  * `GET /guilds/{id}/members` is refused without it. Discord's reference attaches
  * that requirement to *List* Guild Members, and **not** to *Get* Guild Member,
  * which is this endpoint. So the intent probably does not gate the login, and an
@@ -47,7 +47,7 @@ export interface GuildMember {
  *
  * It is still a Phase 0 task (it is an application toggle, off by default, and no
  * permission substitutes for it, Administrator included), and it is still
- * required before Phase 3. It is simply not confirmed to be required *here*.
+ * required before Phase 4. It is simply not confirmed to be required *here*.
  * `deno task phase0:check` settles it against the live application rather than
  * against anyone's reading of the docs.
  */

@@ -61,7 +61,7 @@ import {
  * they become a member-with-that-`ts_uid`, the reconcile sees a badge on
  * TeamSpeak that Discord does not have, and removes it. They lose the badge by
  * the act of linking. So the fix is to get the Discord role onto the real people
- * here BEFORE Phase 3 leaves dry-run: have them link and re-run this (idempotent),
+ * here BEFORE Phase 4 leaves dry-run: have them link and re-run this (idempotent),
  * or an admin grants the role by hand. The ones who have left the unit never link,
  * so their badge lingers harmlessly on a dead identity.
  */
@@ -334,7 +334,7 @@ async function main(): Promise<number> {
   }
 
   /**
-   * Phase 3's seed needs these, and MIGRATION.md's badge table still says TODO in
+   * Phase 4's seed needs these, and MIGRATION.md's badge table still says TODO in
    * all eight rows. Print them in the shape it wants (the CANONICAL name, which is
    * what the seed and the TeamSpeak group use, not the emoji display name), so
    * nobody has to go and copy sixteen snowflakes out of the Discord client by hand.

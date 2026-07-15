@@ -36,7 +36,7 @@ export const getWorkerServerConfig = memoize(() =>
 );
 
 /**
- * Phase 2 (the Discord login) and Phase 4 (the bot). One application, `7R_Bot`:
+ * Phase 2 (the Discord login) and Phase 5 (the bot). One application, `7R_Bot`:
  * see the schema.
  */
 export const getDiscordConfig = memoize(() => loadConfig(discordSchema));
@@ -49,7 +49,7 @@ export const getWorkerClientConfig = memoize(() =>
   loadConfig(workerClientSchema)
 );
 
-/** Phase 2 (the poke-link flow) and Phase 3 (the reconcile). Worker only. */
+/** Phase 2 (the poke-link flow) and Phase 4 (the reconcile). Worker only. */
 export const getTeamspeakConfig = memoize(() => loadConfig(teamspeakSchema));
 
 /** The worker posts its own errors here, so a failure is visible without log-diving. */

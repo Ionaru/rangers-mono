@@ -5,7 +5,7 @@ bot: a member-facing `/link` command (with `/unlink` as its counterpart), handle
 the interactions endpoint. The possession challenge itself is unchanged (Q10's
 bot-initiated mechanic: pick yourself from the online-clients list, the worker pokes
 that client a one-time code, you type the code back). Only the surface moves. The web
-link/unlink pages for TeamSpeak are removed when `/link` ships (Phase 4), not before:
+link/unlink pages for TeamSpeak are removed when `/link` ships (Phase 5), not before:
 the web flow keeps serving until its replacement exists.
 
 ## Why
@@ -20,7 +20,7 @@ machinery (`packages/identity/link-code.ts`), the `link_code` table, and the wor
 internal API (`GET /internal/ts/clients`, `POST /internal/ts/poke`) are reused as-is.
 No schema change, no new env, no new coupling: the interactions endpoint lives in
 `apps/web`, which already holds the worker client. What `/link` does cost is carried
-by Phase 4 anyway: the interactions endpoint must exist, and it must dispatch
+by Phase 5 anyway: the interactions endpoint must exist, and it must dispatch
 message-component and modal-submit interactions, not just slash commands.
 
 Keeping both surfaces was considered and rejected: two UIs over one flow is twice the
@@ -75,7 +75,7 @@ unchanged by it.
   (IMPLEMENTATION §8).
 - `/link` and `/unlink` are **member-facing, not admin-gated** — unlike every other
   planned write command. `/link-force` (admin, ADR 0009) is unaffected and stays.
-- Phase 4 gains the removal of the web TeamSpeak link/unlink pages alongside its other
+- Phase 5 gains the removal of the web TeamSpeak link/unlink pages alongside its other
   deliverables. Until then the web flow keeps working; the docs describe the decided
   end state.
 - The web member area becomes read-only plus Steam linking. Self-unlink (a privacy

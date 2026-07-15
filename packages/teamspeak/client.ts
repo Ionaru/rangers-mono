@@ -19,7 +19,7 @@ import {
  * will not be one (ARCHITECTURE §9), so the transport is first exercised against
  * the live server. What that buys is bounded here: Phase 2 only *reads* the
  * client list and sends a poke. It writes nothing on TeamSpeak. The dangerous
- * writes are the group reconcile, and they arrive in Phase 3 behind
+ * writes are the group reconcile, and they arrive in Phase 4 behind
  * SYNC_DRY_RUN and the blast-radius guard.
  */
 
