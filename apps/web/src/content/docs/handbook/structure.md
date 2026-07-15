@@ -19,7 +19,7 @@ This makes the platoon leader in charge of the entire operation.
 ### Structure
 
 - **Platoon Element** - Leadership and supportive element of the platoon, generally operating in a second line behind the frontline.
-- **Squad Elements** - A platoon consists of up to three squads (Alpha, Bravo & Charlie). Squads are generally the frontline elements and the main element of our platoon.
+- **Squad Elements** - A platoon consists of up to four squads (Alpha, Bravo, Charlie & Delta). Squads are generally the frontline elements and the main element of our platoon.
 - **Support Elements** - There are various possible support elements such as combat engineers, weapons teams, reconnaissance teams, mechanised or armoured teams. Support elements generally have more freedom and are under less strict control of the platoon leadership. Their main task is to support the squad elements and help them succeed with their tasks. Their freedom enables them to apply their special abilities to their fullest potential.
 
 <img class="transparent-fix" src="/wiki/images/PL_Struc2.png" alt="Platoon structure">
@@ -37,7 +37,7 @@ Regularly the Platoon Element splits into two teams. The Platoon Leader and Medi
 
 1. Platoon Leader
 2. Platoon Sergeant
-3. Squad Leaders (Alpha to Charlie) or whoever their successor within the squad is / if a squad is combat ineffective another squad leader of a combat effective squad may take command breaking the succession from (Alpha to Charlie) in favour of keeping momentum.
+3. Squad Leaders (Alpha to Delta) or whoever their successor within the squad is / if a squad is combat ineffective another squad leader of a combat effective squad may take command breaking the succession from (Alpha to Delta) in favour of keeping momentum.
 
 The mission shall be continued. The death of the Platoon Leader shall not impact the overall objective nor the general decision-making regarding the mission. If the original first in command is part of a reinforcement wave he may take control from his successor. The successor has to hand over command as soon as the situation allows and the original commander is in a position to do so, meaning he is back in the vicinity of the active units in the area of operations.
 
@@ -103,7 +103,7 @@ A list of the loadout sets and the different units can be found [here](https://d
 - **Platoon Leader (PL)** - The Platoon Leader carries a carbine with grenade launcher as well as coloured smoke to mark positions.
 - **Platoon Engineer (PE)** - The Platoon Engineer carries a battle rifle in addition to his engineer equipment (engineer specialisation loadouts are outlined below).
 - **Platoon Medic (PM)** - The Platoon Medic carries a carbine and a substantial amount of medical gear.
-- **Forward Air Controller (FAC)** - The Forward Air Controller carries a carbine and long-range radio.
+- **Forward Air Controller (FAC)** - The Forward Air Controller carries a carbine and long-range radio. This role is often taken up by the Platoon Sergeant, but can also be filled by a separate, dedicated member.
 - **Platoon DMR (PDMR)** - The Platoon DMR carries a DMR with a high magnification scope.
 - **Platoon UAV (UAV)** - The Platoon UAV has a UAV drone.
 

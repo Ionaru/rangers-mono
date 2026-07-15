@@ -4,12 +4,13 @@ title: Procedures
 
 ## Operation Procedures
 
-1. **Briefing** - Mission Runner (Creator) presents the Mission Briefing on the Briefing Screen.
-2. **Equipment Assignment** - Platoon Leader assigns Equipment to Squads such as MMG, MAT or other special Roles.
-3. **Squad Assembly** - Squad Leader assigns Roles to Operators and special Equipment (Lockpicks, etc.) to individuals. Individuals get their Loadouts and conduct adjustments.
-4. **Squad Briefing** - Squad Leader briefs his Squad and defines the internal Chain of Command (2IC, etc.). Checking the Composition and Equipment. Radio check. Reports to Platoon Leader when ready to proceed.
-5. **Platoon Briefing / First Orders** - Platoon Leader presents his Plan. Outlining the specifics on how he wants to attack the first objective and how to get to the AO specifically. Squad Leaders may ask questions and input their concerns. At the end of this process stands the initial plan.
-6. **Roll Out** - Lock and Load. Start of the Insertion and the actual Mission.
+1. **Squad Assignment** - On the lobby screen, before the briefing, members gather and are assigned to squads. The Mission Runner and operation commander decide the composition of the unit.
+2. **Briefing** - Mission Runner (Creator) presents the Mission Briefing on the Briefing Screen (map screen).
+3. **Equipment Assignment** - On the Briefing Screen, after the briefing, the Platoon Leader assigns Equipment to Squads such as MMG, MAT or other special Roles.
+4. **Squad Assembly** - In-game, after the briefing, the Squad Leader assigns Roles to Operators and special Equipment (Lockpicks, etc.) to individuals. Individuals get their Loadouts and conduct adjustments.
+5. **Squad Briefing** - Squad Leader briefs his Squad and defines the internal Chain of Command (2IC, etc.). Checking the Composition and Equipment. Radio check. Reports to Platoon Leader when ready to proceed.
+6. **Platoon Briefing / First Orders** - Platoon Leader presents his Plan. Outlining the specifics on how he wants to attack the first objective and how to get to the AO specifically. Squad Leaders may ask questions and input their concerns. At the end of this process stands the initial plan.
+7. **Roll Out** - Lock and Load. Start of the Insertion and the actual Mission.
 
 ## Join in Progress
 

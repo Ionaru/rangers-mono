@@ -31,8 +31,8 @@ title: Reconnaissance
 
 The Recon Sniper may carry two primary weapons. A Personal Defence Weapon (PDW) and a Sniper Rifle.
 
-- **Gun Back** - The Sniper Rifle is by default loaded into his Gun Back (Backpack). He is carrying his PDW.
-- **Switching Weapons** - Place the PDW into your inventory. Use ACE Self-Interaction to take the Sniper Rifle out of your Gun Back. When done, place the Sniper Rifle in your Gun Back with ACE Self-Interaction and take the PDW out of your inventory. It is not possible to switch a weapon you carry directly with the weapon in the Gun Back.
+- **Gunbag** - The Sniper Rifle is by default loaded into his Gunbag (Backpack). He is carrying his PDW.
+- **Switching Weapons** - Place the PDW into your inventory. Use ACE Self-Interaction to take the Sniper Rifle out of your Gunbag. When done, place the Sniper Rifle in your Gunbag with ACE Self-Interaction and take the PDW out of your inventory. It is not possible to switch a weapon you carry directly with the weapon in the Gunbag.
 
 ## Marksmanship
 

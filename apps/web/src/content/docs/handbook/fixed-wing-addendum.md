@@ -81,7 +81,7 @@ There are 2 types of AA missile locking mechanisms that are modelled in Arma:
   - Fox 2 is an infrared guided missile, which means it can lock on to nearby heat signatures (the target can be invisible to your radar, and you will still get a lock), the target will not receive a warning about the infrared lock on.
   - It has a 180 degree firing angle (you can fire it in tight turns and without having a direct view of the target, only using the lock on), but it has a maximum range of 5km from where you can get a lock (e.g. BIM-9X, ASRAAM).
 - **Fox 3**
-  - Fox 3 is a radar semi-guided missile, which means it needs an active radar lock to engage, typically fired from BVR (beyond visual range), it gives a lock-on warning to the target and has a tight firing angle.
+  - Fox 3 is an active radar-homing missile, which means it carries its own radar and guides itself after launch (fire-and-forget), so the shooter does not have to hold the lock all the way to impact. Typically fired from BVR (beyond visual range), it gives a lock-on warning to the target and has a tight firing angle.
   - Many SPAAG (self-propelled anti-aircraft gun) have a small range, if you make an effort to stay at a minimum of 4 km away from these vehicles they will not be effective against you.
 
 When entering combat zones stay at high speed to keep the vulnerability time window small.
@@ -174,7 +174,7 @@ The following weapon systems are working (at the moment of writing this document
 - **AGM-114N** type: thermobaric, targeting: laser, range: UNK
 - **AGM-114L** type: HEAT, targeting: radar, range: 8km, notes: LOBL
 - **AGM-114K** type: HEAT, targeting: laser, range: 8km, notes: LOBL, less precise
-- **AGM-65L** type: HEAT, targeting: radar, range: 6km, notes: LOAL, only one of the 2 functions
+- **AGM-65L** type: HEAT, targeting: laser, range: 6km, notes: LOAL, only one of the 2 functions
 - **AGM-65G** type: HEAT, targeting: ir, range: 4km, notes: target needs to be hot
 - **GBU 12** type: LGB, targeting: laser/unguided, range: UNK
 - **GBU SDB** type: PGGB, targeting: laser/ir/unguided, range: UNK

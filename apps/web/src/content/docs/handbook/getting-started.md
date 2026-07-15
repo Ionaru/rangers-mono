@@ -44,9 +44,9 @@ Now it is time to talk about your first mission with us. Depending on your prior
 
 ## Operation Structure
 
-- **Assignment** - Gather in the lobby and wait for orders. The mission runner and operation commander will decide on the composition of the unit.
-- **Briefing** - The mission runner will give a mission briefing. If any questions regarding the situation or objective come up, ask them.
-- **Setup** - Getting radios set up and tested, operators get their loadouts assigned and equip them. Soldiers can customise their gear.
+- **Assignment** - Gather on the lobby screen and wait for orders. Before the briefing, the mission runner and operation commander decide on the composition of the unit and assign members to squads.
+- **Briefing** - On the map screen the mission runner will give a mission briefing. If any questions regarding the situation or objective come up, ask them.
+- **Setup** - After the briefing, special weapons are assigned to squads on the briefing screen. Then, in-game, operators get their roles and loadouts assigned, set up and test their radios, and customise their gear.
 - **Planning** - The commander presents his plan for the operation.
 - **Infiltration** - Units insert into the combat area. Load your weapon before moving out.
 - **Execution** - Execution of the mission.

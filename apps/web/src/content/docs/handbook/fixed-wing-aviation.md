@@ -94,7 +94,7 @@ The following weapon systems have been chosen for use in operations, and they sh
 - **AGM-65G Maverick** type: ATGM, targeting: IR, charge: HEAT
 - **GBU-56 LJDAM** type: Large diameter bomb, targeting: Laser guided, charge: HE
 - **EGBU-12 Enhanced Paveway II** type: small diameter bomb, targeting: Laser guided, charge: HE
-- **R60M** type: medium range air-to-air, targeting: IR
+- **R60M** type: short range air-to-air, targeting: IR
 - **KH-25MTP** type: ATGM, targeting: IR, charge: HEAT
 - **S-8 KOM** type: HEDP Rockets, targeting: unguided, charge: HEAT
 

@@ -10,7 +10,7 @@ The current standard loadout for eight people consists of:
 
 - 2x AR
 - 2x LAT
-- 1x Grenadier (optional)
+- 2x Specialist (e.g. Grenadier, Battle Rifle, Breacher)
 - Medic
 - SL
 

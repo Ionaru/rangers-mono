@@ -16,7 +16,7 @@ everyone is expected to follow their leader's orders.
 
 It depends on the mission. Our loadouts cover three settings:
 
-- **Modern** - present-day forces, from tier-one special operations (Rangers,
+- **Modern** - present-day forces, from special operations (Rangers,
   MARSOC, DEVGRU, Green Berets and allied SF) down to conventional army and
   marines.
 - **Retro** - the 1980s to 2000s, including Delta Force and US Army and Marine

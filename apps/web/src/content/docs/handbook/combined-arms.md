@@ -10,6 +10,8 @@ All elements like Aviation, Reconnaissance, Armour or other Support Units are pu
 
 ## Platoon Sergeant / Forward Air Controller
 
+The Forward Air Controller (FAC) duties are most often carried by the Platoon Sergeant, but the FAC can also be a separate, dedicated role. The responsibilities below apply to whoever fills the FAC role.
+
 - **Doctrine** - Connective tissue linking the Infantry Platoon and its leader to the Support Elements.
 - **Communication** - Equipped with a Long-Range-Radio, he is responsible for the communication between the Infantry Platoon and Support Elements which are not in proximity of the Platoon.
   - **Direct** - When directing tasks and requesting fire support, he is responsible to ensure that no friendlies or civilians are being hurt.

@@ -83,7 +83,7 @@ The CH-47 is used as the lift helicopter capable of lifting supply crates and li
 
 - **Altitude** - The flight altitude of the helicopter must take into account the rope's length as well as the size of the cargo.
   - An example of this for transporting a Humvee would be: 30m Combat Altitude + 10m Rope Length + 2m Height of the Humvee, bringing the flight altitude to 42m.
-- **Speed** - The flight speed of the helicopter must not exceed 170m/s.
+- **Speed** - The flight speed of the helicopter must not exceed 170km/h.
   - This will risk the sling loaded cargo striking the helicopter should the pilot necessitate manoeuvres.
   - Helicopter movement must also take into consideration the movement of the sling loaded cargo.
 - **Navigation** - The pilot may communicate with ground-based elements to guide the cargo into a safe drop zone.

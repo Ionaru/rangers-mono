@@ -63,7 +63,7 @@ Skills a Combat Engineer needs to be able to bring onto the battlefield.
 - **AT Mine** - Anti-vehicle / tank mine activated by pressure. It will not be activated by infantry stepping on it.
 - **IED** - Either pressure or remotely activated. Usually based on an artillery shell. Highly effective with a large explosion radius. Effective against vehicles and personnel.
 - **Claymore** - Directional anti-personnel mine. Usually remotely activated.
-- **SLAM** - Directional anti-vehicle / tank mine. Either activated by pressure in bottom attack mode, laser in side attack mode or remotely activated.
+- **SLAM** - Directional anti-vehicle / tank mine. Either activated by a magnetic sensor in bottom attack mode, an infrared sensor in side attack mode, or remotely activated.
 - **Explosive Charge** - Explosive charge activated either by timer or remotely.
 - **Explosive Satchel** - Large explosive charge activated either by timer or remotely.
 

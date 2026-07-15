@@ -34,7 +34,7 @@ The advanced system can be further trimmed to your preferences. In our flight sc
 
 ### Hardware Requirements
 
-Minimum hardware requirements for this are four axes: two for cyclic, one for the collective and one for the pedals. All of them are necessary to keep control over your helicopter while using the advanced flight model. This means that mouse and keyboard are not sufficient anymore, and a flight stick is strongly recommended. For beginners who are unsure if they want to continue using this system, I can recommend the Logitech T.Flightstick X for around 35€. It provides you with all four axes you need.
+Minimum hardware requirements for this are four axes: two for cyclic, one for the collective and one for the pedals. All of them are necessary to keep control over your helicopter while using the advanced flight model. This means that mouse and keyboard are not sufficient anymore, and a flight stick is strongly recommended. For beginners who are unsure if they want to continue using this system, I can recommend the Thrustmaster T.Flight Stick X for around 35€. It provides you with all four axes you need.
 
 ## Making your choice
 

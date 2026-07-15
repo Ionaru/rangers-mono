@@ -46,7 +46,7 @@ Based on the information and the availability of your individual accessible chan
 
 ## Radios
 
-On default each soldier is carrying a Rifleman Radio AN/PRC-343. Each Squad has their own Squad Net. The Squad Leaders, 2nd in Command, Platoon Leader, Platoon Sergeant and Platoon Medic will also carry an additional Radio connected to the Platoon Net, AN/PRC-152. Furthermore, the Platoon Leader will carry a Long-Range Radio to communicate with Support Units such as Aviation on the Command Net, AN/PRC-117F.
+On default each soldier is carrying a Rifleman Radio AN/PRC-343. Each Squad has their own Squad Net. The Squad Leaders, 2nd in Command, Platoon Leader, Platoon Sergeant and Platoon Medic will also carry an additional Radio connected to the Platoon Net, AN/PRC-152. Furthermore, the Platoon Sergeant will carry a Long-Range Radio to communicate with Support Units such as Aviation on the Command Net, AN/PRC-117F.
 
 It is essential that every soldier is familiar with how to set up and use the Radio. It is mandatory that communication lines remain open at all times, e.g. if a Squad Leader is unconscious, the second in command should go on the Platoon Net and report the situation and assume control of the Squad and the Communication, while the Leader is being treated. In the end every soldier should be ready to take actions to maintain the communication at all times during the mission based on the situation of his unit. It is everyone's duty to ensure a constant uninterrupted line of communication between all elements, no matter the costs. If your unit lacks a Radio capable of connecting to the Platoon Net (e.g. AN/PRC-343), one person may need to switch to the Platoon Actual Net to keep a line of communication.
 

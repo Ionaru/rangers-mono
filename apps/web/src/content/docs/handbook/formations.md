@@ -108,3 +108,25 @@ differently, so pick the one that fits the ground and the threat.
 
 - Intending to switch to line soon
 - Moving in a platoon wedge
+
+## Diamond
+
+<img class="transparent-fix" src="/wiki/images/Diamond.png" alt="Diamond formation">
+
+**Pros**
+
+- Excellent all-round (360°) security
+- Good firepower in every direction, including the rear
+- Strong when the threat can come from any bearing
+
+**Cons**
+
+- Spread out, so concealment is limited
+- Needs space and is harder to hold in tight terrain
+- Less concentrated firepower to the front than a wedge or line
+
+**Use when**
+
+- You expect contact from any direction, including the rear
+- In the combat area or close quarters with an all-round threat
+- The threat bearing is unclear
