@@ -1,0 +1,74 @@
+---
+/**
+ * The public-site shell: homepage, about, briefing generator. Distinct from the
+ * member-area `Base.astro` (which stays deliberately plain). Owns the 7R visual
+ * identity, the tokens, the header wordmark, the footer.
+ *
+ * `member` is passed on SSR pages (the homepage) so the header can greet a
+ * signed-in member; prerendered pages omit it and show a sign-in affordance.
+ */
+import "../styles/tokens.css";
+import "../styles/public.css";
+import SiteNav from "../components/SiteNav.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Highlights the active top-nav item. */
+  current?: "home" | "handbook" | "briefing" | "about";
+  member?: { displayName: string } | null;
+}
+
+const {
+  title,
+  description =
+    "The 7th Ranger Group: a European Arma 3 milsim unit. One planned operation every Saturday, run properly and played for fun.",
+  current,
+  member = null,
+} = Astro.props;
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <title>{title} | 7th Ranger Group</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/brand/banner.png" />
+    <meta name="theme-color" content="#0b0e0d" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <SiteNav variant="bar" current={current} member={member} />
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <a class="brand" href="/" aria-label="7th Ranger Group, home">
+          <img src="/brand/logo.png" alt="" width="40" height="40" />
+          <span class="brand-name">7th Ranger Group</span>
+        </a>
+        <nav class="footer-nav" aria-label="Footer">
+          <a href="/handbook/">Handbook</a>
+          <a href="/briefing-generator">Briefing generator</a>
+          <a href="/about">About</a>
+          <a href="https://discord.gg/vbFMQXe" rel="noopener">Discord</a>
+          <a href="ts3server://ts.7th-ranger.com">TeamSpeak</a>
+          <a href="/me">Members</a>
+        </nav>
+        <p class="footer-note">
+          7th Ranger Group. A European Arma 3 milsim unit. Operations every
+          Saturday, 20:00 CET/CEST.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

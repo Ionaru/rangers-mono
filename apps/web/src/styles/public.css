@@ -1,0 +1,535 @@
+/*
+ * Public-site component styles (PublicLayout pages: homepage, about, briefing
+ * generator). Tokens come from tokens.css. Loaded globally by PublicLayout.
+ *
+ * The signature elements, kept disciplined:
+ *  - the green square (.sq / .eyebrow), the logo's dot, reused as marker, nav
+ *    indicator and rule node;
+ *  - monospace field-labels (.eyebrow, .meta, nav), a briefing-document voice;
+ *  - grayscale imagery (.shot), colour is reserved for the green.
+ */
+
+/* ---- reset / base ---------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 1rem/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Responsive 16:9 embed (the "our take on milsim" video). */
+.video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #000;
+}
+.video iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+a {
+  color: var(--accent-2);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius);
+}
+
+/* ---- signature: the green square + field labels ---------------------- */
+.sq {
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  background: var(--accent);
+  vertical-align: baseline;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font: 600 0.72rem/1 var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 1.1rem;
+}
+.eyebrow::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--accent);
+  flex: none;
+}
+
+/* A hairline with a small green node on the left, the section divider. */
+.rule {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+  position: relative;
+}
+.rule::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+
+/* ---- type ------------------------------------------------------------ */
+h1,
+h2,
+h3 {
+  font-family: var(--sans);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.h-display {
+  font-size: clamp(2.4rem, 6vw, 4.25rem);
+  letter-spacing: 0.01em;
+}
+.h-section {
+  font-size: clamp(1.6rem, 3.4vw, 2.5rem);
+}
+.lede {
+  font-size: clamp(1.05rem, 1.7vw, 1.3rem);
+  line-height: 1.5;
+  color: var(--text);
+  max-width: 42ch;
+  margin: 0;
+}
+.muted {
+  color: var(--muted);
+}
+
+/* ---- buttons --------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font: 600 0.82rem/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.9rem 1.3rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn--primary {
+  /* --accent-2 (not the darker brand --accent) so the dark label clears WCAG AA
+     contrast; the exact brand green stays the accent squares/marks. */
+  background: var(--accent-2);
+  color: var(--accent-ink);
+}
+.btn--primary:hover {
+  background: var(--accent-3);
+  text-decoration: none;
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line-2);
+}
+.btn--ghost:hover {
+  border-color: var(--accent-2);
+  color: var(--text);
+  text-decoration: none;
+}
+
+/* ---- header ---------------------------------------------------------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+/* .brand / .brand-name are reused by the footer; the header's brand + nav now
+   live in the shared SiteNav.astro component. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.brand img {
+  height: 1.75rem;
+  width: auto;
+}
+.brand .brand-name {
+  font: 700 0.8rem/1 var(--mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* ---- hero ------------------------------------------------------------ */
+.hero {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-position: center 38%;
+  filter: grayscale(1) contrast(1.08) brightness(0.62);
+}
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+    to right,
+    var(--bg) 0%,
+    color-mix(in srgb, var(--bg) 78%, transparent) 42%,
+    transparent 100%
+  ),
+    linear-gradient(to top, var(--bg) 2%, transparent 45%);
+}
+.hero .wrap {
+  padding-block: clamp(4.5rem, 12vw, 8.5rem);
+}
+.hero__inner {
+  max-width: 44rem;
+}
+.hero__wordmark {
+  width: min(30rem, 82%);
+  height: auto;
+  margin: 0 0 1.6rem;
+}
+.hero__lede {
+  margin-top: 1.4rem;
+}
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2rem;
+}
+.hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 2.6rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--line);
+  font: 600 0.72rem/1 var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hero__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hero__meta span::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--accent);
+  flex: none;
+}
+
+/* ---- generic section ------------------------------------------------- */
+.section {
+  padding-block: clamp(3.5rem, 8vw, 6rem);
+}
+.section--tight {
+  padding-block: clamp(2.5rem, 5vw, 4rem);
+}
+.section__head {
+  max-width: 52ch;
+  margin-bottom: 2.6rem;
+}
+.section__head p {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.section--panel {
+  background: var(--bg-2);
+  border-block: 1px solid var(--line);
+}
+
+/* Video + text pairing ("our take on milsim"). */
+.take {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+}
+.take__text p {
+  margin: 1rem 0 0;
+  color: var(--muted);
+}
+@media (max-width: 46rem) {
+  .take {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- "what we are": three disciplined facts -------------------------- */
+.facts {
+  display: grid;
+  /* Explicit 3-up, collapsing straight to 1 (never an auto-fit 2+1 that leaves
+     a lopsided lone card and an empty bordered cell). minmax(0,…) keeps a long
+     unbreakable token from blowing a track out. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.fact {
+  background: var(--bg);
+  padding: 1.6rem 1.5rem;
+}
+.fact dt {
+  font: 600 0.7rem/1 var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  margin-bottom: 0.7rem;
+}
+.fact dd {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+/* ---- pillars --------------------------------------------------------- */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+.pillar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1.7rem 1.6rem 1.9rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.pillar:hover {
+  border-color: var(--line-2);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+.pillar .pillar__no {
+  font: 600 0.72rem/1 var(--mono);
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+.pillar h3 {
+  font-size: 1.35rem;
+  color: var(--text);
+}
+.pillar p {
+  margin: 0;
+  color: var(--muted);
+  flex: 1;
+}
+.pillar .pillar__go {
+  font: 600 0.74rem/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---- enlist (unit photo + CTA) --------------------------------------- */
+.enlist {
+  position: relative;
+  isolation: isolate;
+  border-block: 1px solid var(--line);
+  overflow: hidden;
+}
+.enlist__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-position: center 30%;
+  filter: grayscale(1) contrast(1.05) brightness(0.5);
+}
+.enlist__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to right,
+    var(--bg) 8%,
+    color-mix(in srgb, var(--bg) 55%, transparent) 60%,
+    transparent
+  );
+}
+.enlist .wrap {
+  padding-block: clamp(4rem, 9vw, 7rem);
+}
+.enlist__inner {
+  max-width: 38rem;
+}
+.enlist__inner p {
+  color: var(--text);
+  font-size: 1.1rem;
+  margin: 0 0 1.8rem;
+}
+
+/* ---- footer ---------------------------------------------------------- */
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding-block: 2.6rem 3rem;
+  background: var(--bg-2);
+}
+.site-footer .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.site-footer .brand img {
+  height: 1.4rem;
+}
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.3rem;
+  font: 600 0.74rem/1 var(--mono);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.footer-nav a {
+  color: var(--muted);
+}
+.footer-nav a:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+.footer-note {
+  width: 100%;
+  color: var(--muted);
+  font: 500 0.72rem/1.5 var(--mono);
+  letter-spacing: 0.04em;
+}
+
+/* ---- motion / responsive -------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Three-up grids collapse straight to one column on tablet-portrait and below,
+   so there is never a lopsided 2+1 row. */
+@media (max-width: 48rem) {
+  .facts,
+  .pillars {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tap targets: footer links are line-height:1 with no padding, so give them a
+   >=40px hit box on touch-sized viewports. (The header nav's own tap targets
+   live in SiteNav.astro.) */
+@media (max-width: 48rem) {
+  .footer-nav {
+    gap: 0.25rem 1.3rem;
+  }
+  .footer-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+}
+
+/* Print: the dark theme prints as near-blank (browsers drop backgrounds), so
+   force dark ink on white and drop the chrome. The briefing SQF is the main
+   thing anyone prints or saves as PDF. */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: #fff;
+    color: #111;
+  }
+  .site-header,
+  .hero__bg,
+  .hero__scrim,
+  .enlist__bg,
+  .enlist__scrim {
+    display: none !important;
+  }
+  a {
+    color: #111;
+  }
+}

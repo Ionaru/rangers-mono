@@ -1,0 +1,50 @@
+/*
+ * 7R public-site design tokens. Shared by PublicLayout (public.css) and the
+ * Starlight handbook (handbook.css), so the marketing pages and the docs read as
+ * one system.
+ *
+ * The system is drawn from the unit's own logo: a monochrome "7.R" mark whose
+ * only colour is one green square. So: near-black forest-cool surfaces, imagery
+ * desaturated to grayscale, and a single brand green (#087b08) spent sparingly,
+ * the recurring "green square" and the primary call to action.
+ *
+ * Only :root variables live here. No element or class rules, so this file is
+ * safe to load into Starlight's own stylesheet cascade.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces: near-black with a faint cool-green cast, lifting in steps. */
+  --bg: #0b0e0d;
+  --bg-2: #0f1311;
+  --panel: #121614;
+  --panel-2: #171d19;
+  --line: #232b28;
+  --line-2: #313b37;
+
+  /* Ink. */
+  --text: #e9ede9;
+  --muted: #8b968f;
+  --faint: #5c665f;
+  --bad: #e0847f;
+
+  /* Brand green: the one accent. `--accent` fills the square; `--accent-2` is
+     the brighter tint for green text and interactive states on a dark ground;
+     `--accent-ink` is the near-black that sits on a green fill. */
+  --accent: #087b08;
+  --accent-2: #12a512;
+  --accent-3: #17b817;
+  --accent-ink: #04210a;
+
+  /* Type: a system grotesque for prose and display (heavy + uppercase does the
+     tactical work), a monospace utility face for the field-briefing labels,
+     eyebrows, nav and data. */
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  /* Rhythm. */
+  --maxw: 68rem;
+  --gutter: clamp(1.25rem, 5vw, 3.25rem);
+  --radius: 3px;
+}

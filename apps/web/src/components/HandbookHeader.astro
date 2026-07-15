@@ -1,0 +1,29 @@
+---
+/**
+ * Starlight `Header` override: render the shared SiteNav (docs variant) so the
+ * handbook uses the exact same header as the rest of the site. The only extra is
+ * Starlight's Pagefind search, passed into SiteNav's `search` slot. The sidebar
+ * hamburger (mobile) is rendered by PageFrame; the site nav is added to that menu
+ * via HandbookMobileMenuFooter.astro.
+ *
+ * The concrete Search import (not the `virtual:starlight/components/Search`
+ * module, which Starlight ships no ambient types for): we don't override Search,
+ * so it is the same component and it type-checks under `astro check`.
+ */
+import Search from "@astrojs/starlight/components/Search.astro";
+import config from "virtual:starlight/user-config";
+import SiteNav from "./SiteNav.astro";
+
+const shouldRenderSearch = config.pagefind;
+---
+<SiteNav variant="docs" current="handbook">
+  {shouldRenderSearch && (
+    <div class="hb-search" slot="search"><Search /></div>
+  )}
+</SiteNav>
+
+<style>
+.hb-search {
+  min-width: 0;
+}
+</style>

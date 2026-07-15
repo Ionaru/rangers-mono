@@ -1,0 +1,102 @@
+/*
+ * Starlight theme overrides: make the handbook read as the same product as the
+ * public site. Loaded after tokens.css (astro.config customCss), so it maps
+ * Starlight's own custom properties onto the 7R tokens.
+ */
+
+/* Accent + fonts apply to both colour schemes. */
+:root {
+  --sl-color-accent-low: #04210a;
+  --sl-color-accent: #087b08;
+  --sl-color-accent-high: #bfe9bf;
+  --sl-font: var(--sans);
+  --sl-font-mono: var(--mono);
+}
+
+/* The handbook is dark-only (HandbookThemeProvider forces data-theme="dark"), so
+   only the dark palette is ever used. Map Starlight's full dark grayscale onto
+   the 7R surfaces, including `--sl-color-black` (the mobile menu / search-modal
+   background) so nothing renders as Starlight's default light value. */
+:root[data-theme="dark"] {
+  --sl-color-bg: var(--bg);
+  --sl-color-bg-nav: color-mix(in srgb, var(--bg) 86%, transparent);
+  --sl-color-bg-sidebar: var(--bg-2);
+  --sl-color-bg-inline-code: var(--panel-2);
+  --sl-color-bg-accent: var(--accent);
+  --sl-color-black: var(--bg);
+  --sl-color-text: var(--text);
+  --sl-color-text-accent: var(--accent-2);
+  --sl-color-white: #f3f6f3;
+  --sl-color-gray-1: #e9ede9;
+  --sl-color-gray-2: #c3ccc5;
+  --sl-color-gray-3: var(--muted);
+  --sl-color-gray-4: #566058;
+  --sl-color-gray-5: #2b3330;
+  --sl-color-gray-6: var(--panel);
+  --sl-color-hairline: var(--line);
+  --sl-color-hairline-light: var(--line);
+  --sl-color-hairline-shade: var(--line);
+}
+
+/* Dark-only: hide the light/dark toggle rather than offer a light theme that is
+   off-brand. */
+starlight-theme-select,
+.theme-select {
+  display: none;
+}
+
+/* The mobile menu (hamburger) button ships as a bright white pill in dark mode
+   (Starlight uses it as a high-contrast control), which glows against our dark
+   header. Restyle it to a subtle dark pill. Unlayered, so it wins over
+   Starlight's `@layer starlight.core` rule without !important. */
+starlight-menu-button button {
+  background-color: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line-2);
+  box-shadow: none;
+}
+starlight-menu-button [aria-expanded="true"] button {
+  background-color: var(--panel-2);
+}
+
+/* From `md` up, the handbook header content (.hb-header) supplies the site gutter
+   itself so it matches the marketing header's box; zero Starlight's own inline
+   padding on the bar to avoid doubling it. (Below md the padding stays, since it
+   reserves space for the hamburger.) Unlayered, so it wins over starlight.core. */
+@media (min-width: 50rem) {
+  .page > .header {
+    padding: 0;
+  }
+}
+
+/* The site header wordmark carries the brand; keep Starlight's own title
+   restrained and in the utility voice. */
+.site-title {
+  font-family: var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+/* Content images: never overflow the column. Two classes carried over from the
+   legacy content (element-icon, transparent-fix) were authored to float right;
+   restore that here, column-aware, instead of via inline styles. */
+.sl-markdown-content img {
+  max-width: 100%;
+  height: auto;
+}
+.sl-markdown-content img.element-icon,
+.sl-markdown-content img.transparent-fix {
+  float: right;
+  max-width: min(45%, 320px);
+  margin: 0.3rem 0 1rem 1.5rem;
+}
+
+@media (max-width: 50rem) {
+  .sl-markdown-content img.element-icon,
+  .sl-markdown-content img.transparent-fix {
+    float: none;
+    max-width: 100%;
+    margin: 1rem 0;
+  }
+}
