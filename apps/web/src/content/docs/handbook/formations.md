@@ -130,3 +130,30 @@ differently, so pick the one that fits the ground and the threat.
 - You expect contact from any direction, including the rear
 - In the combat area or close quarters with an all-round threat
 - The threat bearing is unclear
+
+## Wedge on wedge (platoon)
+
+<img class="transparent-fix" src="/wiki/images/WedgeOnWedge.png" alt="Platoon wedge-on-wedge formation">
+
+The platoon-level version of the wedge: a lead squad and a trail squad, each in
+its own wedge, with the leader and medic positioned between them.
+
+**Pros**
+
+- Good all-round situational awareness across the platoon
+- Both flanks secured by the two squad wedges
+- Strong, concentrated firepower towards the front
+- The command element stays covered in the centre
+- Flexible: shifts easily into a platoon line or column
+
+**Cons**
+
+- Wide and spread out, so concealment is limited
+- Needs open ground and room to manoeuvre
+- Harder to control than a single squad
+
+**Use when**
+
+- Moving as a platoon and expecting hostiles from a ~180° arc to the front
+- It is the default platoon movement formation in open terrain
+- You want front and flank security while keeping the command element protected
