@@ -131,29 +131,34 @@ differently, so pick the one that fits the ground and the threat.
 - In the combat area or close quarters with an all-round threat
 - The threat bearing is unclear
 
-## Wedge on wedge (platoon)
+## Wedge on wedge
 
-<img class="transparent-fix" src="/wiki/images/WedgeOnWedge.png" alt="Platoon wedge-on-wedge formation">
+<img class="transparent-fix" src="/wiki/images/WedgeOnWedge.png" alt="Wedge-on-wedge squad formation">
 
-The platoon-level version of the wedge: a lead squad and a trail squad, each in
-its own wedge, with the leader and medic positioned between them.
+A squad column with both fire teams in a wedge, and the default squad movement
+formation. The lead fire team moves in a wedge, the trail fire team follows in
+its own wedge, and the squad leader (with the medic) sits between them: far
+enough forward to see the lead team and react to contact, far enough back to
+avoid being caught in the first exchange of fire. The lead team is most likely
+to make first contact; the trail team is the squad leader's manoeuvre element
+once it does.
 
 **Pros**
 
-- Good all-round situational awareness across the platoon
-- Both flanks secured by the two squad wedges
-- Strong, concentrated firepower towards the front
-- The command element stays covered in the centre
-- Flexible: shifts easily into a platoon line or column
+- Good all-round security: the two wedges cover the front, both flanks and the rear
+- Good dispersion, while staying close enough for voice and hand-signal control
+- Strong firepower to the front and the flanks
+- The lead team can return fire immediately without masking the trail team
+- Flexible: collapses into a line to assault, or a file for tight terrain
 
 **Cons**
 
 - Wide and spread out, so concealment is limited
-- Needs open ground and room to manoeuvre
-- Harder to control than a single squad
+- Not the fastest formation through dense terrain
+- Less firepower to the front than a line
 
 **Use when**
 
-- Moving as a platoon and expecting hostiles from a ~180° arc to the front
-- It is the default platoon movement formation in open terrain
-- You want front and flank security while keeping the command element protected
+- It is the default squad movement formation
+- Contact is possible but you still need to cover ground
+- You want front, flank and rear security with the leader kept covered
