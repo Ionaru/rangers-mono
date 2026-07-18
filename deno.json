@@ -20,7 +20,7 @@
     // `deno check` cannot read .astro files, so apps/web is typechecked by
     // `astro check` instead. Both halves run, or the web app's strict tsconfig
     // is enforced nowhere outside an editor and `astro build` only transpiles.
-    "check": "deno check packages/config/mod.ts packages/domain/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/discord/phase0-check.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts apps/worker/badge-backfill.ts apps/worker/ts-check.ts && deno task web:check",
+    "check": "deno check packages/config/mod.ts packages/domain/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/discord/phase0-check.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts apps/worker/badge-backfill.ts apps/worker/ts-check.ts apps/worker/assignable-seed.ts apps/worker/sync-preview.ts && deno task web:check",
     // apps/ as well as packages/. The worker's internal API is the one
     // authorisation boundary in the system, and it is pure request-handling, so
     // it is testable even though the TeamSpeak connection behind it is not.
@@ -44,7 +44,13 @@
     "ts:check": "deno task --cwd apps/worker ts:check",
     // Phase 0, one-shot. Reads the live TeamSpeak badge groups (the only current
     // record of who holds what) and mirrors them into Discord. Dry-run by default.
-    "badges:backfill": "deno task --cwd apps/worker badges:backfill"
+    "badges:backfill": "deno task --cwd apps/worker badges:backfill",
+    // Phase 4. Applies the git-tracked Assignable mapping: resolves sgids live by
+    // group name, prints the proposed mapping, and confirms before any write.
+    "assignables:seed": "deno task --cwd apps/worker assignables:seed",
+    // Read-only. Prints the reconcile diff a live sync pass would apply, without
+    // applying anything. Required reading before flipping SYNC_DRY_RUN (ADR 0009).
+    "sync:preview": "deno task --cwd apps/worker sync:preview"
   },
   "fmt": {
     "exclude": [

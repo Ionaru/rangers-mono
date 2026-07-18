@@ -59,17 +59,27 @@ export const webSchema = coreSchema.extend({
 export type WebConfig = z.infer<typeof webSchema>;
 
 /**
+ * The guild and the bot token, and nothing else: what anything that talks to
+ * Discord *as the bot* needs. Phase 4's member poll runs in the worker, and
+ * "every loader asks for exactly what its caller reads" means the worker must
+ * not be forced to carry a client secret and a session key it never touches.
+ */
+export const discordBotSchema = z.object({
+  DISCORD_GUILD_ID: z.string().min(1),
+  DISCORD_BOT_TOKEN: z.string().min(1),
+});
+export type DiscordBotConfig = z.infer<typeof discordBotSchema>;
+
+/**
  * Phase 2 (login) and Phase 5 (bot).
  *
  * All four app values come from ONE Discord application: 7R_Bot, ours, not the
  * legacy 2019 bot's (ADR 0015). DISCORD_CLIENT_ID is that application's id, so
  * it serves both the OAuth login and slash-command registration.
  */
-export const discordSchema = z.object({
-  DISCORD_GUILD_ID: z.string().min(1),
+export const discordSchema = discordBotSchema.extend({
   DISCORD_CLIENT_ID: z.string().min(1),
   DISCORD_CLIENT_SECRET: z.string().min(1),
-  DISCORD_BOT_TOKEN: z.string().min(1),
   /**
    * Ed25519 verify key for the interactions endpoint. Per-application: it must
    * come from the same application as DISCORD_BOT_TOKEN, or every interaction

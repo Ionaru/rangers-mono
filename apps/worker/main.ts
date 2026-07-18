@@ -1,11 +1,15 @@
 import {
   type AlertConfig,
   type CoreConfig,
+  type DiscordBotConfig,
   getAlertConfig,
   getCoreConfig,
+  getDiscordBotConfig,
+  getSyncConfig,
   getTeamspeakConfig,
   getWorkerServerConfig,
   loadAll,
+  type SyncConfig,
   type TeamspeakConfig,
   type WorkerServerConfig,
 } from "@7r/config";
@@ -13,6 +17,7 @@ import { closeDb, getDb, ping } from "@7r/db";
 import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
 import { makeAlerter } from "./alert.ts";
 import { createInternalApiHandler } from "./internal-api.ts";
+import { startSyncLoop } from "./sync.ts";
 
 /**
  * The worker: one long-running Deno process.
@@ -57,9 +62,23 @@ async function main() {
    * redeploy, be told about TS_QUERY_HOST, redeploy, be told about
    * TS_QUERY_PASS. `loadAll` collects them.
    */
-  const [core, workerServer, ts, alerts] = loadAll<
-    [CoreConfig, WorkerServerConfig, TeamspeakConfig, AlertConfig]
-  >([getCoreConfig, getWorkerServerConfig, getTeamspeakConfig, getAlertConfig]);
+  const [core, workerServer, ts, alerts, bot, sync] = loadAll<
+    [
+      CoreConfig,
+      WorkerServerConfig,
+      TeamspeakConfig,
+      AlertConfig,
+      DiscordBotConfig,
+      SyncConfig,
+    ]
+  >([
+    getCoreConfig,
+    getWorkerServerConfig,
+    getTeamspeakConfig,
+    getAlertConfig,
+    getDiscordBotConfig,
+    getSyncConfig,
+  ]);
 
   const { WORKER_INTERNAL_PORT, WORKER_INTERNAL_TOKEN } = workerServer;
   const { ERROR_ALERT_DISCORD_WEBHOOK } = alerts;
@@ -95,7 +114,32 @@ async function main() {
     logLevel: core.LOG_LEVEL,
     port: WORKER_INTERNAL_PORT,
     teamspeak: `${ts.TS_QUERY_HOST}:${ts.TS_QUERY_PORT}`,
+    // An operator must be able to tell which mode a running worker is in from
+    // this one line. "The sync has been running for a week" means nothing if
+    // nobody can see it was dry-running the whole time.
+    syncDryRun: sync.SYNC_DRY_RUN,
   });
+
+  /**
+   * Phase 4: the reconcile loop. Runs on this process's one ServerQuery
+   * connection, every ROLE_SYNC_INTERVAL_SECONDS, behind SYNC_DRY_RUN (default
+   * true) and the permanent blast-radius guard (ADR 0002, IMPLEMENTATION §6).
+   */
+  const stopSync = startSyncLoop(
+    {
+      db,
+      teamspeak,
+      discord: { botToken: bot.DISCORD_BOT_TOKEN },
+      guildId: bot.DISCORD_GUILD_ID,
+      maxRemovals: sync.SYNC_MAX_REMOVALS,
+      log,
+      alert,
+    },
+    {
+      intervalSeconds: sync.ROLE_SYNC_INTERVAL_SECONDS,
+      dryRun: sync.SYNC_DRY_RUN,
+    },
+  );
 
   const server = Deno.serve(
     {
@@ -133,6 +177,7 @@ async function main() {
 
   const shutdown = async () => {
     log("shutting down");
+    stopSync();
     clearInterval(heartbeat);
     Deno.removeSignalListener("SIGTERM", onSignal);
     Deno.removeSignalListener("SIGINT", onSignal);

@@ -3,8 +3,10 @@ import {
   alertSchema,
   coreSchema,
   databaseSchema,
+  discordBotSchema,
   discordSchema,
   steamSchema,
+  syncSchema,
   teamspeakSchema,
   webSchema,
   workerClientSchema,
@@ -40,6 +42,12 @@ export const getWorkerServerConfig = memoize(() =>
  * see the schema.
  */
 export const getDiscordConfig = memoize(() => loadConfig(discordSchema));
+
+/** Phase 4. The worker's guild poll: the bot token and the guild, nothing more. */
+export const getDiscordBotConfig = memoize(() => loadConfig(discordBotSchema));
+
+/** Phase 4: the reconcile loop, its dry-run switch, and the blast-radius guard. */
+export const getSyncConfig = memoize(() => loadConfig(syncSchema));
 
 /** Phase 2. Steam OpenID is stateless, so this is one URL and nothing else. */
 export const getSteamConfig = memoize(() => loadConfig(steamSchema));
