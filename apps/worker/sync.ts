@@ -40,11 +40,26 @@ export interface SyncDeps {
   alert: (summary: string, detail?: unknown) => void;
 }
 
-/** A member the pass could not reconcile. Skipped, named, never fatal. */
+/**
+ * A member whose TeamSpeak group reconcile was skipped this pass. Named, never
+ * fatal. Their `disabled_at` is still decided from Discord state; only the
+ * group add/remove is skipped, because we could not read their TeamSpeak side.
+ */
 export interface SkippedMember {
   displayName: string;
   tsUid: string;
   reason: string;
+  /**
+   * Why the group reconcile was skipped:
+   * - `unknown_identity`: the server has never seen this uid (a legacy import
+   *   from before the rebuild, or a bad force-link). Mostly routine, so the loop
+   *   counts it rather than alerting; `sync:preview` names them for the rare
+   *   force-link typo worth chasing.
+   * - `lookup_error`: a ServerQuery call threw. A member stuck erroring every
+   *   pass is a real fault, so this class alerts (once per episode) and is named
+   *   in the loop's logs every pass.
+   */
+  kind: "unknown_identity" | "lookup_error";
 }
 
 export interface SyncPassResult {
@@ -73,9 +88,16 @@ export async function runSyncPass(
 ): Promise<SyncPassResult> {
   const { db, teamspeak, discord, guildId, log, alert } = deps;
 
-  const aborted = (reason: string): SyncPassResult => {
+  const aborted = (
+    reason: string,
+    opts: { page?: boolean } = {},
+  ): SyncPassResult => {
     log("sync pass aborted", { reason });
-    alert(`sync pass aborted: ${reason}`);
+    // Most aborts are real failures worth paging (an empty guild poll is a
+    // Discord outage or a revoked GUILD_MEMBERS intent). A few are expected
+    // states that must not page the error webhook every tick: those callers
+    // pass `page: false`, and the log line above still records them.
+    if (opts.page !== false) alert(`sync pass aborted: ${reason}`);
     return {
       outcome: "aborted",
       abortReason: reason,
@@ -99,8 +121,15 @@ export async function runSyncPass(
     // Without a mapping the owned set is empty and every member would diff to
     // "remove nothing, add nothing": a pass that looks like success and means
     // nothing. Say what is actually wrong instead.
+    //
+    // But do NOT page the error webhook for it: the deploy starts this loop at
+    // boot and seeds the mapping *afterwards* (assignable-seed.ts runs before
+    // the first sync:preview), so an empty mapping is the expected pre-seed
+    // state, not a bug. Paging every ROLE_SYNC_INTERVAL_SECONDS until someone
+    // seeds would only train operators to ignore the channel.
     return aborted(
       "assignable mapping is empty; run `deno task assignables:seed` first",
+      { page: false },
     );
   }
 
@@ -140,12 +169,15 @@ export async function runSyncPass(
       "sync: mapped TeamSpeak groups no longer exist; re-run the seed",
       names.join(", "),
     );
+    // Decide "dead" once, here, so the alert above and the rebuild below can
+    // never fall out of lock-step on the same predicate.
+    const deadSgids = new Set(deadEntries.map(([, a]) => a.tsSgid!));
     mapping = new Map(
       mappingEntries.map((
         [roleId, a],
       ) => [
         roleId,
-        a.tsSgid !== null && !groupNames.has(a.tsSgid)
+        a.tsSgid !== null && deadSgids.has(a.tsSgid)
           ? { ...a, tsSgid: null }
           : a,
       ]),
@@ -161,37 +193,69 @@ export async function runSyncPass(
 
   for (const member of members) {
     const roles = rolesByDiscordId.get(member.discordId);
+    // The disabled_at half of a member's plan is a pure Discord fact and does
+    // not depend on TeamSpeak, so it is gathered here, before the lookup that
+    // may fail. A member we cannot read on TeamSpeak is planned with a null
+    // TeamSpeak state: no group ops, but the stamp/clear still fires (§4.4).
+    const discordSide = {
+      memberId: member.id,
+      displayName: member.displayName,
+      tsUid: member.tsUid,
+      inGuild: roles !== undefined,
+      discordRoleIds: roles ?? [],
+      alreadyDisabled: member.disabledAt !== null,
+    };
     try {
       const cldbid = await getClientDbIdByUid(deps.teamspeak, member.tsUid);
       if (cldbid === null) {
         // This server has never seen the identity: a legacy-imported uid from
-        // before the rebuild, or a typo'd force-link. Nothing to reconcile.
+        // before the rebuild, or a typo'd force-link. Their groups cannot be
+        // reconciled, but their disabled_at still follows Discord.
         skipped.push({
           displayName: member.displayName,
           tsUid: member.tsUid,
           reason: "TeamSpeak identity unknown to this server",
+          kind: "unknown_identity",
         });
+        inputs.push({ ...discordSide, currentSgids: null });
         continue;
       }
       const groups = await getServerGroupsByClientDbId(teamspeak, cldbid);
       cldbidByMemberId.set(member.id, cldbid);
       inputs.push({
-        memberId: member.id,
-        displayName: member.displayName,
-        tsUid: member.tsUid,
-        inGuild: roles !== undefined,
-        discordRoleIds: roles ?? [],
-        alreadyDisabled: member.disabledAt !== null,
+        ...discordSide,
         currentSgids: groups.map((g) => Number(g.sgid)),
       });
     } catch (error) {
-      // One member's ServerQuery hiccup must not kill the other ninety-nine.
+      // One member's ServerQuery hiccup must not kill the other ninety-nine,
+      // and must not block their disabled_at either: plan them with no
+      // TeamSpeak state so the stamp/clear still runs.
       skipped.push({
         displayName: member.displayName,
         tsUid: member.tsUid,
         reason: String(error),
+        kind: "lookup_error",
       });
+      inputs.push({ ...discordSide, currentSgids: null });
     }
+  }
+
+  // A member that errors on every pass is never reconciled and, unlike a write
+  // failure, would otherwise be invisible: surface the error class (the routine
+  // unknown-identity class is a count only, below). The loop de-dupes this page
+  // so a persistently-broken member is reported once per episode, not per tick.
+  const skippedErrors = skipped.filter((s) => s.kind === "lookup_error");
+  const skippedUnknown = skipped.filter((s) => s.kind === "unknown_identity");
+  if (skippedErrors.length > 0) {
+    log("sync: members errored on TeamSpeak lookup", {
+      members: skippedErrors.map((s) => `${s.displayName}: ${s.reason}`),
+    });
+    alert(
+      "sync: members could not be looked up on TeamSpeak",
+      skippedErrors
+        .map((s) => `${s.displayName} (${s.tsUid}): ${s.reason}`)
+        .join("\n"),
+    );
   }
 
   // ---------------------------------------------- plan (pure), then act
@@ -200,7 +264,13 @@ export async function runSyncPass(
     maxRemovals: deps.maxRemovals,
   });
 
-  for (const memberPlan of plan.changed) {
+  // Warnings hang on every planned member, not only the ones with a diff. A
+  // member holding two rank roles whose TeamSpeak groups already mirror both is
+  // a no-op this pass, so it is absent from `plan.changed`, but it is still a
+  // Discord state to flag every pass until a human fixes it (IMPLEMENTATION §6
+  // step 6). Iterate `plan.members`, as sync-preview.ts already does; iterating
+  // `plan.changed` here silently dropped exactly the converged-conflict case.
+  for (const memberPlan of plan.members) {
     for (const warning of memberPlan.warnings) {
       log("sync warning", { member: memberPlan.displayName, warning });
     }
@@ -217,12 +287,27 @@ export async function runSyncPass(
     const strippees = plan.members
       .filter((m) => m.toRemove.length > 0)
       .map((m) => m.displayName);
+    // Log every pass (the page is de-duped by the loop, so without this a
+    // standing halt would go dark in the logs after its first alert). A halt is
+    // often the whole membership (a bad or empty mapping), so the names are
+    // sampled rather than dumped in full every tick: the count is the signal,
+    // and sync:preview enumerates them in full on demand.
+    log("sync halted by blast-radius guard", {
+      removalMembers: plan.removalMemberCount,
+      maxRemovals: plan.maxRemovals,
+      dryRun: !opts.apply,
+      sample: strippees.slice(0, 10),
+    });
+    // Stable summary (the varying counts live in the detail, which the loop's
+    // de-dup ignores), plus a dry-run marker so it does not read as a live trip.
     alert(
-      `SYNC HALTED by the blast-radius guard: a single pass would remove owned groups from ` +
-        `${plan.removalMemberCount} members (SYNC_MAX_REMOVALS=${plan.maxRemovals}). ` +
-        `Nothing was applied. This is definitionally a bug: a bad mapping, an empty-ish ` +
-        `Discord poll, or TeamSpeak returning garbage.`,
-      strippees.join(", "),
+      `SYNC HALTED by the blast-radius guard${opts.apply ? "" : " (dry run)"}`,
+      `A single pass would remove owned groups from ${plan.removalMemberCount} ` +
+        `member(s) (SYNC_MAX_REMOVALS=${plan.maxRemovals}); nothing was applied. ` +
+        `This is definitionally a bug: a bad mapping, an empty-ish Discord poll, ` +
+        `or TeamSpeak returning garbage.\nMembers losing groups: ${
+          strippees.join(", ")
+        }`,
     );
     return { ...base, outcome: "halted", appliedAdds: 0, appliedRemoves: 0 };
   }
@@ -242,7 +327,8 @@ export async function runSyncPass(
       members: members.length,
       changed: plan.changed.length,
       removalMembers: plan.removalMemberCount,
-      skipped: skipped.length,
+      skippedUnknown: skippedUnknown.length,
+      skippedErrors: skippedErrors.length,
     });
     return { ...base, outcome: "dry_run", appliedAdds: 0, appliedRemoves: 0 };
   }
@@ -282,9 +368,15 @@ export async function runSyncPass(
   }
 
   if (writeFailures.length > 0) {
+    // Log the members every pass: the page below is de-duped on a stable
+    // summary, so without this log a *different* member failing on a later pass
+    // (same summary, suppressed page) would leave no trace anywhere.
+    log("sync write failures", { members: writeFailures });
+    // Stable summary, count in the detail, so the loop's de-dup pages a standing
+    // write fault once per episode rather than every tick.
     alert(
-      `sync: ${writeFailures.length} member(s) failed to apply`,
-      writeFailures.join("\n"),
+      "sync: members failed to apply",
+      `${writeFailures.length} member(s):\n${writeFailures.join("\n")}`,
     );
   }
 
@@ -293,7 +385,8 @@ export async function runSyncPass(
     changed: plan.changed.length,
     adds: appliedAdds,
     removes: appliedRemoves,
-    skipped: skipped.length,
+    skippedUnknown: skippedUnknown.length,
+    skippedErrors: skippedErrors.length,
     failures: writeFailures.length,
   });
 
@@ -306,8 +399,10 @@ export async function runSyncPass(
  * Sync is eventually-consistent by design (ADR 0002: REST polling, no
  * gateway), so a failed pass is logged, alerted, and simply retried on the
  * next tick. The `running` latch stops a slow pass stacking a second one onto
- * the same ServerQuery connection. Returns a stop function for the worker's
- * shutdown path, which releases every handle it takes (main.ts's rule).
+ * the same ServerQuery connection, and an edge-triggered de-dup (below) keeps a
+ * standing fault from paging the error webhook on every tick. Returns a stop
+ * function for the worker's shutdown path, which releases every handle it takes
+ * (main.ts's rule).
  */
 export function startSyncLoop(
   deps: SyncDeps,
@@ -315,18 +410,45 @@ export function startSyncLoop(
 ): () => void {
   let running = false;
 
+  /**
+   * Edge-triggered page de-duplication. A standing condition (a persistent
+   * blast-radius halt, a stale sgid, a member that errors every pass) must page
+   * the error webhook ONCE when it starts, not every `intervalSeconds` forever:
+   * the guard's channel is only useful while people still read it, and an alert
+   * that repeats 288 times a day trains them not to.
+   *
+   * We key on the alert *summary*, which the callers above write to be stable
+   * per condition (the varying counts and names live in the `detail` argument,
+   * which is ignored here). A summary pages only when it was absent from the
+   * previous pass; while it persists it stays quiet; if it clears and later
+   * returns it pages again. runSyncPass still `log()`s every condition every
+   * pass, so nothing goes dark, only the paging is de-duplicated. This is
+   * category-level on purpose: a different `detail` under the same summary (a
+   * different member failing) does not re-page, which the per-pass logs cover,
+   * and which is the price of never spamming.
+   */
+  let pagedLastPass = new Set<string>();
+
   const pass = async () => {
     if (running) {
       deps.log("sync pass still running, skipping this tick");
       return;
     }
     running = true;
+    const pagedThisPass = new Set<string>();
+    const dedupedAlert = (summary: string, detail?: unknown) => {
+      pagedThisPass.add(summary);
+      if (!pagedLastPass.has(summary)) deps.alert(summary, detail);
+    };
     try {
-      await runSyncPass(deps, { apply: !opts.dryRun });
+      await runSyncPass({ ...deps, alert: dedupedAlert }, {
+        apply: !opts.dryRun,
+      });
     } catch (error) {
       deps.log("sync pass failed", { error: String(error) });
-      deps.alert("sync pass failed", error);
+      dedupedAlert("sync pass failed", error);
     } finally {
+      pagedLastPass = pagedThisPass;
       running = false;
     }
   };

@@ -268,3 +268,110 @@ Deno.test("a pass separates the changed from the converged", () => {
   assertEquals(pass.changed[0].toAdd, [71]);
   assertEquals(pass.changed[0].toRemove, [68]);
 });
+
+Deno.test("a converged >1-rank member carries a warning but is not in changed", () => {
+  // The trap the worker's warning loop must dodge: a member holding two rank
+  // roles whose TeamSpeak groups already mirror both is a no-op pass (empty
+  // toAdd/toRemove, no stamp/clear), so planSyncPass leaves them out of
+  // `changed`. The exclusivity warning still has to surface every pass
+  // (IMPLEMENTATION §6 step 6), so the worker iterates `plan.members`, not
+  // `plan.changed`. This locks that contract: the warning is on `members`, and
+  // it would be lost if a caller only looked at `changed`.
+  const pass = planSyncPass(
+    [
+      input({
+        memberId: "m-conflict",
+        tsUid: "uid-conflict",
+        discordRoleIds: [OFFICER, RECRUIT],
+        currentSgids: [71, 68],
+      }),
+    ],
+    mapping,
+    { maxRemovals: 5 },
+  );
+  assertEquals(pass.members.length, 1);
+  assertEquals(pass.changed.length, 0);
+  const [member] = pass.members;
+  assertEquals(member.toAdd, []);
+  assertEquals(member.toRemove, []);
+  assertEquals(member.warnings.length, 1);
+  assert(member.warnings[0].includes("rank"));
+});
+
+// `currentSgids: null` = the pass could not read this member's TeamSpeak state
+// (the server does not know the uid, or the lookup threw). Groups must not be
+// touched, but the disabled_at decision is a Discord fact and must still be
+// made: a leaver with a broken link is still stamped (§4.4).
+
+Deno.test("a leaver with unreadable TeamSpeak state is still stamped disabled", () => {
+  const plan = planMemberSync(
+    input({ inGuild: false, discordRoleIds: [], currentSgids: null }),
+    mapping,
+    owned,
+  );
+  assert(plan.stampDisabled);
+  assertFalse(plan.clearDisabled);
+  // Cannot see their groups, so touches none: no phantom removals either.
+  assertEquals(plan.toAdd, []);
+  assertEquals(plan.toRemove, []);
+});
+
+Deno.test("an in-guild member with unreadable TeamSpeak state gets no phantom adds", () => {
+  // The trap the nullable state avoids: passing [] for an unresolved member
+  // would make every owned group they qualify for look missing and be queued
+  // as an add that can never apply. null means "unknown", so toAdd stays empty.
+  const plan = planMemberSync(
+    input({
+      inGuild: true,
+      discordRoleIds: [OFFICER, MEDIC],
+      currentSgids: null,
+    }),
+    mapping,
+    owned,
+  );
+  assertEquals(plan.toAdd, []);
+  assertEquals(plan.toRemove, []);
+  assertFalse(plan.stampDisabled);
+  assertFalse(plan.clearDisabled);
+});
+
+Deno.test("a rejoiner with unreadable TeamSpeak state still gets disabled_at cleared", () => {
+  const plan = planMemberSync(
+    input({
+      inGuild: true,
+      alreadyDisabled: true,
+      discordRoleIds: [RECRUIT],
+      currentSgids: null,
+    }),
+    mapping,
+    owned,
+  );
+  assert(plan.clearDisabled);
+  assertFalse(plan.stampDisabled);
+  assertEquals(plan.toAdd, []);
+  assertEquals(plan.toRemove, []);
+});
+
+Deno.test("the rank-conflict warning still fires when TeamSpeak state is unreadable", () => {
+  const plan = planMemberSync(
+    input({ discordRoleIds: [OFFICER, RECRUIT], currentSgids: null }),
+    mapping,
+    owned,
+  );
+  assertEquals(plan.warnings.length, 1);
+  assertEquals(plan.toAdd, []);
+  assertEquals(plan.toRemove, []);
+});
+
+Deno.test("a null-state leaver is in changed (for the stamp) but adds nothing to the removal count", () => {
+  // It has a disabled_at transition, so the pass must act on it, but it has no
+  // removals: an unreadable member can never widen the blast-radius guard.
+  const pass = planSyncPass(
+    [input({ inGuild: false, discordRoleIds: [], currentSgids: null })],
+    mapping,
+    { maxRemovals: 5 },
+  );
+  assertEquals(pass.changed.length, 1);
+  assertEquals(pass.removalMemberCount, 0);
+  assertFalse(pass.halted);
+});

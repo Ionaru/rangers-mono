@@ -59,8 +59,16 @@ export interface MemberSyncInput {
   discordRoleIds: readonly string[];
   /** `member.disabled_at` is already stamped: stamp it only the first time. */
   alreadyDisabled: boolean;
-  /** Every group the identity holds on TeamSpeak, raw and unfiltered. */
-  currentSgids: readonly number[];
+  /**
+   * Every group the identity holds on TeamSpeak, raw and unfiltered, or `null`
+   * when the pass could not read it (the server does not know this uid, or the
+   * ServerQuery lookup threw). `null` is not "holds nothing": it is "we do not
+   * know", so the group reconcile produces no adds or removes for them. The
+   * `disabled_at` decision below is a Discord fact and is still made, so a
+   * leaver whose TeamSpeak link is broken is still stamped (§4.4) rather than
+   * silently skipped.
+   */
+  currentSgids: readonly number[] | null;
 }
 
 /** What one member's sync should do. Both sets are subsets of `owned`. */
@@ -122,23 +130,38 @@ export function planMemberSync(
     );
   }
 
-  const desired = new Set<number>();
-  for (const entry of held) {
-    if (entry.tsSgid !== null && owned.has(entry.tsSgid)) {
-      desired.add(entry.tsSgid);
+  // The group reconcile runs only when we actually know the member's TeamSpeak
+  // state. `currentSgids === null` means the pass could not read it (identity
+  // unknown to the server, or a ServerQuery error): we cannot honestly diff
+  // groups we cannot see, so we touch none. The disabled_at decision below is a
+  // pure Discord fact and is made regardless, which is the whole point: it must
+  // not wait on TeamSpeak, or a leaver with a broken link is never stamped.
+  let toAdd: number[] = [];
+  let toRemove: number[] = [];
+  if (input.currentSgids !== null) {
+    const desired = new Set<number>();
+    for (const entry of held) {
+      if (entry.tsSgid !== null && owned.has(entry.tsSgid)) {
+        desired.add(entry.tsSgid);
+      }
     }
-  }
 
-  // Clamping current to owned is the guarantee that a manual grant, Server
-  // Admin, or anything else outside the mapping can never appear in toRemove.
-  const current = new Set(input.currentSgids.filter((s) => owned.has(s)));
+    // Clamping current to owned is the guarantee that a manual grant, Server
+    // Admin, or anything else outside the mapping can never appear in toRemove.
+    const current = new Set(input.currentSgids.filter((s) => owned.has(s)));
+
+    toAdd = [...desired].filter((s) => !current.has(s)).sort((a, b) => a - b);
+    toRemove = [...current].filter((s) => !desired.has(s)).sort((a, b) =>
+      a - b
+    );
+  }
 
   return {
     memberId: input.memberId,
     displayName: input.displayName,
     tsUid: input.tsUid,
-    toAdd: [...desired].filter((s) => !current.has(s)).sort((a, b) => a - b),
-    toRemove: [...current].filter((s) => !desired.has(s)).sort((a, b) => a - b),
+    toAdd,
+    toRemove,
     stampDisabled: !input.inGuild && !input.alreadyDisabled,
     clearDisabled: input.inGuild && input.alreadyDisabled,
     warnings,

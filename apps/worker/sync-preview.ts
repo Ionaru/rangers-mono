@@ -64,7 +64,15 @@ async function main(): Promise<number> {
     console.log("\nsync preview: what a live pass would do\n");
 
     if (plan.changed.length === 0) {
-      console.log("  nothing. Discord and TeamSpeak agree for every member.");
+      // "Agree" only if every member was actually read. A pass where TeamSpeak
+      // could not resolve people (skipped, below) has an empty change set too,
+      // and printing "they agree" there would be a lie that invites flipping
+      // SYNC_DRY_RUN on a pass that never saw TeamSpeak.
+      console.log(
+        result.skipped.length === 0
+          ? "  nothing. Discord and TeamSpeak agree for every member."
+          : `  no changes among the members that could be read; ${result.skipped.length} skipped below (TeamSpeak not read for them).`,
+      );
     }
     for (const m of plan.changed) {
       const flags = [
@@ -89,7 +97,12 @@ async function main(): Promise<number> {
     }
 
     if (result.skipped.length > 0) {
-      console.log(`\nskipped (${result.skipped.length}):`);
+      // "Skipped" is the GROUP reconcile only: these members' TeamSpeak side
+      // could not be read, so no groups are touched. Their disabled_at still
+      // follows Discord, so a leaver here can also appear above under changes.
+      console.log(
+        `\nskipped group reconcile (${result.skipped.length}; disabled_at still applies):`,
+      );
       for (const s of result.skipped) {
         console.log(`  ${s.displayName} (${s.tsUid}): ${s.reason}`);
       }
