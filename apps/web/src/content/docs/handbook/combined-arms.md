@@ -31,7 +31,7 @@ The Callsign for the Platoon Sergeant on the Command Net is "Central" in order t
 - **Holding a Sector** - Echo is often used to hold a sector reliably due to their heavy weaponry.
 - **Punching Through** - If Echo is Motorised or Mechanised, they might be used in certain situations to punch through which will put them ahead of everyone else. This is a situational decision.
 
-Detail about Echo Platoon Support can be found in [Section 9 - Echo Platoon Support](/handbook/echo-platoon-support).
+Detail about Echo Platoon Support can be found in [Section 11 - Echo Platoon Support](/handbook/echo-platoon-support).
 
 ## Aviation
 
@@ -60,7 +60,7 @@ Detail about Echo Platoon Support can be found in [Section 9 - Echo Platoon Supp
   - FAC and Aviation share responsibility of avoiding friendly fire and civilian casualties.
   - Check Aviation ROE for further details.
 
-Details on how to request certain actions can be found in [Section 3 - Communication](/handbook/communication). Further details about Aviation including ROE can be found in [Section 10 - Aviation](/handbook/rotary-aviation).
+Details on how to request certain actions can be found in [Section 3 - Communication](/handbook/communication). Further details about Aviation including ROE can be found in [Section 12 - Aviation](/handbook/rotary-aviation).
 
 ## Reconnaissance
 
@@ -73,7 +73,7 @@ Details on how to request certain actions can be found in [Section 3 - Communica
 - **Indirect Target Elimination** - The Reconnaissance Team is providing critical target information utilised by another Element to engage the target.
   - SGT coordinates the joint effort of the Elements.
 
-Detail about Reconnaissance can be found in [Section 11 - Reconnaissance](/handbook/reconnaissance).
+Detail about Reconnaissance can be found in [Section 13 - Reconnaissance](/handbook/reconnaissance).
 
 ## Armour
 
@@ -86,4 +86,4 @@ Detail about Reconnaissance can be found in [Section 11 - Reconnaissance](/handb
   - Alternatively, Armour may overwatch an assigned area denying enemy movement.
 - **Push** - The Armour might act as a moving shield in a coordinated push with the Infantry.
 
-Detail about Armour can be found in [Section 12 - Armour](/handbook/armour).
+Detail about Armour can be found in [Section 14 - Armour](/handbook/armour).
