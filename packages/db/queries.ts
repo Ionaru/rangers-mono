@@ -1,8 +1,9 @@
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
-import { attendanceSession, linkCode, member } from "./schema.ts";
+import { assignable, attendanceSession, linkCode, member } from "./schema.ts";
 import { authAccount } from "./auth-schema.ts";
-import type { LinkCode, Member } from "./schema.ts";
+import type { Assignable, LinkCode, Member } from "./schema.ts";
+import type { AssignableKind } from "@7r/domain";
 
 /** Queries live beside the schema (ADR 0008), so callers never import drizzle themselves. */
 
@@ -418,6 +419,103 @@ export async function membersByTsUid(
       displayName: row.displayName,
     }]),
   );
+}
+
+// ---------------------------------------------------------------- assignable
+
+/** The whole mapping, in display order. The reconcile reads this once per pass. */
+export async function listAssignables(db: Db): Promise<Assignable[]> {
+  return await db
+    .select()
+    .from(assignable)
+    .orderBy(asc(assignable.kind), asc(assignable.sortOrder));
+}
+
+/**
+ * One row of the Assignable seed (ADR 0009): the git-tracked config is the
+ * source of record, and this is how it is applied.
+ *
+ * Idempotent by `discordRoleId`, and unlike `upsertLegacyMember` it OVERWRITES:
+ * a re-run after a corrected sgid mapping must correct the row, not politely
+ * keep the wrong number. The table is derived state; the config file is the
+ * truth (MIGRATION.md wants exactly this: re-runnable after a sgid fix).
+ */
+export async function upsertAssignable(
+  db: Db,
+  input: {
+    kind: AssignableKind;
+    name: string;
+    discordRoleId: string;
+    tsSgid: number | null;
+    sortOrder: number;
+  },
+): Promise<void> {
+  await db
+    .insert(assignable)
+    .values(input)
+    .onConflictDoUpdate({
+      target: assignable.discordRoleId,
+      set: {
+        kind: input.kind,
+        name: input.name,
+        tsSgid: input.tsSgid,
+        sortOrder: input.sortOrder,
+      },
+    });
+}
+
+// ---------------------------------------------------------------- role sync
+
+/** A member as the reconcile iterates them: linked, with their disabled state. */
+export interface SyncMember {
+  id: string;
+  discordId: string;
+  displayName: string;
+  tsUid: string;
+  disabledAt: Date | null;
+}
+
+/**
+ * Every member with a linked TeamSpeak identity: the set the reconcile
+ * iterates. OUR members, never the guild list, which is the leaver fix the
+ * design hangs on (§4.4): a leaver vanishes from the guild poll but not from
+ * here, so their desired set is empty and every owned group comes off.
+ */
+export async function listSyncMembers(db: Db): Promise<SyncMember[]> {
+  const rows = await db
+    .select({
+      id: member.id,
+      discordId: member.discordId,
+      displayName: member.displayName,
+      tsUid: member.tsUid,
+      disabledAt: member.disabledAt,
+    })
+    .from(member)
+    .where(sql`${member.tsUid} is not null`);
+
+  return rows.map((r) => ({ ...r, tsUid: r.tsUid! }));
+}
+
+/** Stamp `disabled_at`: first seen missing from the guild (§4.4). */
+export async function setMemberDisabledAt(
+  db: Db,
+  memberId: string,
+): Promise<void> {
+  await db
+    .update(member)
+    .set({ disabledAt: new Date(), updatedAt: new Date() })
+    .where(eq(member.id, memberId));
+}
+
+/** Clear `disabled_at`: seen back in the guild (reconcile.ts says why). */
+export async function clearMemberDisabledAt(
+  db: Db,
+  memberId: string,
+): Promise<void> {
+  await db
+    .update(member)
+    .set({ disabledAt: null, updatedAt: new Date() })
+    .where(eq(member.id, memberId));
 }
 
 /** A linked member, reduced to what nickname triage needs. */

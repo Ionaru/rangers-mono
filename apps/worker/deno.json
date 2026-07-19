@@ -6,7 +6,9 @@
     "dev": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env --watch main.ts",
     "start": "deno run --allow-net --allow-env --allow-read --allow-sys main.ts",
     "ts:check": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env ts-check.ts",
-    "badges:backfill": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env badge-backfill.ts"
+    "badges:backfill": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env badge-backfill.ts",
+    "assignables:seed": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env assignable-seed.ts",
+    "sync:preview": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env sync-preview.ts"
   },
   "imports": {
     "ts3-nodejs-library": "npm:ts3-nodejs-library@3.5.3"

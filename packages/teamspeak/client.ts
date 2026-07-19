@@ -17,10 +17,10 @@ import {
  *
  * None of this is covered by tests. There is no dockerised TeamSpeak and there
  * will not be one (ARCHITECTURE §9), so the transport is first exercised against
- * the live server. What that buys is bounded here: Phase 2 only *reads* the
- * client list and sends a poke. It writes nothing on TeamSpeak. The dangerous
- * writes are the group reconcile, and they arrive in Phase 4 behind
- * SYNC_DRY_RUN and the blast-radius guard.
+ * the live server. Phase 2 only *read* the client list and sent a poke. The
+ * dangerous writes are the two group-write helpers Phase 4 added, and they are
+ * only ever reached through the reconcile, behind SYNC_DRY_RUN and the
+ * blast-radius guard.
  */
 
 /**
@@ -246,6 +246,67 @@ export async function listServerGroupMembers(
     uid: entry.clientUniqueIdentifier,
     nickname: entry.clientNickname,
   }));
+}
+
+/**
+ * The durable database id (`cldbid`) for a TeamSpeak identity, or null if this
+ * server has never seen it.
+ *
+ * The reconcile operates on cldbid because it is durable: it resolves whether
+ * or not the member is online, which is what lets a demotion land on somebody
+ * who has not connected in a month (IMPLEMENTATION §6). A null is a real
+ * answer, not an error: a legacy-imported uid the server no longer knows, or a
+ * member who linked on one server and plays on another. The caller skips them.
+ */
+export async function getClientDbIdByUid(
+  teamspeak: TeamspeakConnection,
+  uid: string,
+): Promise<string | null> {
+  try {
+    const result = await teamspeak.clientGetDbidFromUid(uid);
+    return result.cldbid;
+  } catch (error) {
+    // ServerQuery error 1281, "database empty result set": the server has no
+    // record of this identity. The library types the id as a string.
+    if ((error as { id?: unknown }).id === "1281") return null;
+    throw error;
+  }
+}
+
+/**
+ * The server groups an identity currently holds, by cldbid, online or not.
+ * The reconcile's "current" set (clamped to the owned set by the caller).
+ */
+export async function getServerGroupsByClientDbId(
+  teamspeak: TeamspeakConnection,
+  cldbid: string,
+): Promise<ServerGroup[]> {
+  const groups = await teamspeak.serverGroupsByClientId(cldbid);
+  return groups.map((group) => ({ sgid: group.sgid, name: group.name }));
+}
+
+/**
+ * Grant a server group. With `removeClientFromServerGroup` below, these are the
+ * first *writes* the platform ever makes to TeamSpeak, and the whole reason
+ * they are safe to ship untested (ARCHITECTURE §9) is what stands in front of
+ * them: SYNC_DRY_RUN for the first passes, and the blast-radius guard forever.
+ * Neither is optional, and nothing else in this codebase may call these two.
+ */
+export async function addClientToServerGroup(
+  teamspeak: TeamspeakConnection,
+  cldbid: string,
+  sgid: string,
+): Promise<void> {
+  await teamspeak.serverGroupAddClient(cldbid, sgid);
+}
+
+/** Revoke a server group. See `addClientToServerGroup` for the safety framing. */
+export async function removeClientFromServerGroup(
+  teamspeak: TeamspeakConnection,
+  cldbid: string,
+  sgid: string,
+): Promise<void> {
+  await teamspeak.serverGroupDelClient(cldbid, sgid);
 }
 
 /**
