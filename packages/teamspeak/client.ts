@@ -266,9 +266,20 @@ export async function getClientDbIdByUid(
     const result = await teamspeak.clientGetDbidFromUid(uid);
     return result.cldbid;
   } catch (error) {
-    // ServerQuery error 1281, "database empty result set": the server has no
-    // record of this identity. The library types the id as a string.
-    if ((error as { id?: unknown }).id === "1281") return null;
+    // The server cannot resolve this uid to a client. For us that is a real
+    // answer, not a fault (an unknown or stale identity: a legacy_import link
+    // from before the rebuild, a bad force-link), so the caller skips them.
+    // Two responses mean it, and which one a server sends varies by version:
+    //   1281 "database empty result set" - uid is well-formed but not on record;
+    //    512 "invalid clientID"           - the server rejects the uid outright.
+    // Some servers (ours) answer 512 for ANY unrecognised uid, so the 1281 path
+    // never fires; without catching 512 too, every stale link throws and pages
+    // the error webhook as if TeamSpeak had faulted.
+    const id = (error as { id?: unknown }).id;
+    const text = String((error as { message?: unknown }).message ?? error);
+    if (id === "1281" || id === "512" || text.includes("invalid clientID")) {
+      return null;
+    }
     throw error;
   }
 }
