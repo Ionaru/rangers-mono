@@ -92,6 +92,21 @@ export const ASSIGNABLE_CONFIG: readonly AssignableConfigEntry[] = [
     tsGroupName: null,
     sortOrder: 2,
   },
+  // Infantry Instructor is a second Discord role that grants the same
+  // TeamSpeak "Instructor" group as the staff Instructor role above. The
+  // reconcile supports several Discord roles mapping to one group (the owned
+  // set is a union; `ownedSgids` dedupes), so holding either role keeps the
+  // group. The canonical `name` stays "Instructor" because that is the group
+  // it confers and the domain Role union has no "Infantry Instructor" member;
+  // if the roster should show it under its own label, that is a domain change
+  // (extend ROLES in CONTEXT.md + packages/domain), not a mapping tweak.
+  {
+    kind: "role",
+    name: "Instructor",
+    discordRoleId: "638346225879351307",
+    tsGroupName: "Instructor",
+    sortOrder: 3,
+  },
 
   // Badges: additive qualifications. Discord role ids from badges:backfill.
   {
