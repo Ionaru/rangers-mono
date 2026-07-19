@@ -41,16 +41,19 @@ export default defineConfig({
         MobileMenuFooter: "./src/components/HandbookMobileMenuFooter.astro",
         ThemeProvider: "./src/components/HandbookThemeProvider.astro",
       },
-      // Order follows the legacy hand-maintained TOC (the old index.md); the two
-      // orphan pages (flight-models, fixed-wing-addendum, linked only inline in
-      // the legacy content) are placed after their aviation parents.
+      // Order mirrors the TOC on the introduction page (index.md): sections
+      // 1-8 are the skills every Infantryman is expected to know, 9-15 are
+      // leadership and specialist roles, and the unnumbered reference material
+      // closes the list. The two orphan pages (fixed-wing-addendum,
+      // flight-models, linked only inline) are placed after their aviation
+      // parents. Section numbers live only in index.md's prose; keep the two
+      // in sync when reordering.
       sidebar: [
+        { slug: "handbook" },
         {
-          label: "Handbook",
+          label: "Infantry Fundamentals",
           items: [
-            "handbook",
             "handbook/getting-started",
-            "handbook/faq",
             "handbook/structure",
             "handbook/communication",
             "handbook/basic-infantry-skills",
@@ -58,6 +61,11 @@ export default defineConfig({
             "handbook/medical",
             "handbook/battle-drills",
             "handbook/formations",
+          ],
+        },
+        {
+          label: "Leadership & Specialist Roles",
+          items: [
             "handbook/tactics-leadership",
             "handbook/combined-arms",
             "handbook/echo-platoon-support",
@@ -67,6 +75,11 @@ export default defineConfig({
             "handbook/fixed-wing-aviation",
             "handbook/fixed-wing-addendum",
             "handbook/flight-models",
+          ],
+        },
+        {
+          label: "Reference",
+          items: [
             {
               label: "Procedures & Regulations",
               items: [
@@ -77,6 +90,7 @@ export default defineConfig({
             },
             "handbook/debrief",
             "handbook/qualifications",
+            "handbook/faq",
           ],
         },
       ],

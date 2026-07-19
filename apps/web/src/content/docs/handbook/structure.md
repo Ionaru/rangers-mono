@@ -87,7 +87,7 @@ More details can be found in their Handbook Sections.
 
 ## Roles & Loadouts
 
-This section outlines the available roles & loadouts deployed in our unit. We use various sets of loadouts resembling several military units from different countries. Sets are grouped into three categories.
+This section outlines the available roles & loadouts deployed in our unit. We use various sets of loadouts resembling several military units from different countries. Sets are grouped into three categories. How a squad composes and tailors its loadout is covered in [Section 5 - Loadouts](/handbook/loadouts).
 
 ### Loadout Tiers
 

@@ -14,6 +14,9 @@ The current standard loadout for eight people consists of:
 - Medic
 - SL
 
+A full catalogue of the available roles and their gear can be found in
+[Section 2 - Structure](/handbook/structure).
+
 One LAT is considered necessary to defend against armour, unless you have an MAT
 in your squad. An AR is important for suppressing enemies and giving
 the squad more room to manoeuvre. Medic and SL are necessary for obvious reasons.
