@@ -121,7 +121,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
   let guildMember;
   try {
     guildMember = await getGuildMember(
-      { botToken: DISCORD_BOT_TOKEN },
+      {
+        botToken: DISCORD_BOT_TOKEN,
+        /**
+         * One try, and a short one. The REST client retries transient Discord
+         * failures by default, which is right for the worker's five-minute loop
+         * and wrong here: somebody is watching a blank page, and the 503 below
+         * is a good answer they can act on. It is also reachable more than once
+         * per person, because neither the 503 nor the not-in-guild redirect
+         * writes a Member row, so the next request comes straight back here.
+         */
+        retry: { transientAttempts: 1, timeoutMs: 5_000 },
+      },
       DISCORD_GUILD_ID,
       resolved.discordId,
     );

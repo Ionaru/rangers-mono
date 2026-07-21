@@ -7,3 +7,4 @@
  * the Operations-channel sampling.
  */
 export * from "./client.ts";
+export * from "./throttle.ts";

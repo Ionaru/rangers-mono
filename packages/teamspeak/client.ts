@@ -4,6 +4,12 @@ import {
   TeamSpeak,
   type TeamSpeakClient,
 } from "ts3-nodejs-library";
+import {
+  type CommandThrottle,
+  type CommandThrottleOptions,
+  type CommandThrottleStats,
+  createCommandThrottle,
+} from "./throttle.ts";
 
 /**
  * The ServerQuery connection. The worker holds exactly one, for the lifetime of
@@ -44,6 +50,17 @@ export interface TeamspeakConnectionOptions {
   /** The virtual server to select (`sid`), not a port. */
   virtualServerId: number;
   nickname: string;
+  /**
+   * Command-budget overrides. Defaulted, and deliberately not an env var.
+   *
+   * The pacing is unconditional: nothing in the process can tell whether this
+   * box is on TeamSpeak's query allowlist, so it always assumes it is not. The
+   * only reason to raise the ceiling would be to spend a known allowlist, and
+   * the cost of the ceiling is a few seconds a pass, against a knob an operator
+   * could set to something that switches the guard off during an incident. Not
+   * worth the trade (throttle.ts).
+   */
+  throttle?: CommandThrottleOptions;
 }
 
 /** An online TeamSpeak client, reduced to the three things the link flow needs. */
@@ -53,6 +70,104 @@ export interface OnlineClient {
   /** The identity. Durable, and what gets stored on the member. */
   uid: string;
   nickname: string;
+}
+
+/**
+ * Every connection's throttle, so `commandThrottleStats` can find it and so a
+ * second `installCommandThrottle` on the same object is a no-op rather than a
+ * second gate silently halving the rate.
+ */
+const throttles = new WeakMap<object, CommandThrottle>();
+
+/**
+ * Put the command budget in front of the connection.
+ *
+ * It patches the instance's own `execute`, because that is the one method every
+ * single command goes through, including the ones the library issues for itself
+ * (the reconnect handshake, the cached `version`). Wrapping our own helpers
+ * instead would leave the library's own traffic, and anything a later phase
+ * calls directly on the connection object, outside the budget: exactly the
+ * commands nobody would think to check.
+ *
+ * **Priorized commands bypass the gate, synchronously.** `priorize()` sets a
+ * flag that the very next `execute` consumes, and the library's `handleReady`
+ * uses it to put `use <sid>` at the head of the queue and then un-pauses the
+ * queue in the same tick. Deferring that command would let an ordinary command
+ * that was parked in the gate run against a connection with no virtual server
+ * selected. They are charged to the budget but never made to wait, which is what
+ * the two commands of headroom below the server's limit are for (throttle.ts).
+ *
+ * The flag is consumed **when the call is made**, exactly as the library's own
+ * `execute` consumes it, and then handed straight back for the real `execute` to
+ * take. That ordering matters: `handleReady` re-runs on every reconnect and ends
+ * with `priorize().version()`, which returns the cached version WITHOUT sending
+ * anything, leaving the flag set. Read it later, at dispatch time, and that
+ * leftover would silently promote whichever ordinary command happened to be
+ * waiting, once per reconnect. Nothing can slip in between: `priorize()` and the
+ * call it decorates are one synchronous expression.
+ */
+export function installCommandThrottle(
+  teamspeak: TeamspeakConnection,
+  options: CommandThrottleOptions = {},
+): CommandThrottle {
+  const existing = throttles.get(teamspeak);
+  if (existing) return existing;
+
+  /**
+   * The patch is invisible to the type checker (`execute` is generic and
+   * `priorizeNextCommand` is private), so a library upgrade that renames either
+   * would otherwise leave a worker that runs, floods, and says nothing. Assert
+   * both, and let it be fatal: the worker treats boot failures as fatal on
+   * purpose (apps/worker/main.ts).
+   */
+  const internals = teamspeak as unknown as {
+    execute: (cmd: string, ...args: unknown[]) => Promise<unknown>;
+    priorizeNextCommand: boolean;
+  };
+  if (typeof internals.execute !== "function") {
+    throw new Error(
+      "TeamSpeak connection has no execute(): ts3-nodejs-library changed shape and the command throttle cannot be installed",
+    );
+  }
+  if (typeof internals.priorizeNextCommand !== "boolean") {
+    throw new Error(
+      "TeamSpeak connection has no priorizeNextCommand flag: ts3-nodejs-library changed shape and the command throttle cannot be installed",
+    );
+  }
+
+  const original = internals.execute.bind(teamspeak);
+  const throttle = createCommandThrottle(options);
+
+  internals.execute = (cmd, ...args) => {
+    const priorized = internals.priorizeNextCommand;
+    internals.priorizeNextCommand = false;
+    if (priorized) {
+      throttle.charge();
+      // Handed back so the real `execute` takes the priority path it was asked
+      // for. It clears the flag itself on the way through.
+      internals.priorizeNextCommand = true;
+      return original(cmd, ...args);
+    }
+    return throttle.run(() => original(cmd, ...args));
+  };
+
+  throttles.set(teamspeak, throttle);
+  return throttle;
+}
+
+/**
+ * How much the budget has cost this connection so far, cumulative.
+ *
+ * The flood used to be its own alarm: a log line per second said "you are
+ * sending too much". Pacing removes the alarm along with the flood, so the
+ * sync logs the delta per pass instead. Without it, a pass that quietly grows
+ * from five seconds to forty (a bigger roster, Phase 6's sampling on the same
+ * connection) has no signal at all until something times out.
+ */
+export function commandThrottleStats(
+  teamspeak: TeamspeakConnection,
+): CommandThrottleStats {
+  return throttles.get(teamspeak)?.stats() ?? { commands: 0, waitedMs: 0 };
 }
 
 /**
@@ -69,7 +184,14 @@ export interface OnlineClient {
 export async function connectTeamspeak(
   options: TeamspeakConnectionOptions,
 ): Promise<TeamSpeak> {
-  const teamspeak = await TeamSpeak.connect({
+  /**
+   * `new TeamSpeak(..., autoConnect: false)` then `connect()`, which is exactly
+   * what the `TeamSpeak.connect` static does, split apart for one reason: the
+   * throttle has to be installed BEFORE the socket opens. The library sends its
+   * own handshake the instant the connection is ready, and a patch applied after
+   * that has already missed commands.
+   */
+  const teamspeak = new TeamSpeak({
     host: options.host,
     protocol: QueryProtocol.SSH,
     queryport: options.queryport,
@@ -78,7 +200,11 @@ export async function connectTeamspeak(
     // Idle ServerQuery connections get dropped. This is a process that may sit
     // untouched from Sunday to Saturday.
     keepAlive: true,
+    autoConnect: false,
   });
+
+  installCommandThrottle(teamspeak, options.throttle);
+  await teamspeak.connect();
 
   // Selecting the virtual server is what turns a bare query connection into one
   // that can see clients. The nickname is set in the same call, because a query
@@ -168,10 +294,21 @@ export function keepConnected(
   });
 
   teamspeak.on("flooding", (error) => {
-    // The library backs off and retries on its own (524). Worth a line, because
-    // an IP that is not allowlisted hits the 10-commands-per-3-seconds limit and
-    // this is the only symptom (ARCHITECTURE §4.4).
-    log("teamspeak flood limit hit, backing off", { error: String(error) });
+    /**
+     * This should now be silent, and a line here is a fault rather than a
+     * routine back-off.
+     *
+     * The library does NOT back off: it re-sends the same command about a second
+     * later, forever, with no attempt counter. Phase 4 lived on that path for
+     * minutes at a time. The command budget in front of `execute` exists to keep
+     * us under the server's limit so this event never fires (throttle.ts), so if
+     * it does, either something reached the wire without passing the budget or
+     * the budget is sized wrong for what this box now sends. `gateWaitMs` on the
+     * sync pass is the number to look at.
+     */
+    log("teamspeak flood limit hit despite the command budget", {
+      error: String(error),
+    });
   });
 }
 
@@ -233,19 +370,47 @@ export interface ServerGroupMember {
  * the live TeamSpeak groups are the only current record of who has earned what
  * (the legacy database's grants are years out of date).
  *
- * `servergroupclientlist -names` hands back the client's unique identifier
- * directly, so the uid needs no second lookup and this stays one call per group.
+ * It is also the reconcile's whole view of TeamSpeak (IMPLEMENTATION §6): one
+ * call per owned group replaced two calls per member, which is what took a pass
+ * from ~200 commands to ~16 and ended the flood. `servergroupclientlist -names`
+ * hands back the client's unique identifier AND its durable `cldbid` in the same
+ * response, so a group's holders need no second lookup each.
  */
 export async function listServerGroupMembers(
   teamspeak: TeamspeakConnection,
   sgid: string,
 ): Promise<ServerGroupMember[]> {
-  const entries = await teamspeak.serverGroupClientList(sgid);
+  let entries;
+  try {
+    entries = await teamspeak.serverGroupClientList(sgid);
+  } catch (error) {
+    // A group nobody is in answers "database empty result set" rather than with
+    // an empty list, and an empty group is not a fault: several of the badges
+    // legitimately have no holders. Everything else throws, and the caller
+    // treats that group as unreadable for the pass rather than as empty, which
+    // is the distinction the whole reconcile rests on (sync.ts).
+    if (isEmptyResultSet(error)) return [];
+    throw error;
+  }
   return entries.map((entry) => ({
     cldbid: entry.cldbid,
     uid: entry.clientUniqueIdentifier,
     nickname: entry.clientNickname,
   }));
+}
+
+/**
+ * TeamSpeak's "there is nothing here", which it reports as an error.
+ *
+ * Matched on the message as well as the id because this server has already been
+ * caught answering a documented id with a different one (see
+ * `getClientDbIdByUid`), and reading "empty" as "broken" is the expensive
+ * direction: it would take a group out of the reconcile until somebody noticed.
+ */
+function isEmptyResultSet(error: unknown): boolean {
+  const id = (error as { id?: unknown }).id;
+  const text = String((error as { message?: unknown }).message ?? error);
+  return id === "1281" || text.includes("empty result set");
 }
 
 /**
@@ -257,6 +422,12 @@ export async function listServerGroupMembers(
  * who has not connected in a month (IMPLEMENTATION §6). A null is a real
  * answer, not an error: a legacy-imported uid the server no longer knows, or a
  * member who linked on one server and plays on another. The caller skips them.
+ *
+ * This is the reconcile's FALLBACK, not its mechanism. `servergroupclientlist`
+ * already returns a cldbid for everybody who holds an owned group, so the only
+ * members left needing this are the ones Discord says should gain a group while
+ * TeamSpeak has them in none. Steady state is a handful; the pass after the very
+ * first apply is the one that pays for the whole roster.
  */
 export async function getClientDbIdByUid(
   teamspeak: TeamspeakConnection,
@@ -282,18 +453,6 @@ export async function getClientDbIdByUid(
     }
     throw error;
   }
-}
-
-/**
- * The server groups an identity currently holds, by cldbid, online or not.
- * The reconcile's "current" set (clamped to the owned set by the caller).
- */
-export async function getServerGroupsByClientDbId(
-  teamspeak: TeamspeakConnection,
-  cldbid: string,
-): Promise<ServerGroup[]> {
-  const groups = await teamspeak.serverGroupsByClientId(cldbid);
-  return groups.map((group) => ({ sgid: group.sgid, name: group.name }));
 }
 
 /**

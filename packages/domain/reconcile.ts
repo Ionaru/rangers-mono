@@ -41,6 +41,35 @@ export function ownedSgids(mapping: AssignableMapping): ReadonlySet<number> {
   return owned;
 }
 
+/**
+ * The groups Discord says a member should hold: their role ids resolved through
+ * the mapping and clamped to the owned set.
+ *
+ * Exported because the gather needs the same answer before the plan exists: a
+ * member who holds no owned group only needs a TeamSpeak lookup if this set is
+ * non-empty (sync-gather.ts). Computing it twice in two places is how the two
+ * would drift, and a `desired` that comes out too small removes groups from
+ * people, so it is computed once, here.
+ *
+ * A role id the mapping does not know is somebody else's Discord role and
+ * contributes nothing; a mapped assignable with a null sgid (Mission maker) is
+ * real in Discord but has no TeamSpeak shadow, so it contributes nothing either.
+ */
+export function desiredSgids(
+  discordRoleIds: readonly string[],
+  mapping: AssignableMapping,
+  owned: ReadonlySet<number>,
+): Set<number> {
+  const desired = new Set<number>();
+  for (const roleId of discordRoleIds) {
+    const entry = mapping.get(roleId);
+    if (entry && entry.tsSgid !== null && owned.has(entry.tsSgid)) {
+      desired.add(entry.tsSgid);
+    }
+  }
+  return desired;
+}
+
 /** Everything the reconcile needs to know about one member. */
 export interface MemberSyncInput {
   /** Opaque to the reconcile; echoed into the plan so the worker can apply it. */
@@ -60,10 +89,13 @@ export interface MemberSyncInput {
   /** `member.disabled_at` is already stamped: stamp it only the first time. */
   alreadyDisabled: boolean;
   /**
-   * Every group the identity holds on TeamSpeak, raw and unfiltered, or `null`
-   * when the pass could not read it (the server does not know this uid, or the
-   * ServerQuery lookup threw). `null` is not "holds nothing": it is "we do not
-   * know", so the group reconcile produces no adds or removes for them. The
+   * The groups the identity holds on TeamSpeak, or `null` when the pass could
+   * not read them (the server does not know this uid, or the ServerQuery lookup
+   * threw). It is clamped to the owned set below regardless, so a caller may
+   * legitimately pass only the owned ones, which is what the per-group gather
+   * does. `null` is not "holds nothing": it is "we do not know", so the group
+   * reconcile produces no adds or removes for them, and an EMPTY array is a
+   * positive claim that they hold none of the owned groups. The
    * `disabled_at` decision below is a Discord fact and is still made, so a
    * leaver whose TeamSpeak link is broken is still stamped (§4.4) rather than
    * silently skipped.
@@ -102,12 +134,7 @@ export function planMemberSync(
 ): MemberSyncPlan {
   const warnings: string[] = [];
 
-  /**
-   * The member's roles resolved through the mapping. A role id the mapping does
-   * not know is somebody else's Discord role and contributes nothing; a mapped
-   * assignable with a null sgid (Mission maker) is real in Discord but has no
-   * TeamSpeak shadow, so it contributes nothing either.
-   */
+  /** The member's roles resolved through the mapping, for the rank check below. */
   const held: MappedAssignable[] = [];
   for (const roleId of input.discordRoleIds) {
     const entry = mapping.get(roleId);
@@ -118,7 +145,7 @@ export function planMemberSync(
    * Rank is exclusive, and Discord is the truth, so a member with two rank
    * roles is a Discord problem to report, not a sync problem to solve. Both
    * sgids stay in the desired set: the sync mirrors what Discord says, and the
-   * fix belongs where the truth lives (§6 step 6).
+   * fix belongs where the truth lives (§6 step 7).
    */
   const { conflicting } = resolveRank(held);
   if (conflicting.length > 0) {
@@ -139,12 +166,7 @@ export function planMemberSync(
   let toAdd: number[] = [];
   let toRemove: number[] = [];
   if (input.currentSgids !== null) {
-    const desired = new Set<number>();
-    for (const entry of held) {
-      if (entry.tsSgid !== null && owned.has(entry.tsSgid)) {
-        desired.add(entry.tsSgid);
-      }
-    }
+    const desired = desiredSgids(input.discordRoleIds, mapping, owned);
 
     // Clamping current to owned is the guarantee that a manual grant, Server
     // Admin, or anything else outside the mapping can never appear in toRemove.
@@ -187,7 +209,7 @@ export interface SyncPassPlan {
 }
 
 /**
- * Plan a full reconcile pass and apply the blast-radius guard (§6 step 4).
+ * Plan a full reconcile pass and apply the blast-radius guard (§6 step 5).
  *
  * The guard counts *members losing groups*, not groups lost: one demotion
  * removing four groups is one member. Normal operation touches 0-2 people, so

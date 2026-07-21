@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
 import {
   type AssignableMapping,
+  desiredSgids,
   type MappedAssignable,
   type MemberSyncInput,
   ownedSgids,
@@ -169,7 +170,7 @@ Deno.test("a manual TeamSpeak group outside the owned set is never touched", () 
 
 Deno.test("two rank roles: warned about, mirrored anyway", () => {
   // Discord is the source of truth, so the sync mirrors the broken state and
-  // reports it; the fix belongs in Discord (§6 step 6).
+  // reports it; the fix belongs in Discord (§6 step 7).
   const plan = planMemberSync(
     input({ discordRoleIds: [OFFICER, RECRUIT], currentSgids: [71] }),
     mapping,
@@ -274,7 +275,7 @@ Deno.test("a converged >1-rank member carries a warning but is not in changed", 
   // roles whose TeamSpeak groups already mirror both is a no-op pass (empty
   // toAdd/toRemove, no stamp/clear), so planSyncPass leaves them out of
   // `changed`. The exclusivity warning still has to surface every pass
-  // (IMPLEMENTATION §6 step 6), so the worker iterates `plan.members`, not
+  // (IMPLEMENTATION §6 step 7), so the worker iterates `plan.members`, not
   // `plan.changed`. This locks that contract: the warning is on `members`, and
   // it would be lost if a caller only looked at `changed`.
   const pass = planSyncPass(
@@ -374,4 +375,46 @@ Deno.test("a null-state leaver is in changed (for the stamp) but adds nothing to
   assertEquals(pass.changed.length, 1);
   assertEquals(pass.removalMemberCount, 0);
   assertFalse(pass.halted);
+});
+
+Deno.test("desiredSgids resolves mapped roles and ignores everything else", () => {
+  // The extraction that lets the gather decide who needs a TeamSpeak lookup
+  // without re-deriving the desired set. It is the same function the plan uses,
+  // which is the point: a second implementation that came out too small would
+  // remove groups from people.
+  assertEquals(
+    [...desiredSgids([OFFICER, MEDIC], mapping, owned)].sort((a, b) => a - b),
+    [71, 76],
+  );
+  // Not ours, and mapped-but-not-mirrored: neither contributes.
+  assertEquals([
+    ...desiredSgids([UNMAPPED_ROLE, MISSION_MAKER], mapping, owned),
+  ], []);
+  assertEquals([...desiredSgids([], mapping, owned)], []);
+});
+
+Deno.test("desiredSgids is clamped to owned, so a group this pass will not touch is never desired", () => {
+  // What the caller does with a group it could not read: null the sgid out of
+  // the mapping for the pass. The group must then leave the desired set too, or
+  // it would be added back on a pass that cannot see who holds it.
+  const withoutOfficer: AssignableMapping = new Map(
+    entries.map(([roleId, a]) =>
+      a.tsSgid === 71 ? [roleId, { ...a, tsSgid: null }] : [roleId, a]
+    ),
+  );
+  const narrowed = ownedSgids(withoutOfficer);
+  assertEquals([...desiredSgids([OFFICER], withoutOfficer, narrowed)], []);
+});
+
+Deno.test("a member already holding exactly what Discord grants keeps it", () => {
+  // The regression that would matter most: if the desired set ever came out
+  // empty for a member who legitimately holds a group, the group would be
+  // removed. This is the case that says it does not.
+  const plan = planMemberSync(
+    input({ discordRoleIds: [OFFICER, MEDIC], currentSgids: [71, 76] }),
+    mapping,
+    owned,
+  );
+  assertEquals(plan.toAdd, []);
+  assertEquals(plan.toRemove, []);
 });

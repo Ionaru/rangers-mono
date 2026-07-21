@@ -67,7 +67,9 @@ export async function getGuildMember(
     throw new DiscordApiError(
       response.status,
       `/guilds/${guildId}/members/${userId}`,
-      await response.text(),
+      // Guarded for the same reason as roles.ts: the request's timeout signal
+      // stays armed across the body read, so the read can reject on its own.
+      await response.text().catch(() => "(the body could not be read)"),
     );
   }
 

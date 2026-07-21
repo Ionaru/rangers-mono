@@ -92,7 +92,10 @@ export async function addMemberRole(
     throw new DiscordApiError(
       response.status,
       `/guilds/${guildId}/members/${userId}/roles/${roleId}`,
-      await response.text(),
+      // The request's timeout signal is still armed while the body is read, so
+      // this read can itself reject. A bulk caller branches on the status, and a
+      // raw DOMException escaping here would bypass every one of those branches.
+      await response.text().catch(() => "(the body could not be read)"),
     );
   }
 }

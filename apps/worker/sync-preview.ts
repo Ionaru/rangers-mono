@@ -63,15 +63,25 @@ async function main(): Promise<number> {
 
     console.log("\nsync preview: what a live pass would do\n");
 
+    if (result.unreadableGroups.length > 0) {
+      // Named first, because everything below is scoped to the groups that
+      // could be read: a group missing here is a group nobody gains or loses.
+      console.log(
+        "groups NOT reconciled this pass (their client list could not be read):",
+      );
+      for (const g of result.unreadableGroups) console.log(`  ${g}`);
+      console.log("");
+    }
+
     if (plan.changed.length === 0) {
       // "Agree" only if every member was actually read. A pass where TeamSpeak
       // could not resolve people (skipped, below) has an empty change set too,
       // and printing "they agree" there would be a lie that invites flipping
       // SYNC_DRY_RUN on a pass that never saw TeamSpeak.
       console.log(
-        result.skipped.length === 0
+        result.skipped.length === 0 && result.unreadableGroups.length === 0
           ? "  nothing. Discord and TeamSpeak agree for every member."
-          : `  no changes among the members that could be read; ${result.skipped.length} skipped below (TeamSpeak not read for them).`,
+          : `  no changes among the members and groups that could be read; ${result.skipped.length} member(s) skipped below.`,
       );
     }
     for (const m of plan.changed) {
@@ -108,10 +118,29 @@ async function main(): Promise<number> {
       }
     }
 
+    if (result.notLookedUp.length > 0) {
+      /**
+       * The reconcile reads TeamSpeak one group at a time now, so a member who
+       * appears in no group's list and is due none is finished without ever
+       * being looked up by identity. That is the saving; this is its cost. Their
+       * `ts_uid` could be years dead and this pass would not know, because
+       * nothing about their sync depends on it.
+       */
+      console.log(
+        `\nnot looked up (${result.notLookedUp.length}): they hold no mapped ` +
+          `TeamSpeak group and Discord grants them none, so the pass has nothing ` +
+          `to do for them either way. A dead ts_uid here would go unnoticed:`,
+      );
+      for (const m of result.notLookedUp) {
+        console.log(`  ${m.displayName} (${m.tsUid})`);
+      }
+    }
+
     console.log(
       `\n${result.membersConsidered} linked member(s) considered, ` +
         `${plan.changed.length} with changes, removals touch ` +
-        `${plan.removalMemberCount} member(s) (guard halts above ${plan.maxRemovals}).`,
+        `${plan.removalMemberCount} member(s) (guard halts above ${plan.maxRemovals}). ` +
+        `${result.probes} member(s) needed a per-identity lookup.`,
     );
 
     if (plan.halted) {

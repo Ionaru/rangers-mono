@@ -48,6 +48,15 @@ The stack: `docker compose up -d postgres`, then
 - **Never run `deno approve-scripts` / `--allow-scripts`.** The "ignored build
   scripts" warning is correct behaviour; the script (`cpu-features`, pulled in
   by `ssh2`) is an optional native addon we do not want.
+- **Mind the ServerQuery command budget.** TeamSpeak refuses a query client that
+  sends more than 10 commands in 3 seconds, and the library's answer to being
+  refused is to re-send the same command every second, forever: a burst does not
+  fail, it quietly degrades to a crawl and holds the one connection the whole
+  process shares. Anything new that talks to TeamSpeak should cost commands
+  proportional to the number of *groups or channels*, not the number of members,
+  and it must go through `packages/teamspeak` so the throttle in front of
+  `execute` applies. Phase 4 shipped a reconcile at two commands per member and
+  flooded for three and a half minutes out of every five.
 - **Pin the Deno version.** It lives in `.dvmrc`, both Dockerfiles, and
   `.github/workflows/cd.yaml`, and CI fails if they disagree. It is load-bearing
   twice over: `ssh2` leans on `node:crypto` for a cipher Deno has broken before,
