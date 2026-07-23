@@ -30,6 +30,8 @@ export interface OnlineClient {
   /** The identity, which gets stored on the member. Durable. */
   uid: string;
   nickname: string;
+  /** True when this is the identity the requesting member is already linked to (a re-link). */
+  current: boolean;
 }
 
 async function callWorker<T>(
@@ -69,10 +71,19 @@ async function callWorker<T>(
   return await response.json() as T;
 }
 
-/** The online TeamSpeak clients a member may claim as themselves. */
-export async function fetchOnlineClients(): Promise<OnlineClient[]> {
+/**
+ * The online TeamSpeak clients a member may claim as themselves.
+ *
+ * Pass the requester's `memberId` so their own current identity is offered back
+ * for a re-link (marked `current`); omit it and every linked identity is hidden,
+ * which is what the old web pages want (they do not identify the requester).
+ */
+export async function fetchOnlineClients(
+  memberId?: string,
+): Promise<OnlineClient[]> {
+  const query = memberId ? `?member=${encodeURIComponent(memberId)}` : "";
   const body = await callWorker<{ clients: OnlineClient[] }>(
-    "/internal/ts/clients",
+    `/internal/ts/clients${query}`,
   );
   return body.clients;
 }

@@ -86,7 +86,13 @@ function isTransientStatus(status: number): boolean {
 }
 
 export interface DiscordRestOptions {
-  botToken: string;
+  /**
+   * The bot token, or `null` for a route that authenticates itself another way.
+   * The interaction followup endpoint is signed by the token in its URL, not by
+   * a bot token (followup.ts), so it passes `null` and no `Authorization` header
+   * is sent. Every other caller passes the real token.
+   */
+  botToken: string | null;
   /**
    * Overrides for the defaults, which are sized for the worker: a background
    * loop that runs again in five minutes and would rather wait than fail. The
@@ -153,7 +159,9 @@ export async function discordFetch(
    * appears is not something anyone notices.
    */
   const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bot ${botToken}`);
+  // `null` for the token means this route authenticates itself (the interaction
+  // followup, signed by the token in its URL). Every other route is the bot.
+  if (botToken !== null) headers.set("Authorization", `Bot ${botToken}`);
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }

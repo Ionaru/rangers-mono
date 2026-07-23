@@ -5,6 +5,7 @@
     ".": "./mod.ts"
   },
   "tasks": {
-    "check:phase0": "deno run --allow-net --allow-env --allow-read --env-file=../../.env phase0-check.ts"
+    "check:phase0": "deno run --allow-net --allow-env --allow-read --env-file=../../.env phase0-check.ts",
+    "commands:register": "deno run --allow-net --allow-env --allow-read --env-file=../../.env register.ts"
   }
 }

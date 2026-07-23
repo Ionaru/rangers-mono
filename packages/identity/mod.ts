@@ -16,4 +16,5 @@
  * database writes these rules authorise live in `@7r/db` rather than in here.
  */
 export * from "./link-code.ts";
+export * from "./link-candidates.ts";
 export * from "./steam.ts";

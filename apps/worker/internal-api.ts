@@ -3,7 +3,8 @@ import {
   pokeClient,
   type TeamspeakConnection,
 } from "@7r/teamspeak";
-import { type Db, listLinkedTsUids, ping } from "@7r/db";
+import { type Db, listTeamspeakLinks, ping } from "@7r/db";
+import { pickableClients } from "@7r/identity";
 
 /**
  * The worker's internal HTTP API. The Compose network only: never proxied, never
@@ -83,7 +84,7 @@ export function createInternalApiHandler(
 
     try {
       if (pathname === "/internal/ts/clients" && request.method === "GET") {
-        return await handleClients(deps);
+        return await handleClients(deps, new URL(request.url));
       }
 
       if (pathname === "/internal/ts/poke" && request.method === "POST") {
@@ -107,26 +108,36 @@ export function createInternalApiHandler(
 
 /**
  * The clients a member may claim as themselves: online, real people, and not
- * already linked to somebody.
+ * already linked to *somebody else*.
  *
  * Filtering out the taken identities here rather than in the browser is what
  * stops the pick-list being an invitation to claim a teammate's identity. It is
  * not the *guarantee* (that is the poke, which goes to whoever they picked, plus
  * the unique constraint on member.ts_uid), but it means the mistake is not
  * offered in the first place.
+ *
+ * `?member=<id>` names the requester, so their *own* current identity is offered
+ * back (marked `current`) for a re-link, instead of being hidden with everyone
+ * else's. The decision is `pickableClients` in `@7r/identity`, which is pure and
+ * tested; the worker only supplies the two lists. Omitting `member` (the old web
+ * flow, which does not identify the requester) hides every linked identity,
+ * which is what those pages already expect.
  */
-async function handleClients(deps: InternalApiDeps): Promise<Response> {
+async function handleClients(
+  deps: InternalApiDeps,
+  url: URL,
+): Promise<Response> {
   const { db, teamspeak } = deps;
+  const memberId = url.searchParams.get("member") ?? undefined;
 
-  const [online, linked] = await Promise.all([
+  const [online, links] = await Promise.all([
     listClients(teamspeak),
-    listLinkedTsUids(db),
+    listTeamspeakLinks(db),
   ]);
 
-  const taken = new Set(linked);
-  const available = online.filter((client) => !taken.has(client.uid));
+  const clients = pickableClients({ online, links, memberId });
 
-  return Response.json({ clients: available });
+  return Response.json({ clients });
 }
 
 /** Poke a code at the connection the member picked. */

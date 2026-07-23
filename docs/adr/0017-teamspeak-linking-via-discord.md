@@ -43,18 +43,35 @@ because Steam OpenID is a browser redirect flow and cannot run inside Discord.)
 
 Hence the shape:
 
-1. `/link` → the handler fetches online, unlinked clients from the worker and replies
-   with an **ephemeral message carrying a String Select** ("Which TeamSpeak user are
-   you?"). Ephemeral message, not modal-with-select: a dismissed modal is gone for
-   good, a message persists. (Select options cap at 25; more than 25 online unlinked
-   clients is not a realistic state for this unit.)
+1. `/link` → the handler fetches the online clients this member may claim from the
+   worker and replies with an **ephemeral message carrying a String Select** ("Which
+   TeamSpeak user are you?"). Ephemeral message, not modal-with-select: a dismissed
+   modal is gone for good, a message persists. (Select options cap at 25; more than 25
+   online unlinked clients is not a realistic state for this unit.)
 2. Select interaction → resolve the ephemeral `clid` to the durable `uid` (the same
    re-fetch the web flow does), create the `link_code` row, poke the code, and update
    the message to "code sent to *nickname*" with an **[Enter code] button**.
-3. Button → opens the modal with one text input. The button stays on the message, so
-   a mistyped code or an accidentally dismissed modal is recovered by clicking again.
-4. Modal submit → verify (`verifyLinkCode`), complete (`completeTeamspeakLink`),
-   update the message with the outcome and attempts remaining.
+3. Button → opens the modal with one text input, wrapped in a **Label** component
+   (type 18): Discord deprecated Action-Row-wrapped text inputs in modals. The button
+   stays on the message, so a mistyped code or an accidentally dismissed modal is
+   recovered by clicking again.
+4. Modal submit → verify (`verifyLinkCode`), complete (`completeTeamspeakLink`), and
+   report the outcome and attempts remaining as a **fresh ephemeral reply** (defer
+   type 5, then edit `@original`). Not an `UPDATE_MESSAGE`: Discord documents type 6/7
+   as component-only and documents neither for a modal submit, so this flow, first
+   exercised in production, does not lean on one. The picker message and its button
+   survive for a retry, which is what the button is for.
+
+## Re-linking must let you pick the identity you already hold
+
+The worker hides identities linked to **another** member, but offers the requester
+their **own** current identity back, marked as such. Leaving it out was a real bug: a
+member who was already linked (including all ~99 `legacy_import` links) saw an empty
+list and read it as "you are not connected". Picking your own identity re-runs the
+possession challenge and re-stamps `tsVerifiedAt` / `tsLinkMethod='poke'`, which is how
+a carried-over or admin-set link is upgraded to a verified one. The rule lives in
+`pickableClients` (`@7r/identity`), pure and tested; the worker only supplies the
+online list and the current links, keyed by member id.
 
 Code TTL (5 minutes) sits comfortably inside Discord's 15-minute interaction-token
 window.

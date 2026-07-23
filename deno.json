@@ -20,7 +20,7 @@
     // `deno check` cannot read .astro files, so apps/web is typechecked by
     // `astro check` instead. Both halves run, or the web app's strict tsconfig
     // is enforced nowhere outside an editor and `astro build` only transpiles.
-    "check": "deno check packages/config/mod.ts packages/domain/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/discord/phase0-check.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts apps/worker/badge-backfill.ts apps/worker/ts-check.ts apps/worker/assignable-seed.ts apps/worker/sync-preview.ts && deno task web:check",
+    "check": "deno check packages/config/mod.ts packages/domain/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/discord/phase0-check.ts packages/discord/register.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts apps/worker/badge-backfill.ts apps/worker/ts-check.ts apps/worker/assignable-seed.ts apps/worker/sync-preview.ts && deno task web:check",
     // apps/ as well as packages/. The worker's internal API is the one
     // authorisation boundary in the system, and it is pure request-handling, so
     // it is testable even though the TeamSpeak connection behind it is not.
@@ -34,6 +34,10 @@
     // Read-only. Asks Discord which Phase 0 steps are actually done, because almost
     // every way of getting Phase 0 wrong fails silently.
     "phase0:check": "deno task --cwd packages/discord check:phase0",
+    // Phase 5. Registers 7R_Bot's slash commands. Dry-run by default; a bulk PUT
+    // of the guild scope is destructive (takes any surviving /loa with it), so it
+    // lists both scopes and confirms before writing (-- --apply).
+    "commands:register": "deno task --cwd packages/discord commands:register",
     "web:dev": "deno task --cwd apps/web dev",
     "web:build": "deno task --cwd apps/web build",
     "web:check": "deno task --cwd apps/web check",

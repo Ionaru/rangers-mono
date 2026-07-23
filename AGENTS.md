@@ -76,6 +76,15 @@ The stack: `docker compose up -d postgres`, then
 - **Config is lazy.** Never parse the environment at module scope: `astro build`
   executes module code, so a top-level parse turns a missing production secret
   into a failed build.
+- **The Discord interactions endpoint fails closed.** Verify the Ed25519
+  signature over the raw request bytes (`timestamp + rawBody`) before parsing or
+  acting on anything, and return 401 on *any* failure. Discord probes the
+  endpoint with deliberately invalid signatures and removes the URL if one is
+  ever answered 200: a silent, delayed bot death where nothing errors and the bot
+  just stops receiving commands. `verifyInteractionSignature` (`@7r/discord`)
+  never throws for exactly this reason. Deferred handlers run detached, so their
+  `.catch` is mandatory: the web app installs no `unhandledrejection` handler and
+  Deno aborts the process on one.
 
 ## Testing
 

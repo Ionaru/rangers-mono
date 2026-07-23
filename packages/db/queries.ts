@@ -111,18 +111,25 @@ export async function upsertMemberOnLogin(
 // ---------------------------------------------------------------- teamspeak link
 
 /**
- * Every TeamSpeak identity already spoken for.
+ * Every TeamSpeak identity already spoken for, and by whom.
  *
  * The worker subtracts these from the online-client list so nobody is offered
- * somebody else's identity to link. It is a whole-table scan of a column with
- * ~100 non-null values, which is cheaper than any cleverness would be.
+ * somebody else's identity to link, but it keeps the member id so it can offer a
+ * member their *own* current identity back (a re-link: `pickableClients` in
+ * `@7r/identity`). Returning bare uids was the re-link bug: with no way to tell
+ * "yours" from "someone else's", the only safe rule was to hide them all.
+ *
+ * A whole-table scan of a column with ~100 non-null values, which is cheaper
+ * than any cleverness would be.
  */
-export async function listLinkedTsUids(db: Db): Promise<string[]> {
+export async function listTeamspeakLinks(
+  db: Db,
+): Promise<{ memberId: string; tsUid: string }[]> {
   const rows = await db
-    .select({ tsUid: member.tsUid })
+    .select({ memberId: member.id, tsUid: member.tsUid })
     .from(member)
     .where(sql`${member.tsUid} is not null`);
-  return rows.map((r) => r.tsUid!).filter(Boolean);
+  return rows.map((r) => ({ memberId: r.memberId, tsUid: r.tsUid! }));
 }
 
 /**

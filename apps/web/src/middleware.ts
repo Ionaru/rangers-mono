@@ -44,6 +44,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // consult. Skip before importing or touching anything.
   if (context.isPrerendered) return next();
 
+  // The Discord interactions endpoint authenticates every request by an Ed25519
+  // signature, not a session cookie (ADR 0003). Running the session lookup and
+  // its database round-trip for it would spend part of the 3-second interaction
+  // budget on a request that has no cookie and never will. Skip straight through.
+  if (context.url.pathname.startsWith("/api/discord/")) return next();
+
   const gated = needsSession(context.url.pathname);
 
   const { getAuth } = await import("./lib/auth.ts");
