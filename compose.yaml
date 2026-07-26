@@ -143,15 +143,16 @@ services:
       - .env
     secrets:
       - database_url
-    # Optional: the weekly op's witty-lines file and image folder (Phase 5). The
-    # witty line goes in the @everyone message; a random image becomes the event's
-    # cover banner. Uncomment and point OP_ANNOUNCE_TEXT_FILE / OP_ANNOUNCE_IMAGE_DIR
-    # at the in-container paths below. Bind-mounted rather than baked in so the unit
-    # can edit the lines and swap images without a rebuild; read-only because the
-    # worker only ever reads them. Left commented so a deploy that does not use the
-    # flavour need not create the directory.
-    # volumes:
-    #   - ./announce-assets:/app/announce-assets:ro
+    # The weekly op's witty-lines file and image folder (Phase 5): the witty line
+    # goes in the @everyone message, a random image becomes the event's cover
+    # banner. Bind-mounted read-only (the worker only ever reads them) so the unit
+    # can edit the lines and swap images without a rebuild. The host `data/` tree is
+    # git- and docker-ignored, so these live outside the image and survive the
+    # deploy's `git switch`. Set the two config vars to the in-container paths:
+    #   OP_ANNOUNCE_TEXT_FILE=/app/data/event-assets/text.txt
+    #   OP_ANNOUNCE_IMAGE_DIR=/app/data/event-assets/images
+    volumes:
+      - ./data/event-assets:/app/data/event-assets:ro
     # No published port, ever. The internal API is reachable on the Compose
     # network only: never through the proxy, never public (ARCHITECTURE §2).
     depends_on:
