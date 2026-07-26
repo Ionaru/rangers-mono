@@ -75,8 +75,9 @@ async function callWorker<T>(
  * The online TeamSpeak clients a member may claim as themselves.
  *
  * Pass the requester's `memberId` so their own current identity is offered back
- * for a re-link (marked `current`); omit it and every linked identity is hidden,
- * which is what the old web pages want (they do not identify the requester).
+ * for a re-link (marked `current`). Every caller does; the argument stays
+ * optional only because omitting it is the safe direction to fail in, and the
+ * worker answers an unidentified request by hiding every linked identity.
  */
 export async function fetchOnlineClients(
   memberId?: string,

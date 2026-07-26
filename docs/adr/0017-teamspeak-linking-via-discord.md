@@ -6,7 +6,8 @@ the interactions endpoint. The possession challenge itself is unchanged (Q10's
 bot-initiated mechanic: pick yourself from the online-clients list, the worker pokes
 that client a one-time code, you type the code back). Only the surface moves. The web
 link/unlink pages for TeamSpeak are removed when `/link` ships (Phase 5), not before:
-the web flow keeps serving until its replacement exists.
+the web flow keeps serving until its replacement exists. (Both have now happened; see
+Consequences.)
 
 ## Why
 
@@ -93,14 +94,17 @@ unchanged by it.
 - `/link` and `/unlink` are **member-facing, not admin-gated** — unlike every other
   planned write command. `/link-force` (admin, ADR 0009) is unaffected and stays.
 - Phase 5 gains the removal of the web TeamSpeak link/unlink pages alongside its other
-  deliverables. Until then the web flow keeps working; the docs describe the decided
-  end state.
+  deliverables. **Done:** `apps/web/src/pages/link/teamspeak/` and
+  `pages/unlink/teamspeak.ts` are gone, and the profile page shows the link's status
+  and points at the command instead of operating it.
 - The web member area becomes read-only plus Steam linking. Self-unlink (a privacy
   promise, ARCHITECTURE §7) is preserved via `/unlink`.
 - Guest-attendance backfill on link is unchanged: it lives in
   `completeTeamspeakLink`, which both surfaces call.
-- The poke message text ("enter it on the website") changes to point at Discord when
-  the flow ships.
+- The poke message text ("enter it on the website") lost its instruction rather than
+  gaining a new one: with the web pages gone there is only one place a code can be
+  typed back, and the member is already looking at it, so the poke carries just the
+  code (`pokeMessage`, `packages/identity/link-code.ts`).
 - ADR 0003 (HTTP-only bot) is unaffected: components and modals are ordinary HTTP
   interactions. ADR 0009 (no admin web UI) is unaffected: this is member self-service,
   not an admin surface.

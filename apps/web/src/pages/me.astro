@@ -3,33 +3,33 @@ import Base from "../layouts/Base.astro";
 
 /**
  * The member's profile: their three identities, and the buttons to link and
- * unlink the two that are not the login.
+ * unlink Steam.
  *
- * Read-only otherwise, and that is the whole shape of the member area (ADR
- * 0009): no admin panel, no role editing, no roster management. Roles live in
- * Discord and are changed there.
+ * TeamSpeak is shown but not operated from here: `/link` and `/unlink` in
+ * Discord own that flow, and the web pages that used to run it are gone (ADR
+ * 0017). Read-only otherwise, and that is the whole shape of the member area
+ * (ADR 0009): no admin panel, no role editing, no roster management. Roles live
+ * in Discord and are changed there.
  */
 const member = Astro.locals.member!;
 
-/** Set by the link and unlink routes, so the member is told what happened. */
+/**
+ * Set by the Steam link and unlink routes, so the member is told what happened.
+ * TeamSpeak has no entries here any more: its outcomes are reported in Discord,
+ * by the command that caused them.
+ */
 const notice = Astro.url.searchParams.get("notice");
 const error = Astro.url.searchParams.get("error");
 
 const NOTICES: Record<string, string> = {
-  ts_linked: "TeamSpeak linked. Your identity is verified.",
-  ts_unlinked: "TeamSpeak unlinked.",
   steam_linked: "Steam linked.",
   steam_unlinked: "Steam unlinked.",
 };
 
 const ERRORS: Record<string, string> = {
-  ts_taken:
-    "That TeamSpeak identity is already linked to another member. If it is really yours, ask an admin.",
   steam_taken:
     "That Steam account is already linked to another member. If it is really yours, ask an admin.",
   steam_failed: "Steam could not confirm that login. Nothing was changed.",
-  worker_down:
-    "We could not reach TeamSpeak. This is our problem, not yours. Try again in a few minutes.",
 };
 
 /**
@@ -92,14 +92,21 @@ const steamUnverified = member.steamLinkMethod === "manual";
       </div>
 
       <div>
-        <a class="button" href="/link/teamspeak">
-          {member.tsUid ? "Re-link" : "Link TeamSpeak"}
-        </a>
-        {member.tsUid && (
-          <form class="inline" method="post" action="/unlink/teamspeak">
-            <button type="submit" class="secondary">Unlink</button>
-          </form>
-        )}
+        <p class="muted">
+          {member.tsUid
+            ? (
+              <>
+                Run <code>/link</code> in Discord to link it again, or{" "}
+                <code>/unlink</code> to remove it.
+              </>
+            )
+            : (
+              <>
+                Run <code>/link</code> in Discord. You need to be connected to
+                TeamSpeak at the time.
+              </>
+            )}
+        </p>
       </div>
     </div>
   </div>

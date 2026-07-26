@@ -68,10 +68,11 @@ Deno.test("a mixed list keeps mine (marked) and strangers' out", () => {
   ]);
 });
 
-Deno.test("without a memberId every linked identity is hidden (the web-page behaviour)", () => {
-  // The old web flow does not identify the requester, so it may claim nothing
-  // that is already linked. This is what keeps those pages working unchanged
-  // while both surfaces coexist.
+Deno.test("without a memberId every linked identity is hidden (the fail-safe)", () => {
+  // A request that does not say who is asking may claim nothing that is already
+  // linked. No caller omits the member id since the web link pages went (ADR
+  // 0017); this pins the direction a malformed one fails in, which is the whole
+  // point of the branch.
   const online = [
     client({ clid: "10", uid: "alices-uid=" }),
     client({ clid: "11", uid: "fresh-uid=" }),

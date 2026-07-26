@@ -162,10 +162,9 @@ export function linkCommand(interaction: Interaction): Response {
  * The select: resolve the ephemeral `clid` to the durable `uid`, poke a code,
  * and offer the [Enter code] button.
  *
- * The list is re-fetched rather than trusting the posted `clid`, exactly as the
- * web flow does: a `clid` is a connection id and it is ephemeral, so a member may
- * only complete against one that is genuinely online and genuinely theirs to
- * claim right now.
+ * The list is re-fetched rather than trusting the posted `clid`: a `clid` is a
+ * connection id and it is ephemeral, so a member may only complete against one
+ * that is genuinely online and genuinely theirs to claim right now.
  */
 export function linkPick(interaction: Interaction): Response {
   return deferThen(deferredComponentUpdate(), interaction, async () => {
@@ -300,7 +299,7 @@ export function linkEnter(_interaction: Interaction): Response {
  *
  * The decision is `verifyLinkCode`, the pure function in `@7r/identity` with
  * tests against every way it can go wrong. This handler does the I/O the verdict
- * asks for and nothing else, exactly as the web `verify.ts` route does.
+ * asks for and nothing else.
  */
 export function linkCode(interaction: Interaction): Response {
   return deferThen(deferredEphemeralReply(), interaction, async () => {

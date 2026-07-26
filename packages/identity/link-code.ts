@@ -137,8 +137,9 @@ function timingSafeEqual(a: string, b: string): boolean {
 
 /**
  * The text of the poke. It has to be intelligible in a small dialog box, and it
- * is short on purpose: the member is looking at Discord (or the web page) for
- * what to do next, so the poke only needs to carry the code itself.
+ * is short on purpose: since the web link pages were removed (ADR 0017) there is
+ * exactly one place the code can be typed back, the member is already looking at
+ * it, so the poke only needs to carry the code itself.
  */
 export function pokeMessage(code: string): string {
   return `7R link code: ${code}`;

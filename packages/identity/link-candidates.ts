@@ -36,9 +36,13 @@ export interface PickableClient extends OnlineClientLite {
 /**
  * Filter the online clients to the ones `memberId` may claim.
  *
- * With no `memberId` (the old web flow, which does not identify the requester)
- * every linked identity is hidden, which is the behaviour those pages already
- * rely on. Order is preserved: the caller renders the list as given.
+ * `memberId` is optional as a fail-safe, not as a feature. It reaches here from a
+ * query parameter on the worker's internal API, and an unidentified request is
+ * offered nothing that is already linked: the conservative answer, never someone
+ * else's identity. The web link pages used to make exactly that unidentified
+ * call; they are gone (ADR 0017) and every caller now names its requester, so the
+ * branch is what a malformed request lands on rather than a flow anybody runs.
+ * Order is preserved: the caller renders the list as given.
  */
 export function pickableClients(input: {
   online: readonly OnlineClientLite[];

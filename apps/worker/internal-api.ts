@@ -119,9 +119,10 @@ export function createInternalApiHandler(
  * `?member=<id>` names the requester, so their *own* current identity is offered
  * back (marked `current`) for a re-link, instead of being hidden with everyone
  * else's. The decision is `pickableClients` in `@7r/identity`, which is pure and
- * tested; the worker only supplies the two lists. Omitting `member` (the old web
- * flow, which does not identify the requester) hides every linked identity,
- * which is what those pages already expect.
+ * tested; the worker only supplies the two lists. Omitting `member` hides every
+ * linked identity: the conservative answer to a request that does not say who is
+ * asking. Nothing omits it now that the web link pages are gone (ADR 0017), so
+ * that is the fail-safe direction for a malformed call, not a supported flow.
  */
 async function handleClients(
   deps: InternalApiDeps,
