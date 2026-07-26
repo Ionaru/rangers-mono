@@ -16,12 +16,11 @@ import {
   type WorkerServerConfig,
 } from "@7r/config";
 import { closeDb, getDb, ping } from "@7r/db";
-import type { OpScheduleConfig } from "@7r/domain";
 import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
 import { makeAlerter } from "./alert.ts";
 import { createInternalApiHandler } from "./internal-api.ts";
 import { startSyncLoop } from "./sync.ts";
-import { startWeeklyEventLoop } from "./weekly-event.ts";
+import { opScheduleFrom, startWeeklyEventLoop } from "./weekly-event.ts";
 
 /**
  * The worker: one long-running Deno process.
@@ -163,21 +162,13 @@ async function main() {
    * in #arma_general, behind OP_EVENT_DRY_RUN (default true) exactly as the sync
    * loop sits behind SYNC_DRY_RUN.
    */
-  const schedule: OpScheduleConfig = {
-    timeZone: ops.OP_TIMEZONE,
-    opStart: ops.OP_ATTENDANCE_START,
-    attendanceEnd: ops.OP_ATTENDANCE_END,
-    eventEnd: ops.OP_EVENT_END,
-    announceWeekday: ops.OP_ANNOUNCE_WEEKDAY,
-    announceTime: ops.OP_ANNOUNCE_TIME,
-  };
   const stopWeeklyEvent = startWeeklyEventLoop(
     {
       db,
       discord: { botToken: bot.DISCORD_BOT_TOKEN },
       guildId: bot.DISCORD_GUILD_ID,
       announceChannelId: ops.OP_ANNOUNCE_CHANNEL_ID,
-      schedule,
+      schedule: opScheduleFrom(ops),
       textFile: ops.OP_ANNOUNCE_TEXT_FILE,
       imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,
       log,

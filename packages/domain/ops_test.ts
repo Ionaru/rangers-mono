@@ -12,7 +12,7 @@ const TZ = "Europe/Amsterdam";
 
 const CONFIG: OpScheduleConfig = {
   timeZone: TZ,
-  opStart: "20:00",
+  attendanceStart: "20:00",
   attendanceEnd: "23:00",
   eventEnd: "23:30",
   announceWeekday: 3, // Wednesday

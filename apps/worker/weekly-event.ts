@@ -1,4 +1,5 @@
 import { join } from "@std/path";
+import type { OpsConfig } from "@7r/config";
 import type { Db } from "@7r/db";
 import {
   getOrCreateWeeklyOperation,
@@ -76,6 +77,25 @@ interface PickedImage {
   contentType: string;
 }
 
+/**
+ * The schedule the pure planner needs, read off the ops config.
+ *
+ * One place on purpose: the live loop (main.ts) and `op:preview` both need this
+ * object built from the same six keys, and a preview computed from a schedule
+ * that has drifted from the live one is precisely the bug the preview exists to
+ * catch. A seventh knob is now one edit, not two.
+ */
+export function opScheduleFrom(ops: OpsConfig): OpScheduleConfig {
+  return {
+    timeZone: ops.OP_TIMEZONE,
+    attendanceStart: ops.OP_ATTENDANCE_START,
+    attendanceEnd: ops.OP_ATTENDANCE_END,
+    eventEnd: ops.OP_EVENT_END,
+    announceWeekday: ops.OP_ANNOUNCE_WEEKDAY,
+    announceTime: ops.OP_ANNOUNCE_TIME,
+  };
+}
+
 export interface WeeklyEventDeps {
   db: Db;
   discord: DiscordRestOptions;
@@ -106,10 +126,21 @@ export interface WeeklyEventResult {
   /**
    * - `idle`: outside the acting window this tick, nothing to do.
    * - `dry_run`: inside the window; logged what it would do, wrote nothing.
-   * - `created`/`announced`: did at least one of those this pass.
+   * - `created`: created the scheduled event this pass.
+   * - `adopted`: the event was already on Discord from a pass that crashed before
+   *   recording its id; this pass recorded it and created nothing. Kept distinct
+   *   from `created` because reporting a creation that did not happen is exactly
+   *   how a duplicate-event bug would hide.
+   * - `announced`: posted the @everyone announcement this pass.
    * - `noop`: inside the window but the event and announcement already existed.
    */
-  outcome: "idle" | "dry_run" | "created" | "announced" | "noop";
+  outcome:
+    | "idle"
+    | "dry_run"
+    | "created"
+    | "adopted"
+    | "announced"
+    | "noop";
   saturdayDate: string;
 }
 
@@ -146,7 +177,9 @@ export async function runWeeklyEventPass(
   });
 
   let eventId = op.discordEventId;
-  let created = false;
+  // What this pass did about the event, or null if it was already recorded and
+  // this pass touched nothing.
+  let eventOutcome: "created" | "adopted" | null = null;
 
   if (eventId === null) {
     // Reconcile against Discord before creating. A prior pass may have created the
@@ -161,8 +194,7 @@ export async function runWeeklyEventPass(
     );
     if (existingId !== null) {
       eventId = existingId;
-      created = true;
-      await setOperationDiscordEvent(deps.db, op.id, eventId);
+      eventOutcome = "adopted";
       deps.log("weekly event already on Discord; adopted it", {
         date: plan.saturdayDate,
         eventId,
@@ -170,14 +202,16 @@ export async function runWeeklyEventPass(
       });
     } else {
       eventId = await createEvent(deps, title, plan);
-      created = true;
-      await setOperationDiscordEvent(deps.db, op.id, eventId);
+      eventOutcome = "created";
     }
+    // Either way the event now exists and its id is ours to record: one write,
+    // outside the branch, so the two paths cannot drift apart.
+    await setOperationDiscordEvent(deps.db, op.id, eventId);
   }
 
   if (op.announcedAt !== null) {
     return {
-      outcome: created ? "created" : "noop",
+      outcome: eventOutcome ?? "noop",
       saturdayDate: plan.saturdayDate,
     };
   }
@@ -194,7 +228,7 @@ export async function runWeeklyEventPass(
       channel: deps.announceChannelId,
     });
     return {
-      outcome: created ? "created" : "noop",
+      outcome: eventOutcome ?? "noop",
       saturdayDate: plan.saturdayDate,
     };
   }
@@ -380,7 +414,7 @@ async function pickWittyLine(
   try {
     const text = await Deno.readTextFile(deps.textFile);
     const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-    return pickRandom(lines);
+    return pickRandom(lines, Math.random);
   } catch (error) {
     // Best-effort: a missing or unreadable file just means no witty line, not a
     // failed announcement.
@@ -398,15 +432,18 @@ async function pickImage(
 ): Promise<PickedImage | undefined> {
   if (!deps.imageDir) return undefined;
   try {
-    const names: string[] = [];
+    // Keep the content type from the same call that decided the file is an image,
+    // so the pick carries its own type and nothing has to assert it back later.
+    const candidates: { filename: string; contentType: string }[] = [];
     for await (const entry of Deno.readDir(deps.imageDir)) {
-      if (entry.isFile && contentTypeOf(entry.name)) names.push(entry.name);
+      if (!entry.isFile) continue;
+      const contentType = contentTypeOf(entry.name);
+      if (contentType) candidates.push({ filename: entry.name, contentType });
     }
-    const chosen = pickRandom(names);
+    const chosen = pickRandom(candidates, Math.random);
     if (!chosen) return undefined;
-    const contentType = contentTypeOf(chosen)!;
-    const bytes = await Deno.readFile(join(deps.imageDir, chosen));
-    return { filename: chosen, bytes, contentType };
+    const bytes = await Deno.readFile(join(deps.imageDir, chosen.filename));
+    return { ...chosen, bytes };
   } catch (error) {
     deps.log("could not read announcement image folder", {
       dir: deps.imageDir,

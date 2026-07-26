@@ -61,7 +61,11 @@
     "assignables:seed": "deno task --cwd apps/worker assignables:seed",
     // Read-only. Prints the reconcile diff a live sync pass would apply, without
     // applying anything. Required reading before flipping SYNC_DRY_RUN (ADR 0009).
-    "sync:preview": "deno task --cwd apps/worker sync:preview"
+    "sync:preview": "deno task --cwd apps/worker sync:preview",
+    // Phase 5, read-only. Prints the coming Saturday's op (title, window, announce
+    // moment) and the exact @everyone message it would post. Required reading
+    // before flipping OP_EVENT_DRY_RUN (IMPLEMENTATION §7).
+    "op:preview": "deno task --cwd apps/worker op:preview"
   },
   "fmt": {
     "exclude": [

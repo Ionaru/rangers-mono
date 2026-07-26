@@ -150,8 +150,12 @@ function isoDate(year: number, month: number, day: number): string {
 /** The knobs that define when an op happens and when it is announced. */
 export interface OpScheduleConfig {
   timeZone: string;
-  /** Event start / attendance start, "HH:MM" local (20:00). */
-  opStart: string;
+  /**
+   * Event start / attendance start, "HH:MM" local (20:00). Named for what it is
+   * in the plan it produces (`WeeklyOpPlan.attendanceStart`), so the same instant
+   * does not travel under two names between the config and the plan.
+   */
+  attendanceStart: string;
   /** Attendance window end, "HH:MM" local (23:00). Stored on the op row for Phase 6. */
   attendanceEnd: string;
   /** Discord event end, "HH:MM" local (23:30). */
@@ -226,7 +230,7 @@ export function planWeeklyOp(
     );
   };
 
-  const attendanceStart = at(config.opStart);
+  const attendanceStart = at(config.attendanceStart);
   const attendanceEnd = at(config.attendanceEnd);
   const eventEnd = at(config.eventEnd);
 
@@ -293,14 +297,17 @@ function zoneAbbrev(date: Date, timeZone: string): string {
 /**
  * One item chosen uniformly at random, or `undefined` for an empty list.
  *
- * The randomness is injected so the pick is testable; the worker passes
- * `Math.random`. Kept here rather than in the worker so the one branch worth
- * testing (empty list -> undefined, so the announcement degrades to no image or
- * no witty line rather than throwing) is covered without touching the filesystem.
+ * The randomness is injected, and deliberately has **no default**: this package is
+ * pure, and a `Math.random` default would leave every production call implicitly
+ * non-deterministic while the tests quietly passed a stub, so the one caller that
+ * wants real randomness (the worker) says so at the call site. Kept here rather
+ * than in the worker so the one branch worth testing (empty list -> undefined, so
+ * the announcement degrades to no image or no witty line rather than throwing) is
+ * covered without touching the filesystem.
  */
 export function pickRandom<T>(
   items: readonly T[],
-  rng: () => number = Math.random,
+  rng: () => number,
 ): T | undefined {
   if (items.length === 0) return undefined;
   return items[Math.floor(rng() * items.length)];

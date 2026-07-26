@@ -5,8 +5,7 @@ import {
   loadAll,
   type OpsConfig,
 } from "@7r/config";
-import type { OpScheduleConfig } from "@7r/domain";
-import { describeWeeklyEvent } from "./weekly-event.ts";
+import { describeWeeklyEvent, opScheduleFrom } from "./weekly-event.ts";
 
 /**
  * `deno task op:preview`: the dry-run gate before the weekly event goes live,
@@ -33,20 +32,11 @@ async function main(): Promise<number> {
     getOpsConfig,
   ]);
 
-  const schedule: OpScheduleConfig = {
-    timeZone: ops.OP_TIMEZONE,
-    opStart: ops.OP_ATTENDANCE_START,
-    attendanceEnd: ops.OP_ATTENDANCE_END,
-    eventEnd: ops.OP_EVENT_END,
-    announceWeekday: ops.OP_ANNOUNCE_WEEKDAY,
-    announceTime: ops.OP_ANNOUNCE_TIME,
-  };
-
   const { plan, title, coverImageName, announcement } =
     await describeWeeklyEvent(
       {
         guildId: bot.DISCORD_GUILD_ID,
-        schedule,
+        schedule: opScheduleFrom(ops),
         textFile: ops.OP_ANNOUNCE_TEXT_FILE,
         imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,
         log: (message, extra) => console.error(`  (${message})`, extra ?? ""),
