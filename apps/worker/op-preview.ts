@@ -41,7 +41,7 @@ async function main(): Promise<void> {
       {
         guildId: bot.DISCORD_GUILD_ID,
         schedule: opScheduleFrom(ops),
-        textFile: ops.OP_ANNOUNCE_TEXT_FILE,
+        textFile: ops.OP_ANNOUNCE_TEXT_PATH,
         imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,
         log: (message, extra) => console.error(`  (${message})`, extra ?? ""),
       },

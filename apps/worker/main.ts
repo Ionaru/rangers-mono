@@ -169,7 +169,7 @@ async function main() {
       guildId: bot.DISCORD_GUILD_ID,
       announceChannelId: ops.OP_ANNOUNCE_CHANNEL_ID,
       schedule: opScheduleFrom(ops),
-      textFile: ops.OP_ANNOUNCE_TEXT_FILE,
+      textFile: ops.OP_ANNOUNCE_TEXT_PATH,
       imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,
       log,
       alert,

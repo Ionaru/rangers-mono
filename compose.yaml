@@ -149,7 +149,7 @@ services:
     # can edit the lines and swap images without a rebuild. The host `data/` tree is
     # git- and docker-ignored, so these live outside the image and survive the
     # deploy's `git switch`. Set the two config vars to the in-container paths:
-    #   OP_ANNOUNCE_TEXT_FILE=/app/data/event-assets/text.txt
+    #   OP_ANNOUNCE_TEXT_PATH=/app/data/event-assets/text.txt
     #   OP_ANNOUNCE_IMAGE_DIR=/app/data/event-assets/images
     volumes:
       - ./data/event-assets:/app/data/event-assets:ro

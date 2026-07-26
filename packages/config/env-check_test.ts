@@ -88,3 +88,15 @@ Deno.test("collectSchemaKeys reads the real schemas (zod introspection smoke tes
     default: undefined,
   });
 });
+
+Deno.test("no config key ends in _FILE (the suffix is reserved for secret files)", () => {
+  // A `*_FILE` key is intercepted by resolveSecretFiles (load.ts): it reads the
+  // file at that path and sets the un-suffixed key. A config key named `X_FILE`
+  // therefore never reaches its schema and forces a file read at boot that fails
+  // wherever the file is not mounted. This bit production once (OP_ANNOUNCE_TEXT_FILE
+  // crashed the web container, which has no assets mount); never again.
+  const offenders = [...collectSchemaKeys(schemas).keys()].filter((key) =>
+    key.endsWith("_FILE")
+  );
+  assertEquals(offenders, []);
+});

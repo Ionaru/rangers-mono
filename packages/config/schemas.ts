@@ -188,10 +188,16 @@ export const opsSchema = z.object({
   /** The local time on that weekday to fire (18:00). */
   OP_ANNOUNCE_TIME: time().default("18:00"),
   /**
-   * Optional path to a UTF-8 file of witty one-liners, one per line, one picked
-   * at random for the announcement. Unset (or empty/missing) -> no witty line.
+   * Optional path to a UTF-8 file of witty announcement messages, blank-line
+   * separated (a message may span multiple lines), one picked at random. Unset (or
+   * empty/missing) -> no witty message.
+   *
+   * Named `_PATH`, not `_FILE`, deliberately: a `*_FILE` key is reserved by the
+   * secret-file convention (load.ts `resolveSecretFiles`), which would try to READ
+   * the file at boot and set `OP_ANNOUNCE_TEXT` from it, failing wherever the file
+   * is not mounted (the web container has no assets mount). See the guard test.
    */
-  OP_ANNOUNCE_TEXT_FILE: z.string().min(1).optional(),
+  OP_ANNOUNCE_TEXT_PATH: z.string().min(1).optional(),
   /**
    * Optional path to a directory of images (PNG/JPG/GIF), one picked at random and
    * used as the Discord event's cover banner. Unset (or empty/no images) -> no

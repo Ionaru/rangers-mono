@@ -223,7 +223,8 @@ jobs:
             printf '%s' "$VARS_JSON" | jq -r 'to_entries[] | "\(.key)\t\(.value)"'
             printf '%s' "$SECRETS_JSON" | jq -r '
               to_entries[]
-              | select((.key | startswith("DEPLOY_")) or .key == "GITHUB_TOKEN" | not)
+              | select((.key | ascii_upcase | startswith("DEPLOY_"))
+                       or (.key | ascii_upcase) == "GITHUB_TOKEN" | not)
               | "\(.key)\t\(.value)"'
           } | while IFS=$'\t' read -r k v; do
             printf "%s='%s'\n" "$k" "$v"
