@@ -67,7 +67,6 @@ WORKER_INTERNAL_TOKEN=…                          # secret; shared between web 
 
 # Ops schedule / attendance
 OP_TIMEZONE=Europe/Amsterdam
-OP_WEEKLY_CRON=0 20 * * 6                       # legacy field; does NOT drive event creation (see below)
 OP_ATTENDANCE_START=20:00
 OP_ATTENDANCE_END=23:00
 OP_EVENT_END=23:30

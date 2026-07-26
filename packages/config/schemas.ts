@@ -166,12 +166,6 @@ export type WorkerClientConfig = z.infer<typeof workerClientSchema>;
 /** Phase 5 (the weekly event) and Phase 6 (attendance). Saturday only. */
 export const opsSchema = z.object({
   OP_TIMEZONE: z.string().min(1).default("Europe/Amsterdam"),
-  /**
-   * Legacy field, kept for compatibility. It does NOT drive event creation: that
-   * is a DST-correct reconciler keyed on OP_ANNOUNCE_WEEKDAY/OP_ANNOUNCE_TIME
-   * below (a fixed UTC cron would misplace the op by an hour twice a year).
-   */
-  OP_WEEKLY_CRON: z.string().min(1).default("0 20 * * 6"),
   /** Event/attendance start, the op's mission time (20:00 local). */
   OP_ATTENDANCE_START: time().default("20:00"),
   OP_ATTENDANCE_END: time().default("23:00"),

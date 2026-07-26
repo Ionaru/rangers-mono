@@ -37,14 +37,30 @@ export class ConfigError extends Error {
  *
  * Local development mounts nothing and sets no `X_FILE` at all, so a plain
  * `.env` still works there unchanged.
+ *
+ * The suffix is exported because `env:check` has to answer "is `DATABASE_URL`
+ * configured?" the same way the loader does, and a checker that restates the
+ * convention instead of importing it is a checker that can pass a `.env` the
+ * services then reject at boot. ADR 0014 records that the precedence here already
+ * flipped once, so this is not a hypothetically mutable rule.
  */
+export const SECRET_FILE_SUFFIX = "_FILE";
+
+/** The key a `X_FILE` name stands in for. Assumes the suffix is present. */
+export function keyForSecretFile(fileKey: string): string {
+  return fileKey.slice(0, -SECRET_FILE_SUFFIX.length);
+}
 function resolveSecretFiles(source: EnvSource): EnvSource {
   const resolved: EnvSource = { ...source };
 
   for (const [key, value] of Object.entries(source)) {
-    if (!key.endsWith("_FILE") || value === undefined || value === "") continue;
+    if (
+      !key.endsWith(SECRET_FILE_SUFFIX) || value === undefined || value === ""
+    ) {
+      continue;
+    }
 
-    const target = key.slice(0, -"_FILE".length);
+    const target = keyForSecretFile(key);
 
     try {
       resolved[target] = Deno.readTextFileSync(value).trim();

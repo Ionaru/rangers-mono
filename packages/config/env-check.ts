@@ -1,5 +1,6 @@
 import { z } from "zod";
 import * as schemas from "./schemas.ts";
+import { keyForSecretFile, SECRET_FILE_SUFFIX } from "./load.ts";
 
 /**
  * `deno task env:check`: a read-only config doctor.
@@ -121,7 +122,7 @@ export function diffEnv(
   present: Set<string>,
 ): EnvDiff {
   const satisfied = (key: string) =>
-    present.has(key) || present.has(`${key}_FILE`);
+    present.has(key) || present.has(`${key}${SECRET_FILE_SUFFIX}`);
 
   const missingRequired: string[] = [];
   const missingOptional: { key: string; default: unknown }[] = [];
@@ -135,7 +136,7 @@ export function diffEnv(
   for (const key of present) {
     if (known.has(key)) continue;
     if (
-      key.endsWith("_FILE") && known.has(key.slice(0, -"_FILE".length))
+      key.endsWith(SECRET_FILE_SUFFIX) && known.has(keyForSecretFile(key))
     ) continue;
     unknown.push(key);
   }

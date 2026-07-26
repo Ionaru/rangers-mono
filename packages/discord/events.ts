@@ -117,6 +117,22 @@ export function createGuildScheduledEvent(
 }
 
 /**
+ * The public link to a guild's scheduled event, the one Discord unfurls into an
+ * event card with its cover banner and its native "Interested" button.
+ *
+ * Here rather than at the call site because it is not only display text: the
+ * weekly job finds its own prior announcement by matching this exact URL in the
+ * channel history, so the poster and the finder have to agree on the shape or the
+ * guard against a second @everyone ping silently stops matching.
+ */
+export function guildScheduledEventUrl(
+  guildId: string,
+  eventId: string,
+): string {
+  return `https://discord.com/events/${guildId}/${eventId}`;
+}
+
+/**
  * Every scheduled event currently on the guild.
  *
  * The weekly job lists these before it creates, so a pass that crashed after

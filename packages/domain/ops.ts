@@ -100,38 +100,38 @@ export function zonedWallClockToUtc(wall: WallClock, timeZone: string): Date {
     wall.minute,
   );
 
-  const offsetAt = (utcMs: number): number => {
-    const shown = utcToZonedParts(new Date(utcMs), timeZone);
-    const shownAsUtc = Date.UTC(
-      shown.year,
-      shown.month - 1,
-      shown.day,
-      shown.hour,
-      shown.minute,
-      shown.second,
-    );
-    return shownAsUtc - utcMs;
-  };
-
-  const firstOffset = offsetAt(target);
+  const firstOffset = tzOffsetMs(target, timeZone);
   let result = target - firstOffset;
-  const secondOffset = offsetAt(result);
+  const secondOffset = tzOffsetMs(result, timeZone);
   if (secondOffset !== firstOffset) result = target - secondOffset;
   return new Date(result);
 }
 
+/**
+ * The signed offset of `timeZone` from UTC at a UTC instant, in milliseconds.
+ *
+ * One copy on purpose: this round trip (read the instant's local fields, read
+ * them back as if they were UTC, subtract) is the trickiest arithmetic in the
+ * file, and it is what both the wall-clock inverse above and the CEST/CET label
+ * below are built on. Two hand-written copies would be two places for a fix to
+ * land in one and miss the other.
+ */
+function tzOffsetMs(utcMs: number, timeZone: string): number {
+  const shown = utcToZonedParts(new Date(utcMs), timeZone);
+  const shownAsUtc = Date.UTC(
+    shown.year,
+    shown.month - 1,
+    shown.day,
+    shown.hour,
+    shown.minute,
+    shown.second,
+  );
+  return shownAsUtc - utcMs;
+}
+
 /** The signed offset of `timeZone` from UTC at `date`, in minutes. */
 function tzOffsetMinutes(date: Date, timeZone: string): number {
-  const p = utcToZonedParts(date, timeZone);
-  const asUtc = Date.UTC(
-    p.year,
-    p.month - 1,
-    p.day,
-    p.hour,
-    p.minute,
-    p.second,
-  );
-  return Math.round((asUtc - date.getTime()) / 60_000);
+  return Math.round(tzOffsetMs(date.getTime(), timeZone) / 60_000);
 }
 
 const pad2 = (n: number): string => String(n).padStart(2, "0");
@@ -145,6 +145,33 @@ function parseHhMm(value: string): { hour: number; minute: number } {
 /** A calendar date as `YYYY-MM-DD`, which is what the `operation.date` column stores. */
 function isoDate(year: number, month: number, day: number): string {
   return `${year}-${pad2(month)}-${pad2(day)}`;
+}
+
+/** A calendar date, with no time and no zone: the unit day arithmetic works in. */
+interface CalendarDate {
+  year: number;
+  month: number;
+  day: number;
+}
+
+/**
+ * `date` moved `delta` days, rolling months and years correctly.
+ *
+ * Done in UTC deliberately: adding days to a Y-M-D is timezone-independent, and
+ * `Date.UTC` already normalises an out-of-range day (32 January, 0 March) into
+ * the right calendar date. One helper rather than the same build-and-unpack
+ * written out at each call, because the `- 1`/`+ 1` month juggling either side of
+ * it is exactly where an off-by-one puts the op on the wrong day.
+ */
+function shiftDays(date: CalendarDate, delta: number): CalendarDate {
+  const shifted = new Date(
+    Date.UTC(date.year, date.month - 1, date.day + delta),
+  );
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+  };
 }
 
 /** The knobs that define when an op happens and when it is announced. */
@@ -214,43 +241,24 @@ export function planWeeklyOp(
 
   // Days from today's local weekday forward to Saturday (0 when today is Saturday).
   const daysUntilSaturday = (6 - local.weekday + 7) % 7;
-  // Calendar arithmetic only: adding days to a Y-M-D is timezone-independent.
-  const saturday = new Date(
-    Date.UTC(local.year, local.month - 1, local.day + daysUntilSaturday),
-  );
-  const satY = saturday.getUTCFullYear();
-  const satM = saturday.getUTCMonth() + 1;
-  const satD = saturday.getUTCDate();
+  const saturday = shiftDays(local, daysUntilSaturday);
 
-  const at = (time: string): Date => {
+  const at = (day: CalendarDate, time: string): Date => {
     const { hour, minute } = parseHhMm(time);
-    return zonedWallClockToUtc(
-      { year: satY, month: satM, day: satD, hour, minute },
-      config.timeZone,
-    );
+    return zonedWallClockToUtc({ ...day, hour, minute }, config.timeZone);
   };
 
-  const attendanceStart = at(config.attendanceStart);
-  const attendanceEnd = at(config.attendanceEnd);
-  const eventEnd = at(config.eventEnd);
+  const attendanceStart = at(saturday, config.attendanceStart);
+  const attendanceEnd = at(saturday, config.attendanceEnd);
+  const eventEnd = at(saturday, config.eventEnd);
 
   // The announce weekday within the same week, counted back from Saturday. For
   // Wednesday (3) that is 3 days before; the modulo keeps it correct for any
   // configured weekday.
   const daysBeforeSaturday = (6 - config.announceWeekday + 7) % 7;
-  const announceDay = new Date(
-    Date.UTC(satY, satM - 1, satD - daysBeforeSaturday),
-  );
-  const announce = parseHhMm(config.announceTime);
-  const announceAt = zonedWallClockToUtc(
-    {
-      year: announceDay.getUTCFullYear(),
-      month: announceDay.getUTCMonth() + 1,
-      day: announceDay.getUTCDate(),
-      hour: announce.hour,
-      minute: announce.minute,
-    },
-    config.timeZone,
+  const announceAt = at(
+    shiftDays(saturday, -daysBeforeSaturday),
+    config.announceTime,
   );
 
   // Upper bound is the op start, not the event end: Discord will not schedule an
@@ -259,7 +267,7 @@ export function planWeeklyOp(
     now.getTime() < attendanceStart.getTime();
 
   return {
-    saturdayDate: isoDate(satY, satM, satD),
+    saturdayDate: isoDate(saturday.year, saturday.month, saturday.day),
     attendanceStart,
     attendanceEnd,
     eventEnd,

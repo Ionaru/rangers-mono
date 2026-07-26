@@ -1,4 +1,4 @@
-import { join } from "@std/path";
+import { extname, join } from "@std/path";
 import type { OpsConfig } from "@7r/config";
 import type { Db } from "@7r/db";
 import {
@@ -18,6 +18,8 @@ import {
   createMessage,
   DiscordApiError,
   type DiscordRestOptions,
+  type EventCoverImage,
+  guildScheduledEventUrl,
   listChannelMessages,
   listGuildScheduledEvents,
   type ScheduledEvent,
@@ -47,8 +49,14 @@ import {
  * across a DST change, and it would not survive a missed tick.
  */
 
-/** The event's fixed copy. The title is dynamic (`opTitle`); these are not. */
-const EVENT_LOCATION = "7R Operations Server";
+/**
+ * The event's fixed copy. The title is dynamic (`opTitle`); these are not.
+ *
+ * `EVENT_LOCATION` is exported because `op:preview` prints it: the preview is the
+ * gate before the job goes live, so every field it shows has to come from the code
+ * that acts rather than from a literal of its own.
+ */
+export const EVENT_LOCATION = "7R Operations Server";
 const EVENT_DESCRIPTION = [
   "Mission: TBD",
   "Location: TBD",
@@ -70,11 +78,23 @@ const IMAGE_CONTENT_TYPES: Record<string, string> = {
   ".gif": "image/gif",
 };
 
-/** A chosen cover image: its filename (for logs) and the bytes Discord will encode. */
-interface PickedImage {
+/**
+ * A cover image picked from the folder, named but not yet read.
+ *
+ * Choosing and reading are separate because only the creating pass needs the
+ * bytes: the dry-run log and `op:preview` report the filename, and pulling a
+ * multi-megabyte image into memory to print its name is work with no reader.
+ */
+interface ChosenImage {
   filename: string;
-  bytes: Uint8Array<ArrayBuffer>;
+  /** The full path, so reading it back needs no second `join` and no `imageDir`. */
+  path: string;
   contentType: string;
+}
+
+/** A chosen cover image, read: its filename (for logs) and the bytes Discord encodes. */
+interface PickedImage extends EventCoverImage {
+  filename: string;
 }
 
 /**
@@ -155,7 +175,6 @@ export async function runWeeklyEventPass(
 ): Promise<WeeklyEventResult> {
   const now = new Date();
   const plan = planWeeklyOp(now, deps.schedule);
-  const title = opTitle(plan.attendanceStart, deps.schedule.timeZone);
 
   if (!plan.withinWindow) {
     return { outcome: "idle", saturdayDate: plan.saturdayDate };
@@ -182,6 +201,10 @@ export async function runWeeklyEventPass(
   let eventOutcome: "created" | "adopted" | null = null;
 
   if (eventId === null) {
+    // The title is the event's identity for the adopt-or-create reconcile below,
+    // and nothing outside this branch reads it, so it is computed here rather than
+    // on every one of the ~900 ticks that find the event already recorded.
+    const title = opTitle(plan.attendanceStart, deps.schedule.timeZone);
     // Reconcile against Discord before creating. A prior pass may have created the
     // event and then failed to record its id (a crash between the POST and the DB
     // write): list the guild's events and adopt a match rather than making a second
@@ -216,7 +239,7 @@ export async function runWeeklyEventPass(
     };
   }
 
-  const eventUrl = `https://discord.com/events/${deps.guildId}/${eventId}`;
+  const eventUrl = guildScheduledEventUrl(deps.guildId, eventId);
 
   // Reconcile the announcement the same way. If a prior pass posted it but crashed
   // before recording announced_at, the event link is already in the channel: record
@@ -260,7 +283,7 @@ async function createEvent(
   plan: WeeklyOpPlan,
 ): Promise<string> {
   const cover = await pickImage(deps);
-  const create = (withCover: boolean): Promise<ScheduledEvent> =>
+  const create = (image?: EventCoverImage): Promise<ScheduledEvent> =>
     createGuildScheduledEvent(deps.discord, deps.guildId, {
       name: title,
       description: EVENT_DESCRIPTION,
@@ -268,14 +291,12 @@ async function createEvent(
       start: plan.attendanceStart,
       end: plan.eventEnd,
       reason: EVENT_AUDIT_REASON,
-      image: withCover && cover
-        ? { bytes: cover.bytes, contentType: cover.contentType }
-        : undefined,
+      image,
     });
 
   let event: ScheduledEvent;
   try {
-    event = await create(true);
+    event = await create(cover);
   } catch (error) {
     // A 400 means Discord rejected the request and created nothing (a 5xx or a
     // dropped connection might have created it, so those must not be retried
@@ -292,7 +313,7 @@ async function createEvent(
       // Retry FIRST; only claim (and alert) success once it actually creates. If
       // the second attempt throws too, it propagates unmentioned rather than
       // paging a false "created without it" on every tick.
-      event = await create(false);
+      event = await create(undefined);
       deps.alert(
         "weekly event: cover image rejected, event created without it",
         `Image "${cover.filename}" was refused (too large, or not PNG/JPG/GIF). ${
@@ -379,10 +400,10 @@ export async function describeWeeklyEvent(
 }> {
   const plan = planWeeklyOp(now, deps.schedule);
   const title = opTitle(plan.attendanceStart, deps.schedule.timeZone);
-  const cover = await pickImage(deps);
+  const cover = await chooseImage(deps);
   const announcement = await buildAnnouncementContent(
     deps,
-    `https://discord.com/events/${deps.guildId}/<event-id>`,
+    guildScheduledEventUrl(deps.guildId, "<event-id>"),
   );
   return {
     plan,
@@ -426,24 +447,26 @@ async function pickWittyLine(
   }
 }
 
-/** A random image from the folder, read into memory, or undefined if unusable. */
-async function pickImage(
+/** A random image from the folder, named only, or undefined if unusable. */
+async function chooseImage(
   deps: Pick<WeeklyEventDeps, "imageDir" | "log">,
-): Promise<PickedImage | undefined> {
+): Promise<ChosenImage | undefined> {
   if (!deps.imageDir) return undefined;
   try {
     // Keep the content type from the same call that decided the file is an image,
     // so the pick carries its own type and nothing has to assert it back later.
-    const candidates: { filename: string; contentType: string }[] = [];
+    const candidates: ChosenImage[] = [];
     for await (const entry of Deno.readDir(deps.imageDir)) {
       if (!entry.isFile) continue;
       const contentType = contentTypeOf(entry.name);
-      if (contentType) candidates.push({ filename: entry.name, contentType });
+      if (!contentType) continue;
+      candidates.push({
+        filename: entry.name,
+        path: join(deps.imageDir, entry.name),
+        contentType,
+      });
     }
-    const chosen = pickRandom(candidates, Math.random);
-    if (!chosen) return undefined;
-    const bytes = await Deno.readFile(join(deps.imageDir, chosen.filename));
-    return { ...chosen, bytes };
+    return pickRandom(candidates, Math.random);
   } catch (error) {
     deps.log("could not read announcement image folder", {
       dir: deps.imageDir,
@@ -453,11 +476,33 @@ async function pickImage(
   }
 }
 
+/** A random image from the folder, read into memory, or undefined if unusable. */
+async function pickImage(
+  deps: Pick<WeeklyEventDeps, "imageDir" | "log">,
+): Promise<PickedImage | undefined> {
+  const chosen = await chooseImage(deps);
+  if (!chosen) return undefined;
+  try {
+    const bytes = await Deno.readFile(chosen.path);
+    return {
+      filename: chosen.filename,
+      contentType: chosen.contentType,
+      bytes,
+    };
+  } catch (error) {
+    // Best-effort, like the folder scan: an unreadable file means no cover, not a
+    // failed event.
+    deps.log("could not read announcement image", {
+      path: chosen.path,
+      error: String(error),
+    });
+    return undefined;
+  }
+}
+
 /** The MIME type for a filename's extension, or undefined if it is not an image. */
 function contentTypeOf(filename: string): string | undefined {
-  const dot = filename.lastIndexOf(".");
-  if (dot < 0) return undefined;
-  return IMAGE_CONTENT_TYPES[filename.slice(dot).toLowerCase()];
+  return IMAGE_CONTENT_TYPES[extname(filename).toLowerCase()];
 }
 
 /**

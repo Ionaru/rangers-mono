@@ -5,7 +5,11 @@ import {
   loadAll,
   type OpsConfig,
 } from "@7r/config";
-import { describeWeeklyEvent, opScheduleFrom } from "./weekly-event.ts";
+import {
+  describeWeeklyEvent,
+  EVENT_LOCATION,
+  opScheduleFrom,
+} from "./weekly-event.ts";
 
 /**
  * `deno task op:preview`: the dry-run gate before the weekly event goes live,
@@ -26,7 +30,7 @@ function isoInZone(date: Date, timeZone: string): string {
   }).format(date);
 }
 
-async function main(): Promise<number> {
+async function main(): Promise<void> {
   const [bot, ops] = loadAll<[DiscordBotConfig, OpsConfig]>([
     getDiscordBotConfig,
     getOpsConfig,
@@ -49,7 +53,7 @@ async function main(): Promise<number> {
   console.log("\nweekly event preview: the coming Saturday op\n");
   console.log(`  date            ${plan.saturdayDate}`);
   console.log(`  title           ${title}`);
-  console.log(`  location        7R Operations Server`);
+  console.log(`  location        ${EVENT_LOCATION}`);
   console.log(
     `  event window    ${isoInZone(plan.attendanceStart, tz)} -> ${
       isoInZone(plan.eventEnd, tz)
@@ -82,11 +86,8 @@ async function main(): Promise<number> {
         "Flip it to false to go live."
       : "\n  OP_EVENT_DRY_RUN=false: the worker is LIVE and will post for real.",
   );
-
-  return 0;
 }
 
-if (import.meta.main) {
-  const code = await main();
-  if (code > 0) Deno.exit(code);
-}
+// No exit code to gate on, unlike `env:check`: the preview either prints the plan
+// or throws (a missing required config key), and a throw already exits non-zero.
+if (import.meta.main) await main();
