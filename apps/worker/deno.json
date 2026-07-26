@@ -8,9 +8,11 @@
     "ts:check": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env ts-check.ts",
     "badges:backfill": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env badge-backfill.ts",
     "assignables:seed": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env assignable-seed.ts",
-    "sync:preview": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env sync-preview.ts"
+    "sync:preview": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env sync-preview.ts",
+    "op:preview": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=../../.env op-preview.ts"
   },
   "imports": {
-    "ts3-nodejs-library": "npm:ts3-nodejs-library@3.5.3"
+    "ts3-nodejs-library": "npm:ts3-nodejs-library@3.5.3",
+    "@std/path": "jsr:@std/path@^1.1.6"
   }
 }

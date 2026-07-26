@@ -20,7 +20,7 @@
     // `deno check` cannot read .astro files, so apps/web is typechecked by
     // `astro check` instead. Both halves run, or the web app's strict tsconfig
     // is enforced nowhere outside an editor and `astro build` only transpiles.
-    "check": "deno check packages/config/mod.ts packages/domain/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/discord/phase0-check.ts packages/discord/register.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts apps/worker/badge-backfill.ts apps/worker/ts-check.ts apps/worker/assignable-seed.ts apps/worker/sync-preview.ts && deno task web:check",
+    "check": "deno check packages/config/mod.ts packages/config/env-check.ts packages/domain/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/discord/phase0-check.ts packages/discord/register.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts apps/worker/badge-backfill.ts apps/worker/ts-check.ts apps/worker/assignable-seed.ts apps/worker/sync-preview.ts apps/worker/op-preview.ts && deno task web:check",
     // apps/ as well as packages/. The worker's internal API is the one
     // authorisation boundary in the system, and it is pure request-handling, so
     // it is testable even though the TeamSpeak connection behind it is not.
@@ -31,6 +31,13 @@
     "db:generate": "deno task --cwd packages/db generate",
     "migrate": "deno task --cwd packages/db migrate",
     "import:legacy": "deno task --cwd packages/db import:legacy",
+    // Read-only. Validates a .env against the config schemas: names the missing
+    // required keys (a boot failure), the missing-but-defaulted ones, and any set
+    // key no schema reads. Prints key names only, never values. Run it before
+    // updating the production config, and the deploy runs it as a gate (ADR 0018).
+    //   deno task env:check                 # checks the repo-root .env
+    //   deno task env:check -- --file <path>
+    "env:check": "deno task --cwd packages/config check:env",
     // Read-only. Asks Discord which Phase 0 steps are actually done, because almost
     // every way of getting Phase 0 wrong fails silently.
     "phase0:check": "deno task --cwd packages/discord check:phase0",

@@ -9,15 +9,20 @@
  * command-registration entry point (`register.ts`) is deliberately not exported:
  * it is a task with a config dependency, like `phase0-check.ts`.
  *
+ * The weekly scheduled event lands here too (`events.ts`), alongside the channel
+ * message helper the announcement posts through (`messages.ts`). Creating the
+ * event needs CREATE_EVENTS, not MANAGE_EVENTS (ARCHITECTURE §4.2).
+ *
  * What is deliberately NOT here yet:
  *
- * - role writes beyond the single-role add, and the weekly scheduled event,
- *   which needs CREATE_EVENTS and not MANAGE_EVENTS (Phase 5, later slices).
+ * - role writes beyond the single-role add (Phase 5, later slices).
  */
 export * from "./rest.ts";
 export * from "./guild.ts";
 export * from "./roles.ts";
 export * from "./members.ts";
+export * from "./events.ts";
+export * from "./messages.ts";
 export * from "./interactions.ts";
 export * from "./followup.ts";
 export * from "./commands.ts";

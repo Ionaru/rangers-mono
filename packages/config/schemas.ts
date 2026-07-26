@@ -166,12 +166,51 @@ export type WorkerClientConfig = z.infer<typeof workerClientSchema>;
 /** Phase 5 (the weekly event) and Phase 6 (attendance). Saturday only. */
 export const opsSchema = z.object({
   OP_TIMEZONE: z.string().min(1).default("Europe/Amsterdam"),
+  /**
+   * Legacy field, kept for compatibility. It does NOT drive event creation: that
+   * is a DST-correct reconciler keyed on OP_ANNOUNCE_WEEKDAY/OP_ANNOUNCE_TIME
+   * below (a fixed UTC cron would misplace the op by an hour twice a year).
+   */
   OP_WEEKLY_CRON: z.string().min(1).default("0 20 * * 6"),
+  /** Event/attendance start, the op's mission time (20:00 local). */
   OP_ATTENDANCE_START: time().default("20:00"),
   OP_ATTENDANCE_END: time().default("23:00"),
+  /** Discord event end, past the mission to cover debrief (23:30 local). */
   OP_EVENT_END: time().default("23:30"),
   ATTENDANCE_MIN_MINUTES: int().default(DEFAULT_ATTENDANCE_MIN_MINUTES),
   ATTENDANCE_SAMPLE_SECONDS: int().default(90),
+
+  // --- weekly event creation + announcement (Phase 5) ---
+
+  /** The #arma_general channel the @everyone announcement is posted to. */
+  OP_ANNOUNCE_CHANNEL_ID: z.string().min(1),
+  /**
+   * The weekday the event is created and announced, ahead of the Saturday op.
+   * 0 = Sunday .. 6 = Saturday; default 3 = Wednesday.
+   */
+  OP_ANNOUNCE_WEEKDAY: int()
+    .pipe(z.number().int().min(0).max(6))
+    .default(3),
+  /** The local time on that weekday to fire (18:00). */
+  OP_ANNOUNCE_TIME: time().default("18:00"),
+  /**
+   * Optional path to a UTF-8 file of witty one-liners, one per line, one picked
+   * at random for the announcement. Unset (or empty/missing) -> no witty line.
+   */
+  OP_ANNOUNCE_TEXT_FILE: z.string().min(1).optional(),
+  /**
+   * Optional path to a directory of images (PNG/JPG/GIF), one picked at random and
+   * used as the Discord event's cover banner. Unset (or empty/no images) -> no
+   * cover. Must be readable by the worker (mount it into the container).
+   */
+  OP_ANNOUNCE_IMAGE_DIR: z.string().min(1).optional(),
+  /**
+   * Starts true, like SYNC_DRY_RUN. While true the weekly job computes and logs
+   * what it would create and post but writes nothing and calls no Discord
+   * endpoint. Flip to false to go live (the first live pass @everyone-pings the
+   * whole guild, so review a dry-run first).
+   */
+  OP_EVENT_DRY_RUN: bool().default(true),
 });
 export type OpsConfig = z.infer<typeof opsSchema>;
 

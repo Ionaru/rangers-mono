@@ -27,7 +27,9 @@ The Astro runtime image ships **no `node_modules`**. Building with `npx astro bu
 
 All config is parsed in `packages/config` and **fails loud at boot** if a required value is missing.
 
-The database password and URL are file-based Docker Compose `secrets:`, mounted at `/run/secrets/*`. Every other value, secret or not, reaches `web` and `worker` as plain environment from a git-ignored `.env` on the box, which Compose loads with `env_file:` (ADR 0014). Nothing is ever baked into an image. For any key `X`, a mounted `X_FILE` **beats** a directly-set `X`.
+The database password and URL are file-based Docker Compose `secrets:`, mounted at `/run/secrets/*`. Every other value, secret or not, reaches `web` and `worker` as plain environment from a `.env` on the box, which Compose loads with `env_file:` (ADR 0014). Nothing is ever baked into an image. For any key `X`, a mounted `X_FILE` **beats** a directly-set `X`.
+
+**The box `.env` is generated at deploy, not hand-maintained (ADR 0018).** Production config lives in the GitHub **`production` Environment**: non-secret values as **variables** (viewable/editable in the UI), credentials as **secrets** (write-only), each named exactly as its `.env` key. The deploy assembles `.env` from `toJSON(vars)` + `toJSON(secrets)` (excluding the operational `DEPLOY_*`/`GITHUB_TOKEN`) and writes it to the box. So: **change a value** = edit the one variable/secret; **add a key** = add one entry, no `cd.yaml` change; do not hand-edit the box `.env` (it is overwritten each deploy). `.env.example` tags each key `[VAR]`/`[SECRET]`. **`deno task env:check`** (a read-only doctor over the same schemas; the deploy runs it as a gate) names any missing-required key before it reaches production. `DATABASE_URL` stays out of GitHub, supplied on the box by `DATABASE_URL_FILE`.
 
 ```
 # Core
@@ -65,12 +67,21 @@ WORKER_INTERNAL_TOKEN=…                          # secret; shared between web 
 
 # Ops schedule / attendance
 OP_TIMEZONE=Europe/Amsterdam
-OP_WEEKLY_CRON=0 20 * * 6                       # Sat 20:00 local (compute DST-correct). Saturday only.
+OP_WEEKLY_CRON=0 20 * * 6                       # legacy field; does NOT drive event creation (see below)
 OP_ATTENDANCE_START=20:00
 OP_ATTENDANCE_END=23:00
 OP_EVENT_END=23:30
 ATTENDANCE_MIN_MINUTES=60
 ATTENDANCE_SAMPLE_SECONDS=90
+
+# Weekly event creation + announcement (Phase 5). OP_ANNOUNCE_CHANNEL_ID is REQUIRED:
+# the worker fails loud at boot without it. The rest have defaults.
+OP_ANNOUNCE_CHANNEL_ID=…                        # the #arma_general channel id
+OP_ANNOUNCE_WEEKDAY=3                           # 0=Sun .. 6=Sat; 3 = Wednesday
+OP_ANNOUNCE_TIME=18:00                          # local time on that weekday to fire
+OP_ANNOUNCE_TEXT_FILE=…                         # optional; random witty line for the @everyone message
+OP_ANNOUNCE_IMAGE_DIR=…                         # optional; random PNG/JPG/GIF as the event cover banner
+OP_EVENT_DRY_RUN=true                           # start true; flip to false to go live (first live pass pings @everyone)
 
 # Sync
 ROLE_SYNC_INTERVAL_SECONDS=300
@@ -220,7 +231,7 @@ Inspection commands (read-only, via REST): `/whohas <assignable>`, `/roles @memb
 
 **Fetching the member list is a trap.** `GET /guilds/{id}/members` defaults to **`limit=1`**. Always pass `?limit=1000` explicitly and paginate with `after`. Omitting it does not error: the sync silently processes exactly one member and presents as "sync mostly doesn't work". The bot also needs the **GUILD_MEMBERS privileged intent** enabled on the `7R_Bot` application in the developer portal; it is required for the REST member list, not only for the gateway. It is an application toggle rather than a guild permission, so no amount of permission (Administrator included) substitutes for it, it is off by default, and a `/loa` bot had no reason to turn it on. Without it this poll is refused and Phase 4 quietly does nothing.
 
-Bot permissions on `7R_Bot`: `CREATE_EVENTS` (1<<44) + `MANAGE_ROLES`. **Measured 2026-07-14 (`deno task phase0:check`): it holds `MANAGE_ROLES` and NOT Administrator, and it is missing `CREATE_EVENTS`.** The long-standing claim that it holds Administrator was wrong, so the outstanding task is to *add* `CREATE_EVENTS`, not to take anything away. Miss it and the weekly event 403s on create, silently.
+Bot permissions on `7R_Bot`: `CREATE_EVENTS` (1<<44) + `MANAGE_ROLES` at the guild level, plus, in #arma_general only, **Send Messages + Mention @everyone** (for the weekly announcement to ping) and **Read Message History** (so it can dedup its own prior post and never double-ping). **Measured 2026-07-14 (`deno task phase0:check`): it holds `MANAGE_ROLES` and NOT Administrator, and it is missing `CREATE_EVENTS`.** The long-standing claim that it holds Administrator was wrong, so the outstanding task is to *add* `CREATE_EVENTS`, not to take anything away. Miss it and the weekly event 403s on create, silently.
 
 ---
 
@@ -263,13 +274,14 @@ Runs every `ROLE_SYNC_INTERVAL_SECONDS`. One-way, Discord → TeamSpeak. This is
 ## 7. Operations & attendance (worker)
 
 ### Weekly event creation
-A job on `OP_WEEKLY_CRON` (computed DST-correct in `OP_TIMEZONE`, not a hardcoded UTC hour). **Saturdays only**; there is no Wednesday op.
-1. Compute this week's op datetimes from `OP_ATTENDANCE_START/END` and `OP_EVENT_END` in `OP_TIMEZONE`.
-2. **Idempotency:** if an `operation` already exists for that date (or the Discord event exists), skip.
-3. Create the Discord scheduled event: `POST /guilds/{id}/scheduled-events` with `entity_type=3` (EXTERNAL), `privacy_level=2` (GUILD_ONLY), `entity_metadata.location="TeamSpeak / server"`, `scheduled_start_time` and `scheduled_end_time` as ISO-8601 (event end = 23:30). Needs **`CREATE_EVENTS` (1<<44)**. `MANAGE_EVENTS` (1<<33) is **not** enough: it only edits and deletes events that already exist, and 403s on create.
-4. Insert the `operation` row with the event id and the three windows.
+A **reconciler**, not a fire-once cron (`apps/worker/weekly-event.ts`): every ~5 minutes it recomputes, DST-correct in `OP_TIMEZONE`, the coming Saturday's op and this week's announce moment (the pure `planWeeklyOp` in `@7r/domain`), and inside the window ensures the event, row and announcement exist. Recomputing a pure function of the clock each tick is what makes it survive restarts and missed ticks, where a fixed UTC cron would drift an hour across a DST change and would not recover a tick it slept through. **The op is still Saturday-only**; the *creation and announcement* fire on the announce weekday before it (default **Wednesday 18:00 local**, `OP_ANNOUNCE_WEEKDAY`/`OP_ANNOUNCE_TIME`), so there is notice to RSVP. Guarded by `OP_EVENT_DRY_RUN` (default true, like `SYNC_DRY_RUN`): a dry pass logs what it would do and writes nothing.
 
-The event's native RSVP ("Interested") list is the unit's op-planning tool. We store nothing for it and build no UI for it.
+Three side effects. Each is guarded by a database column **and** reconciled against Discord's own state, so a pass that crashed between a Discord write and the DB write that records it resumes rather than duplicates:
+1. **The `operation` row** (`getOrCreateWeeklyOperation`, unique `date`): created for the coming Saturday with the three windows (`OP_ATTENDANCE_START/END`, `OP_EVENT_END`).
+2. **The scheduled event** (guard: `operation.discord_event_id`): `POST /guilds/{id}/scheduled-events`, `entity_type=3` (EXTERNAL), `privacy_level=2` (GUILD_ONLY), `entity_metadata.location="7R Operations Server"`, ISO-8601 start/end (event end = 23:30), name `"20:00 CEST/CET - Saturday Operation"` (the abbreviation follows DST), and a random in-game image (`OP_ANNOUNCE_IMAGE_DIR`) as the **cover banner** via the `image` field (Discord "image data": a base64 data URI; PNG/JPG/GIF). Needs **`CREATE_EVENTS` (1<<44)**; `MANAGE_EVENTS` (1<<33) only edits/deletes and 403s on create. The image is decorative, so a 400 (too large / unsupported) drops it and the event is created without a cover. **Before creating, the pass lists the guild's events (`listGuildScheduledEvents`) and adopts one matching this op's title + start instant**, so a lost `discord_event_id` never spawns a second event. There is **no bot API to change an event's RSVP list**; a bot creating via REST is not expected to appear "Interested" (that auto-subscribe is a client behaviour), so nothing is done about it.
+3. **The @everyone announcement** (guard: `operation.announced_at`): `POST /channels/{OP_ANNOUNCE_CHANNEL_ID}/messages` (#arma_general) with `@everyone`, an optional random witty line (`OP_ANNOUNCE_TEXT_FILE`), and the event URL `https://discord.com/events/{guild}/{event}` (posting it unfurls the event card, cover banner and native Interested button included). `allowed_mentions: {parse:["everyone"]}` so the ping fires. **Before posting, the pass scans the channel's recent messages (`listChannelMessages`) for the event link**, so a crash after posting but before the DB write never re-pings the guild; this dedup is best-effort (a missing Read Message History permission just forfeits it). The bot needs Send Messages + Mention @everyone (+ Read Message History for the dedup) in the channel.
+
+`deno task op:preview` prints the coming op and the exact message it would post, writing nothing. The event's native RSVP ("Interested") list is the unit's op-planning tool. We store nothing for it and build no UI for it.
 
 ### Attendance sampling
 During `[attendanceStart, attendanceEnd]` (20:00 to 23:00 local):

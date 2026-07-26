@@ -1,0 +1,499 @@
+import { join } from "@std/path";
+import type { Db } from "@7r/db";
+import {
+  getOrCreateWeeklyOperation,
+  markOperationAnnounced,
+  setOperationDiscordEvent,
+} from "@7r/db";
+import {
+  type OpScheduleConfig,
+  opTitle,
+  pickRandom,
+  planWeeklyOp,
+  type WeeklyOpPlan,
+} from "@7r/domain";
+import {
+  createGuildScheduledEvent,
+  createMessage,
+  DiscordApiError,
+  type DiscordRestOptions,
+  listChannelMessages,
+  listGuildScheduledEvents,
+  type ScheduledEvent,
+} from "@7r/discord";
+
+/**
+ * The weekly Saturday Operation: create the Discord scheduled event (with a random
+ * in-game image as its cover banner) and its `operation` row, then ping @everyone
+ * in #arma_general with the event link (ARCHITECTURE §4.2, IMPLEMENTATION §7).
+ *
+ * This is a reconciler, not a fire-once cron. Every tick it recomputes the coming
+ * Saturday and this week's announce moment (pure, `@7r/domain` `planWeeklyOp`), and
+ * inside the window it ensures three things exist. Each is guarded by a database
+ * column AND reconciled against Discord's own state, so a pass that crashed between
+ * a Discord write and the database write that records it resumes rather than
+ * duplicates:
+ *   - the `operation` row (unique `date`);
+ *   - the scheduled event (`operation.discord_event_id`; before creating, the pass
+ *     lists the guild's events and adopts a matching one, so a lost event id never
+ *     spawns a second event: this reconcile fails closed, aborting the pass if the
+ *     list cannot be read);
+ *   - the announcement (`operation.announced_at`; before posting, the pass scans the
+ *     channel for its own prior message so a crash between posting and recording
+ *     does not re-ping the guild. This scan is best-effort: if the history cannot
+ *     be read it posts anyway, so a double-ping is made unlikely, not impossible).
+ * A fixed UTC cron was rejected on purpose: it would misplace the op by an hour
+ * across a DST change, and it would not survive a missed tick.
+ */
+
+/** The event's fixed copy. The title is dynamic (`opTitle`); these are not. */
+const EVENT_LOCATION = "7R Operations Server";
+const EVENT_DESCRIPTION = [
+  "Mission: TBD",
+  "Location: TBD",
+  'Mark yourself as "interested" if you plan on attending!',
+].join("\n");
+
+const EVENT_AUDIT_REASON = "Weekly Saturday Operation (auto-created)";
+
+/**
+ * Image extensions we will use as the event cover; anything else in the folder is
+ * ignored. Limited to what Discord's "image data" accepts for a cover (PNG, JPG,
+ * GIF: reference#image-data); a `.webp` would just be rejected and fall back to no
+ * cover, so it is left out rather than offered.
+ */
+const IMAGE_CONTENT_TYPES: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+};
+
+/** A chosen cover image: its filename (for logs) and the bytes Discord will encode. */
+interface PickedImage {
+  filename: string;
+  bytes: Uint8Array<ArrayBuffer>;
+  contentType: string;
+}
+
+export interface WeeklyEventDeps {
+  db: Db;
+  discord: DiscordRestOptions;
+  guildId: string;
+  /** #arma_general. */
+  announceChannelId: string;
+  schedule: OpScheduleConfig;
+  /** Optional path to a witty-lines file; unset -> no witty line. */
+  textFile?: string;
+  /** Optional path to an image folder; unset -> no image. */
+  imageDir?: string;
+  log: (message: string, extra?: Record<string, unknown>) => void;
+  alert: (summary: string, detail?: unknown) => void;
+}
+
+/**
+ * The subset of deps the announcement builder and the preview read: the guild (for
+ * the event URL), the schedule, the optional asset paths, and a logger. No
+ * database, no Discord auth, no channel id. Naming it lets `op:preview` pass only
+ * what it actually uses instead of stubbing a database it never touches.
+ */
+export type WeeklyEventPreviewDeps = Pick<
+  WeeklyEventDeps,
+  "guildId" | "schedule" | "textFile" | "imageDir" | "log"
+>;
+
+export interface WeeklyEventResult {
+  /**
+   * - `idle`: outside the acting window this tick, nothing to do.
+   * - `dry_run`: inside the window; logged what it would do, wrote nothing.
+   * - `created`/`announced`: did at least one of those this pass.
+   * - `noop`: inside the window but the event and announcement already existed.
+   */
+  outcome: "idle" | "dry_run" | "created" | "announced" | "noop";
+  saturdayDate: string;
+}
+
+/**
+ * One pass. `apply: false` computes and logs without writing anything or calling
+ * Discord (SYNC_DRY_RUN's sibling); `apply: true` creates the event, records it,
+ * and posts the announcement, each step only if Discord does not already have it.
+ */
+export async function runWeeklyEventPass(
+  deps: WeeklyEventDeps,
+  opts: { apply: boolean },
+): Promise<WeeklyEventResult> {
+  const now = new Date();
+  const plan = planWeeklyOp(now, deps.schedule);
+  const title = opTitle(plan.attendanceStart, deps.schedule.timeZone);
+
+  if (!plan.withinWindow) {
+    return { outcome: "idle", saturdayDate: plan.saturdayDate };
+  }
+
+  if (!opts.apply) {
+    // Dry run: decide nothing and read nothing here. The loop surfaces the full
+    // preview once per week (and `op:preview` shows it on demand), so this stays a
+    // cheap no-op rather than dumping the announcement and re-reading the asset
+    // files on every one of the ~900 ticks in the window.
+    return { outcome: "dry_run", saturdayDate: plan.saturdayDate };
+  }
+
+  const op = await getOrCreateWeeklyOperation(deps.db, {
+    date: plan.saturdayDate,
+    attendanceStart: plan.attendanceStart,
+    attendanceEnd: plan.attendanceEnd,
+    eventEnd: plan.eventEnd,
+  });
+
+  let eventId = op.discordEventId;
+  let created = false;
+
+  if (eventId === null) {
+    // Reconcile against Discord before creating. A prior pass may have created the
+    // event and then failed to record its id (a crash between the POST and the DB
+    // write): list the guild's events and adopt a match rather than making a second
+    // event. If the list itself fails, the pass fails and retries next tick, which
+    // is correct: creating without having checked is what risks a duplicate.
+    const existingId = await findExistingEvent(
+      deps,
+      title,
+      plan.attendanceStart,
+    );
+    if (existingId !== null) {
+      eventId = existingId;
+      created = true;
+      await setOperationDiscordEvent(deps.db, op.id, eventId);
+      deps.log("weekly event already on Discord; adopted it", {
+        date: plan.saturdayDate,
+        eventId,
+        title,
+      });
+    } else {
+      eventId = await createEvent(deps, title, plan);
+      created = true;
+      await setOperationDiscordEvent(deps.db, op.id, eventId);
+    }
+  }
+
+  if (op.announcedAt !== null) {
+    return {
+      outcome: created ? "created" : "noop",
+      saturdayDate: plan.saturdayDate,
+    };
+  }
+
+  const eventUrl = `https://discord.com/events/${deps.guildId}/${eventId}`;
+
+  // Reconcile the announcement the same way. If a prior pass posted it but crashed
+  // before recording announced_at, the event link is already in the channel: record
+  // it and do NOT re-ping the whole guild.
+  if (await announcementAlreadyPosted(deps, eventUrl)) {
+    await markOperationAnnounced(deps.db, op.id);
+    deps.log("weekly event announcement already present; not re-posting", {
+      date: plan.saturdayDate,
+      channel: deps.announceChannelId,
+    });
+    return {
+      outcome: created ? "created" : "noop",
+      saturdayDate: plan.saturdayDate,
+    };
+  }
+
+  const content = await buildAnnouncementContent(deps, eventUrl);
+  await createMessage(deps.discord, deps.announceChannelId, {
+    content,
+    allowedMentions: { parse: ["everyone"] },
+  });
+  await markOperationAnnounced(deps.db, op.id);
+  deps.log("weekly event announced", {
+    date: plan.saturdayDate,
+    channel: deps.announceChannelId,
+  });
+
+  return { outcome: "announced", saturdayDate: plan.saturdayDate };
+}
+
+/**
+ * Create the scheduled event with a random cover image, falling back to no cover
+ * if Discord rejects the image. Returns the new event id.
+ */
+async function createEvent(
+  deps: Pick<
+    WeeklyEventDeps,
+    "discord" | "guildId" | "imageDir" | "log" | "alert"
+  >,
+  title: string,
+  plan: WeeklyOpPlan,
+): Promise<string> {
+  const cover = await pickImage(deps);
+  const create = (withCover: boolean): Promise<ScheduledEvent> =>
+    createGuildScheduledEvent(deps.discord, deps.guildId, {
+      name: title,
+      description: EVENT_DESCRIPTION,
+      location: EVENT_LOCATION,
+      start: plan.attendanceStart,
+      end: plan.eventEnd,
+      reason: EVENT_AUDIT_REASON,
+      image: withCover && cover
+        ? { bytes: cover.bytes, contentType: cover.contentType }
+        : undefined,
+    });
+
+  let event: ScheduledEvent;
+  try {
+    event = await create(true);
+  } catch (error) {
+    // A 400 means Discord rejected the request and created nothing (a 5xx or a
+    // dropped connection might have created it, so those must not be retried
+    // here). If a cover was attached it is the likely culprit (too large, or an
+    // unsupported type), so retry once without it: a bad decorative image must
+    // never block the op event itself. The op start is always in the future here
+    // (planWeeklyOp closes the window at attendanceStart), so a 400 is never a
+    // stale-start-time rejection that dropping the image could not fix.
+    if (cover && error instanceof DiscordApiError && error.status === 400) {
+      deps.log("event cover image rejected; retrying without it", {
+        image: cover.filename,
+        error: String(error),
+      });
+      // Retry FIRST; only claim (and alert) success once it actually creates. If
+      // the second attempt throws too, it propagates unmentioned rather than
+      // paging a false "created without it" on every tick.
+      event = await create(false);
+      deps.alert(
+        "weekly event: cover image rejected, event created without it",
+        `Image "${cover.filename}" was refused (too large, or not PNG/JPG/GIF). ${
+          String(error)
+        }`,
+      );
+    } else {
+      throw error;
+    }
+  }
+
+  deps.log("weekly event created", {
+    date: plan.saturdayDate,
+    eventId: event.id,
+    title,
+    cover: cover?.filename ?? null,
+  });
+  return event.id;
+}
+
+/**
+ * The id of a scheduled event already on the guild that matches this op (same
+ * title and same start instant), or null. Lets a pass adopt an event a crashed
+ * earlier pass created but never recorded, instead of making a duplicate.
+ */
+async function findExistingEvent(
+  deps: Pick<WeeklyEventDeps, "discord" | "guildId">,
+  title: string,
+  start: Date,
+): Promise<string | null> {
+  const events = await listGuildScheduledEvents(deps.discord, deps.guildId);
+  const match = events.find((e) =>
+    e.name === title &&
+    new Date(e.scheduled_start_time).getTime() === start.getTime()
+  );
+  return match?.id ?? null;
+}
+
+/** How many recent messages to scan for a prior announcement before posting. */
+const ANNOUNCEMENT_SCAN_LIMIT = 50;
+
+/**
+ * Whether the channel already holds our announcement for this event, found by the
+ * event link it carries. Best-effort: if the history cannot be read (no Read
+ * Message History permission, say), it returns false and the announcement is posted
+ * anyway; the only thing forfeited is the guard against the rare double-post.
+ */
+async function announcementAlreadyPosted(
+  deps: Pick<WeeklyEventDeps, "discord" | "announceChannelId" | "log">,
+  eventUrl: string,
+): Promise<boolean> {
+  try {
+    const recent = await listChannelMessages(
+      deps.discord,
+      deps.announceChannelId,
+      ANNOUNCEMENT_SCAN_LIMIT,
+    );
+    return recent.some((m) => m.content.includes(eventUrl));
+  } catch (error) {
+    deps.log(
+      "could not read channel history before announcing; posting anyway",
+      { error: String(error) },
+    );
+    return false;
+  }
+}
+
+/**
+ * The computed plan, title and the exact announcement (text + chosen image) for a
+ * given `now`, without acting on any of it. This is what `op:preview` prints; it
+ * ignores the acting window so the CLI can show the upcoming op any day of the
+ * week, whereas a live pass only acts inside it.
+ */
+export async function describeWeeklyEvent(
+  deps: WeeklyEventPreviewDeps,
+  now: Date,
+): Promise<{
+  plan: WeeklyOpPlan;
+  title: string;
+  /** The cover image that would go on the event, or null if none is available. */
+  coverImageName: string | null;
+  /** The @everyone message text (the image rides on the event, not the message). */
+  announcement: string;
+}> {
+  const plan = planWeeklyOp(now, deps.schedule);
+  const title = opTitle(plan.attendanceStart, deps.schedule.timeZone);
+  const cover = await pickImage(deps);
+  const announcement = await buildAnnouncementContent(
+    deps,
+    `https://discord.com/events/${deps.guildId}/<event-id>`,
+  );
+  return {
+    plan,
+    title,
+    coverImageName: cover?.filename ?? null,
+    announcement,
+  };
+}
+
+/** Build the @everyone message: the ping, an optional witty line, the event link. */
+async function buildAnnouncementContent(
+  deps: Pick<WeeklyEventDeps, "textFile" | "log">,
+  eventUrl: string,
+): Promise<string> {
+  const line = await pickWittyLine(deps);
+  const paragraphs = ["@everyone"];
+  if (line) paragraphs.push(line);
+  // The URL on its own paragraph is what Discord unfurls into the event card, with
+  // its cover banner and its native "Interested" button.
+  paragraphs.push(eventUrl);
+  return paragraphs.join("\n\n");
+}
+
+/** A random non-empty line from the witty-lines file, or undefined if unusable. */
+async function pickWittyLine(
+  deps: Pick<WeeklyEventDeps, "textFile" | "log">,
+): Promise<string | undefined> {
+  if (!deps.textFile) return undefined;
+  try {
+    const text = await Deno.readTextFile(deps.textFile);
+    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+    return pickRandom(lines);
+  } catch (error) {
+    // Best-effort: a missing or unreadable file just means no witty line, not a
+    // failed announcement.
+    deps.log("could not read announcement text file", {
+      path: deps.textFile,
+      error: String(error),
+    });
+    return undefined;
+  }
+}
+
+/** A random image from the folder, read into memory, or undefined if unusable. */
+async function pickImage(
+  deps: Pick<WeeklyEventDeps, "imageDir" | "log">,
+): Promise<PickedImage | undefined> {
+  if (!deps.imageDir) return undefined;
+  try {
+    const names: string[] = [];
+    for await (const entry of Deno.readDir(deps.imageDir)) {
+      if (entry.isFile && contentTypeOf(entry.name)) names.push(entry.name);
+    }
+    const chosen = pickRandom(names);
+    if (!chosen) return undefined;
+    const contentType = contentTypeOf(chosen)!;
+    const bytes = await Deno.readFile(join(deps.imageDir, chosen));
+    return { filename: chosen, bytes, contentType };
+  } catch (error) {
+    deps.log("could not read announcement image folder", {
+      dir: deps.imageDir,
+      error: String(error),
+    });
+    return undefined;
+  }
+}
+
+/** The MIME type for a filename's extension, or undefined if it is not an image. */
+function contentTypeOf(filename: string): string | undefined {
+  const dot = filename.lastIndexOf(".");
+  if (dot < 0) return undefined;
+  return IMAGE_CONTENT_TYPES[filename.slice(dot).toLowerCase()];
+}
+
+/**
+ * The steady-state loop: one pass now, then every `intervalSeconds`. Same shape
+ * as the sync loop (apps/worker/sync.ts): a `running` latch stops a slow pass
+ * stacking, and a single episode latch keeps a standing failure (a missing
+ * CREATE_EVENTS grant 403ing every tick for three days) from paging on every
+ * tick. Returns a stop function for the worker's shutdown path.
+ */
+export function startWeeklyEventLoop(
+  deps: WeeklyEventDeps,
+  opts: { intervalSeconds: number; dryRun: boolean },
+): () => void {
+  let running = false;
+  let pagedFailure = false;
+  // The last Saturday a dry-run preview was logged for, so the preview goes to the
+  // log once when the window opens rather than on every tick within it. The
+  // actions themselves (created/announced) log inside runWeeklyEventPass, once
+  // each, so a live pass needs nothing here; steady-state no-ops stay silent and
+  // the heartbeat proves liveness.
+  let dryRunLoggedDate: string | null = null;
+
+  const pass = async () => {
+    if (running) return;
+    running = true;
+    try {
+      const result = await runWeeklyEventPass(deps, { apply: !opts.dryRun });
+
+      if (
+        result.outcome === "dry_run" && result.saturdayDate !== dryRunLoggedDate
+      ) {
+        dryRunLoggedDate = result.saturdayDate;
+        const preview = await describeWeeklyEvent(deps, new Date());
+        deps.log(
+          "weekly event (dry run): would create the event and announce",
+          {
+            date: preview.plan.saturdayDate,
+            title: preview.title,
+            location: EVENT_LOCATION,
+            coverImage: preview.coverImageName,
+            channel: deps.announceChannelId,
+            announcement: preview.announcement,
+          },
+        );
+      }
+
+      // A real pass in the window succeeded: close any failure episode.
+      if (pagedFailure && result.outcome !== "idle") {
+        pagedFailure = false;
+        deps.alert(
+          "weekly event recovered",
+          "A pass completed normally again.",
+        );
+      }
+    } catch (error) {
+      deps.log("weekly event pass failed", { error: String(error) });
+      if (!pagedFailure) {
+        pagedFailure = true;
+        deps.alert("weekly event pass failed", error);
+      }
+    } finally {
+      running = false;
+    }
+  };
+
+  deps.log("weekly event loop started", {
+    intervalSeconds: opts.intervalSeconds,
+    dryRun: opts.dryRun,
+    timeZone: deps.schedule.timeZone,
+    announceWeekday: deps.schedule.announceWeekday,
+    announceTime: deps.schedule.announceTime,
+  });
+  pass();
+  const interval = setInterval(pass, opts.intervalSeconds * 1_000);
+  return () => clearInterval(interval);
+}

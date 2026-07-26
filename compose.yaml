@@ -143,6 +143,15 @@ services:
       - .env
     secrets:
       - database_url
+    # Optional: the weekly op's witty-lines file and image folder (Phase 5). The
+    # witty line goes in the @everyone message; a random image becomes the event's
+    # cover banner. Uncomment and point OP_ANNOUNCE_TEXT_FILE / OP_ANNOUNCE_IMAGE_DIR
+    # at the in-container paths below. Bind-mounted rather than baked in so the unit
+    # can edit the lines and swap images without a rebuild; read-only because the
+    # worker only ever reads them. Left commented so a deploy that does not use the
+    # flavour need not create the directory.
+    # volumes:
+    #   - ./announce-assets:/app/announce-assets:ro
     # No published port, ever. The internal API is reachable on the Compose
     # network only: never through the proxy, never public (ARCHITECTURE §2).
     depends_on:

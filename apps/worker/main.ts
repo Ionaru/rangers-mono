@@ -5,19 +5,23 @@ import {
   getAlertConfig,
   getCoreConfig,
   getDiscordBotConfig,
+  getOpsConfig,
   getSyncConfig,
   getTeamspeakConfig,
   getWorkerServerConfig,
   loadAll,
+  type OpsConfig,
   type SyncConfig,
   type TeamspeakConfig,
   type WorkerServerConfig,
 } from "@7r/config";
 import { closeDb, getDb, ping } from "@7r/db";
+import type { OpScheduleConfig } from "@7r/domain";
 import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
 import { makeAlerter } from "./alert.ts";
 import { createInternalApiHandler } from "./internal-api.ts";
 import { startSyncLoop } from "./sync.ts";
+import { startWeeklyEventLoop } from "./weekly-event.ts";
 
 /**
  * The worker: one long-running Deno process.
@@ -46,6 +50,14 @@ addEventListener("unhandledrejection", (event) => {
 
 const HEARTBEAT_MS = 60_000;
 
+/**
+ * How often the weekly-event reconciler wakes. Fine-grained enough that the
+ * Wednesday-18:00 announcement fires within a few minutes of the hour, coarse
+ * enough to be nothing on the wire (it is a no-op on all but one tick a week).
+ * A constant, not config: the announce moment is the tunable, not the poll rate.
+ */
+const WEEKLY_EVENT_CHECK_SECONDS = 300;
+
 function log(message: string, extra: Record<string, unknown> = {}) {
   console.log(
     JSON.stringify({ ts: new Date().toISOString(), msg: message, ...extra }),
@@ -62,7 +74,7 @@ async function main() {
    * redeploy, be told about TS_QUERY_HOST, redeploy, be told about
    * TS_QUERY_PASS. `loadAll` collects them.
    */
-  const [core, workerServer, ts, alerts, bot, sync] = loadAll<
+  const [core, workerServer, ts, alerts, bot, sync, ops] = loadAll<
     [
       CoreConfig,
       WorkerServerConfig,
@@ -70,6 +82,7 @@ async function main() {
       AlertConfig,
       DiscordBotConfig,
       SyncConfig,
+      OpsConfig,
     ]
   >([
     getCoreConfig,
@@ -78,6 +91,7 @@ async function main() {
     getAlertConfig,
     getDiscordBotConfig,
     getSyncConfig,
+    getOpsConfig,
   ]);
 
   const { WORKER_INTERNAL_PORT, WORKER_INTERNAL_TOKEN } = workerServer;
@@ -116,8 +130,10 @@ async function main() {
     teamspeak: `${ts.TS_QUERY_HOST}:${ts.TS_QUERY_PORT}`,
     // An operator must be able to tell which mode a running worker is in from
     // this one line. "The sync has been running for a week" means nothing if
-    // nobody can see it was dry-running the whole time.
+    // nobody can see it was dry-running the whole time. The weekly event is the
+    // same: its first live pass @everyone-pings the guild, so its mode belongs here.
     syncDryRun: sync.SYNC_DRY_RUN,
+    eventDryRun: ops.OP_EVENT_DRY_RUN,
   });
 
   /**
@@ -138,6 +154,38 @@ async function main() {
     {
       intervalSeconds: sync.ROLE_SYNC_INTERVAL_SECONDS,
       dryRun: sync.SYNC_DRY_RUN,
+    },
+  );
+
+  /**
+   * Phase 5: the weekly Saturday op. A DST-correct reconciler that creates the
+   * scheduled event + Operation row on the announce weekday and pings @everyone
+   * in #arma_general, behind OP_EVENT_DRY_RUN (default true) exactly as the sync
+   * loop sits behind SYNC_DRY_RUN.
+   */
+  const schedule: OpScheduleConfig = {
+    timeZone: ops.OP_TIMEZONE,
+    opStart: ops.OP_ATTENDANCE_START,
+    attendanceEnd: ops.OP_ATTENDANCE_END,
+    eventEnd: ops.OP_EVENT_END,
+    announceWeekday: ops.OP_ANNOUNCE_WEEKDAY,
+    announceTime: ops.OP_ANNOUNCE_TIME,
+  };
+  const stopWeeklyEvent = startWeeklyEventLoop(
+    {
+      db,
+      discord: { botToken: bot.DISCORD_BOT_TOKEN },
+      guildId: bot.DISCORD_GUILD_ID,
+      announceChannelId: ops.OP_ANNOUNCE_CHANNEL_ID,
+      schedule,
+      textFile: ops.OP_ANNOUNCE_TEXT_FILE,
+      imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,
+      log,
+      alert,
+    },
+    {
+      intervalSeconds: WEEKLY_EVENT_CHECK_SECONDS,
+      dryRun: ops.OP_EVENT_DRY_RUN,
     },
   );
 
@@ -178,6 +226,7 @@ async function main() {
   const shutdown = async () => {
     log("shutting down");
     stopSync();
+    stopWeeklyEvent();
     clearInterval(heartbeat);
     Deno.removeSignalListener("SIGTERM", onSignal);
     Deno.removeSignalListener("SIGINT", onSignal);

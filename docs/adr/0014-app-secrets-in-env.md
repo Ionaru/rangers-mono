@@ -1,5 +1,7 @@
 # Application secrets live in `.env`; the database keeps its file-based secrets
 
+> **Amended by ADR 0018.** The box `.env` is no longer hand-maintained: it is generated at deploy from a `production` GitHub Environment (non-secret values as variables, credentials as secrets). The runtime mechanism below is unchanged (Compose still `env_file: .env`), the database's file-based `./secrets/` stand, and this ADR's reasoning holds; only "nothing recreates `.env`" is superseded, the deploy now does.
+
 Every secret except two reaches `web` and `worker` as plain environment, from a git-ignored `.env` on the box that Compose loads with `env_file:`. The two exceptions are `postgres_password` and `database_url`, which stay Docker Compose file-based `secrets:` in `./secrets/`.
 
 Correspondingly, a mounted `X_FILE` now **beats** a directly-set `X` in `packages/config`. That order used to run the other way.

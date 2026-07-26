@@ -183,10 +183,71 @@ jobs:
     needs: [meta, images]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # The config the box runs on lives in this Environment: its non-secret values as
+    # variables (viewable/editable in the UI) and its credentials as secrets, not in
+    # a hand-maintained .env on the box (ADR 0018). Declaring the environment here is
+    # what puts those into the `vars`/`secrets` contexts read below, and it is where
+    # any optional deploy protection (main-only, required reviewers) would attach.
+    environment: production
     concurrency:
       group: deploy
       cancel-in-progress: false
     steps:
+      # Checkout + Deno so the assembled .env can be validated on the runner, before
+      # anything on the box is touched (the env:check gate below). The box itself
+      # already has the repo; this checkout is only for the runner-side gate.
+      - uses: actions/checkout@v7
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+
+      # Build the box's .env from the Environment's variables (non-secret) and
+      # secrets (credentials). The operational secrets (DEPLOY_*, GITHUB_TOKEN) are
+      # excluded; every other secret and every variable becomes a line. Values are
+      # single-quoted so Compose's env_file reads them literally, with no `$`
+      # expansion (ADR 0014). Nothing is echoed: the file is written on disk and only
+      # its base64 (single line, to survive the trip into PowerShell) leaves the step,
+      # masked. A value containing a literal single quote is not supported (none do).
+      #
+      # ADD-HERE WARNING: any future *non-config* repo secret must be added to the
+      # exclude below, or it would land in .env; env:check (next step) flags strays.
+      - name: Assemble .env from the production Environment
+        id: dotenv
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: |
+          set -euo pipefail
+          {
+            printf '%s' "$VARS_JSON" | jq -r 'to_entries[] | "\(.key)\t\(.value)"'
+            printf '%s' "$SECRETS_JSON" | jq -r '
+              to_entries[]
+              | select((.key | startswith("DEPLOY_")) or .key == "GITHUB_TOKEN" | not)
+              | "\(.key)\t\(.value)"'
+          } | while IFS=$'\t' read -r k v; do
+            printf "%s='%s'\n" "$k" "$v"
+          done > env.out
+          b64="$(base64 -w0 env.out)"
+          echo "::add-mask::$b64"
+          echo "b64=$b64" >> "$GITHUB_OUTPUT"
+
+      # Fail the deploy here, before the box is touched, if the assembled .env is
+      # missing a required key (a forgotten variable/secret). Otherwise the deploy
+      # would stop the app, migrate, and only then crash-loop the worker on
+      # fail-loud config. Prints key names only, never values.
+      # Absolute path: the task cd's into packages/config, so a relative --file
+      # would resolve there, not against the runner's workspace where env.out lives.
+      # On the box DATABASE_URL is supplied by the mounted ./secrets/ via
+      # DATABASE_URL_FILE, not from .env, so add that marker for the check (env:check
+      # counts a key satisfied by its _FILE partner) or it would flag it missing.
+      - name: Validate the assembled .env before deploying
+        run: |
+          set -euo pipefail
+          cp env.out env.check
+          echo 'DATABASE_URL_FILE=/run/secrets/database_url' >> env.check
+          deno task env:check -- --file "$GITHUB_WORKSPACE/env.check"
+
       # The box is Windows with Docker Desktop, so the remote shell is
       # PowerShell (hence $env: rather than export). The known hazard, recorded
       # in ARCHITECTURE §6 and owned by the operator, not solved here: Docker
@@ -231,6 +292,18 @@ jobs:
             # happened to be there.
             if (-not '${{ secrets.DEPLOY_PATH }}') { throw 'DEPLOY_PATH secret is not set' }
             cd '${{ secrets.DEPLOY_PATH }}'
+
+            # Materialise .env from the production Environment (ADR 0018), assembled
+            # and base64'd on the runner. The base64 is a single line, so it survives
+            # interpolation into this script and is masked in the log. WriteAllBytes,
+            # not Set-Content: raw UTF-8 with no BOM, or the BOM corrupts the first
+            # key. .env is git-ignored, so the `git switch -d` below leaves it alone.
+            # The guard turns an unset/empty assembly into a loud failure rather than
+            # a blank .env that would half-configure the app.
+            $dotenvB64 = '${{ steps.dotenv.outputs.b64 }}'
+            if (-not $dotenvB64) { throw 'assembled .env is empty; refusing to overwrite it' }
+            [System.IO.File]::WriteAllBytes((Join-Path (Get-Location) '.env'), [Convert]::FromBase64String($dotenvB64))
+            if (-not (Test-Path '.env')) { throw 'could not write .env' }
 
             # The images are pinned to this SHA, so the compose.yaml must be too.
             # Unchecked, a failed switch deploys new images against an old file.

@@ -3,5 +3,8 @@
   "version": "0.0.1",
   "exports": {
     ".": "./mod.ts"
+  },
+  "tasks": {
+    "check:env": "deno run --allow-read env-check.ts"
   }
 }

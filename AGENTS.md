@@ -33,12 +33,21 @@ deno task web:dev      Astro dev        deno task web:build    build with Deno
 deno task worker:dev   worker (watch)
 deno task db:generate  generate a migration from schema.ts
 deno task migrate      apply migrations (one-shot, never on boot)
+deno task env:check    check a .env against the config schemas (read-only)
 ```
 
 The stack: `docker compose up -d postgres`, then
 `docker compose --profile migrate run --rm migrate`, then
 `docker compose up -d`. Local development needs `secrets/` populated (see
-`secrets/README.md`) and a `.env` (copy `.env.example`).
+`secrets/README.md`) and a local `.env` (copy `.env.example`).
+
+**Production config is not a hand-maintained `.env` (ADR 0018).** It lives in the
+GitHub `production` Environment: non-secret values as variables, credentials as
+secrets, each named as its `.env` key. The deploy (`.github/workflows/cd.yaml`)
+assembles `.env` from them and writes it to the box, so **change a value** = edit the
+one variable/secret, **add a key** = add one entry (no `cd.yaml` change), and never
+hand-edit the box `.env`. `deno task env:check` (also the deploy's gate) names any
+missing-required key. The DB password/URL stay file-based in `./secrets/` (ADR 0014).
 
 ## Rules that cost a day when broken
 

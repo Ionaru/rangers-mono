@@ -91,6 +91,14 @@ export const operation = pgTable("operation", {
   attendanceEnd: tstz("attendance_end").notNull(),
   eventEnd: tstz("event_end").notNull(),
   discordEventId: text("discord_event_id"),
+  /**
+   * When the @everyone announcement was posted to #arma_general. Null until it
+   * has been. The weekly job creates the event and posts the announcement as two
+   * independently-idempotent steps: `discord_event_id` guards the first, this
+   * guards the second, so a Discord blip that lets the event through but drops the
+   * post is retried on the next tick rather than leaving nobody pinged.
+   */
+  announcedAt: tstz("announced_at"),
   name: text("name"),
   source: text("source").$type<OperationSource>().notNull().default(
     "auto_weekly",

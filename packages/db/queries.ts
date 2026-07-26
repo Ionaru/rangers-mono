@@ -1,8 +1,14 @@
 import { and, asc, eq, gt, isNull, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
-import { assignable, attendanceSession, linkCode, member } from "./schema.ts";
+import {
+  assignable,
+  attendanceSession,
+  linkCode,
+  member,
+  operation,
+} from "./schema.ts";
 import { authAccount } from "./auth-schema.ts";
-import type { Assignable, LinkCode, Member } from "./schema.ts";
+import type { Assignable, LinkCode, Member, Operation } from "./schema.ts";
 import type { AssignableKind } from "@7r/domain";
 
 /** Queries live beside the schema (ADR 0008), so callers never import drizzle themselves. */
@@ -469,6 +475,72 @@ export async function upsertAssignable(
         sortOrder: input.sortOrder,
       },
     });
+}
+
+// ---------------------------------------------------------------- operations
+
+/**
+ * The op row for a Saturday, creating it if this is the first time we have seen
+ * that date. The unique `date` column makes the insert the create-once lock: two
+ * ticks racing to open the same week both call this, one inserts and one no-ops,
+ * and both read back the same row.
+ *
+ * It writes only the op's windows, never the Discord event id or the announced
+ * stamp: those are filled by `setOperationDiscordEvent` and
+ * `markOperationAnnounced` as their steps succeed, so a re-run after a partial
+ * failure resumes rather than overwriting progress with nulls.
+ */
+export async function getOrCreateWeeklyOperation(
+  db: Db,
+  input: {
+    date: string;
+    attendanceStart: Date;
+    attendanceEnd: Date;
+    eventEnd: Date;
+  },
+): Promise<Operation> {
+  await db
+    .insert(operation)
+    .values(input)
+    .onConflictDoNothing({ target: operation.date });
+
+  const [row] = await db
+    .select()
+    .from(operation)
+    .where(eq(operation.date, input.date));
+  return row;
+}
+
+/**
+ * Record the created event's id on the op row.
+ *
+ * `where discord_event_id is null` makes it a no-op once set, so a duplicate call
+ * (a retried tick) cannot overwrite the id, and a second event is never created
+ * behind the first: the null check here is the same guard the weekly job reads
+ * before deciding whether to create an event at all.
+ */
+export async function setOperationDiscordEvent(
+  db: Db,
+  operationId: string,
+  discordEventId: string,
+): Promise<void> {
+  await db
+    .update(operation)
+    .set({ discordEventId })
+    .where(
+      and(eq(operation.id, operationId), isNull(operation.discordEventId)),
+    );
+}
+
+/** Stamp that the @everyone announcement went out. No-op if already stamped. */
+export async function markOperationAnnounced(
+  db: Db,
+  operationId: string,
+): Promise<void> {
+  await db
+    .update(operation)
+    .set({ announcedAt: new Date() })
+    .where(and(eq(operation.id, operationId), isNull(operation.announcedAt)));
 }
 
 // ---------------------------------------------------------------- role sync

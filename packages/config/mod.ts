@@ -5,6 +5,7 @@ import {
   databaseSchema,
   discordBotSchema,
   discordSchema,
+  opsSchema,
   steamSchema,
   syncSchema,
   teamspeakSchema,
@@ -48,6 +49,9 @@ export const getDiscordBotConfig = memoize(() => loadConfig(discordBotSchema));
 
 /** Phase 4: the reconcile loop, its dry-run switch, and the blast-radius guard. */
 export const getSyncConfig = memoize(() => loadConfig(syncSchema));
+
+/** Phase 5 (the weekly event + announcement) and Phase 6 (attendance). Worker only. */
+export const getOpsConfig = memoize(() => loadConfig(opsSchema));
 
 /** Phase 2. Steam OpenID is stateless, so this is one URL and nothing else. */
 export const getSteamConfig = memoize(() => loadConfig(steamSchema));
