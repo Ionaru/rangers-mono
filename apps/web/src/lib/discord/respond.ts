@@ -52,8 +52,7 @@ export function deferThen(
         await editOriginal(
           interaction,
           messageEdit({
-            content:
-              "Something went wrong on our end. Please try again in a few minutes.",
+            content: "Something went wrong. Try again in a few minutes.",
           }),
         );
       } catch (editError) {

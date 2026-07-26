@@ -136,19 +136,10 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 /**
- * The text of the poke. It has to be intelligible in a small dialog box.
- *
- * The `surface` says where to type the code back, and it is honest rather than
- * cosmetic: while both surfaces exist (the web pages and the Discord `/link`
- * command, ADR 0017), a member poked from Discord must be told "in Discord", not
- * sent to a website they never opened. The web flow defaults to "website" so its
- * callers are unchanged; the follow-up that removes the web pages drops the
- * argument.
+ * The text of the poke. It has to be intelligible in a small dialog box, and it
+ * is short on purpose: the member is looking at Discord (or the web page) for
+ * what to do next, so the poke only needs to carry the code itself.
  */
-export function pokeMessage(
-  code: string,
-  surface: "discord" | "website" = "website",
-): string {
-  const where = surface === "discord" ? "in Discord" : "on the website";
-  return `7R link code: ${code} - enter it ${where} to link this TeamSpeak identity.`;
+export function pokeMessage(code: string): string {
+  return `7R link code: ${code}`;
 }

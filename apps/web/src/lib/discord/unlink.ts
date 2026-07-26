@@ -26,9 +26,7 @@ export function unlinkCommand(interaction: Interaction): Response {
     if (!discordId) {
       await editOriginal(
         interaction,
-        messageEdit({
-          content: "We could not tell who you are. Please try again.",
-        }),
+        messageEdit({ content: "Could not identify you. Try again." }),
       );
       return;
     }
@@ -40,7 +38,7 @@ export function unlinkCommand(interaction: Interaction): Response {
       await editOriginal(
         interaction,
         messageEdit({
-          content: "You have no TeamSpeak identity linked. Nothing to unlink.",
+          content: "No TeamSpeak identity linked. Nothing to unlink.",
         }),
       );
       return;
@@ -51,9 +49,8 @@ export function unlinkCommand(interaction: Interaction): Response {
     await editOriginal(
       interaction,
       messageEdit({
-        content:
-          "**TeamSpeak unlinked.** Your TeamSpeak groups come off at the next " +
-          "sync. Run /link whenever you want to link again.",
+        content: "TeamSpeak unlinked. Your groups come off at the next sync. " +
+          "Run /link to link again.",
       }),
     );
   });

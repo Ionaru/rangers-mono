@@ -13,7 +13,6 @@ import {
   CODE_LENGTH,
   CODE_TTL_MS,
   generateLinkCode,
-  MAX_ATTEMPTS,
   pokeMessage,
   verifyLinkCode,
 } from "@7r/identity";
@@ -88,7 +87,7 @@ export function linkCommand(interaction: Interaction): Response {
       await editOriginal(
         interaction,
         messageEdit({
-          content: "We could not tell who you are. Please try again.",
+          content: "Could not identify you. Try again.",
         }),
       );
       return;
@@ -105,14 +104,14 @@ export function linkCommand(interaction: Interaction): Response {
       clients = await fetchOnlineClients(member.id);
     } catch (cause) {
       if (!(cause instanceof WorkerUnavailableError)) throw cause;
-      // Say exactly this. An empty list would read as "you are not connected to
-      // TeamSpeak" and send them to debug a client that was never broken.
+      // Say the connection is down, not that the list is empty. An empty list
+      // would read as "you are not connected to TeamSpeak" and send them to debug
+      // a client that was never broken.
       await editOriginal(
         interaction,
         messageEdit({
           content:
-            "We could not reach TeamSpeak, so we cannot see who is online. " +
-            "This is our problem, not yours. Try again in a few minutes.",
+            "TeamSpeak is unreachable right now. Try again in a few minutes.",
         }),
       );
       return;
@@ -123,10 +122,7 @@ export function linkCommand(interaction: Interaction): Response {
         interaction,
         messageEdit({
           content:
-            "Nobody is online to link. **Connect to TeamSpeak first**, then run " +
-            "/link again. Anyone already linked to another member is hidden, so if " +
-            "you are connected and still not listed, your identity may already be " +
-            "linked to someone else.",
+            "No TeamSpeak users found that can be linked. Connect to TeamSpeak first.",
         }),
       );
       return;
@@ -138,20 +134,16 @@ export function linkCommand(interaction: Interaction): Response {
     const options = clients.slice(0, 25).map((client) => ({
       label: (client.nickname || "(no nickname)").slice(0, 100),
       value: client.clid,
-      description: client.current
-        ? "Your current link. Re-link to re-verify it."
-        : undefined,
+      description: client.current ? "Your current link" : undefined,
     }));
 
     await editOriginal(
       interaction,
       messageEdit({
         content:
-          "These are the people connected to TeamSpeak right now. **Pick " +
-          "yourself** and we will poke a code to that client. If you pick the " +
-          "wrong person the code goes to *them*, so you simply will not be able " +
-          "to finish. If you are already linked, your current identity is marked; " +
-          "picking a different one replaces your current link.",
+          "Pick yourself from the list. The code goes to the client you choose, " +
+          "so a wrong pick cannot be completed. Already linked? Your current " +
+          "identity is marked; choosing a different one replaces it.",
         components: [
           actionRow(
             stringSelect({
@@ -182,7 +174,7 @@ export function linkPick(interaction: Interaction): Response {
       await editOriginal(
         interaction,
         messageEdit({
-          content: "We could not tell who you are. Please try again.",
+          content: "Could not identify you. Try again.",
         }),
       );
       return;
@@ -217,8 +209,7 @@ export function linkPick(interaction: Interaction): Response {
         interaction,
         messageEdit({
           content:
-            "We could not reach TeamSpeak. This is our problem, not yours. Try " +
-            "again in a few minutes by running /link.",
+            "TeamSpeak is unreachable right now. Run /link again in a few minutes.",
         }),
       );
       return;
@@ -249,15 +240,14 @@ export function linkPick(interaction: Interaction): Response {
     });
 
     try {
-      await pokeLinkCode(picked.clid, pokeMessage(code, "discord"));
+      await pokeLinkCode(picked.clid, pokeMessage(code));
     } catch (cause) {
       if (!(cause instanceof WorkerUnavailableError)) throw cause;
       await editOriginal(
         interaction,
         messageEdit({
           content:
-            "We could not reach TeamSpeak to send your code. Try again in a few " +
-            "minutes by running /link.",
+            "TeamSpeak is unreachable, so the code was not sent. Run /link again in a few minutes.",
         }),
       );
       return;
@@ -267,9 +257,8 @@ export function linkPick(interaction: Interaction): Response {
       interaction,
       messageEdit({
         content:
-          `A code was poked to **${picked.nickname || "your client"}** on ` +
-          "TeamSpeak. Click **Enter code** and type it in. It is good for five " +
-          `minutes, and you get ${MAX_ATTEMPTS} tries.`,
+          `A code was sent to **${picked.nickname || "your client"}** on ` +
+          "TeamSpeak. Copy it, and click *Enter code* below.",
         components: [
           actionRow(button({ customId: "link:enter", label: "Enter code" })),
         ],
@@ -320,7 +309,7 @@ export function linkCode(interaction: Interaction): Response {
       await editOriginal(
         interaction,
         messageEdit({
-          content: "We could not tell who you are. Please try again.",
+          content: "Could not identify you. Try again.",
         }),
       );
       return;
@@ -342,9 +331,7 @@ export function linkCode(interaction: Interaction): Response {
     if (!challenge) {
       await editOriginal(
         interaction,
-        messageEdit({
-          content: "There was no code waiting. Run /link again.",
-        }),
+        messageEdit({ content: "No code waiting. Run /link again." }),
       );
       return;
     }
@@ -399,8 +386,8 @@ export function linkCode(interaction: Interaction): Response {
           interaction,
           messageEdit({
             content:
-              "That TeamSpeak identity is already linked to another member. If " +
-              "it is really yours, ask an admin.",
+              "That TeamSpeak identity is already linked to another member. " +
+              "If it is yours, ask an admin.",
           }),
         );
         return;
@@ -410,11 +397,7 @@ export function linkCode(interaction: Interaction): Response {
 
     await editOriginal(
       interaction,
-      messageEdit({
-        content:
-          "**TeamSpeak linked.** Your identity is verified, and you will get " +
-          "your groups at the next sync.",
-      }),
+      messageEdit({ content: "Link successful! ✅" }),
     );
   });
 }
@@ -425,14 +408,14 @@ function verdictMessage(
 ): string {
   switch (verdict.reason) {
     case "wrong_code":
-      return `That is not the code. ${verdict.attemptsLeft} ${
+      return `Wrong code. ${verdict.attemptsLeft} ${
         verdict.attemptsLeft === 1 ? "try" : "tries"
-      } left. Click **Enter code** to try again.`;
+      } left. Click *Enter code* to try again.`;
     case "too_many_attempts":
-      return "Too many wrong guesses. The code is dead. Run /link again.";
+      return "Too many wrong attempts. Run /link again.";
     case "expired":
-      return "That code expired. Run /link again.";
+      return "Code expired. Run /link again.";
     case "already_used":
-      return "That code was already used. Run /link again.";
+      return "Code already used. Run /link again.";
   }
 }
