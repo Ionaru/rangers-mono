@@ -320,3 +320,19 @@ export function pickRandom<T>(
   if (items.length === 0) return undefined;
   return items[Math.floor(rng() * items.length)];
 }
+
+/**
+ * Split the announcement's witty-lines file into individual messages.
+ *
+ * Messages are separated by a **blank line**, not by every newline, so a single
+ * message may span several lines and keep its own line breaks. Any run of blank or
+ * whitespace-only lines is one separator; each message is trimmed and empties are
+ * dropped. CRLF-safe, because the box that edits this file is Windows.
+ */
+export function splitMessages(text: string): string[] {
+  return text
+    .replace(/\r\n/g, "\n") // normalize Windows line endings; keep the break as LF
+    .split(/\n[ \t]*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+}

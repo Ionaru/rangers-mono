@@ -4,6 +4,7 @@ import {
   opTitle,
   pickRandom,
   planWeeklyOp,
+  splitMessages,
   utcToZonedParts,
   zonedWallClockToUtc,
 } from "./ops.ts";
@@ -188,4 +189,33 @@ Deno.test("pickRandom indexes by the injected rng", () => {
   assertEquals(pickRandom(items, () => 0), "a");
   assertEquals(pickRandom(items, () => 0.5), "b");
   assertEquals(pickRandom(items, () => 0.99), "c");
+});
+
+// ---------------------------------------------------------------- splitMessages
+
+Deno.test("splitMessages splits on blank lines and keeps single lines intact", () => {
+  assertEquals(
+    splitMessages("first message\n\nsecond message\n\nthird"),
+    ["first message", "second message", "third"],
+  );
+});
+
+Deno.test("splitMessages keeps line breaks WITHIN a message", () => {
+  const text = "line one\nline two\n\nsecond message";
+  assertEquals(splitMessages(text), ["line one\nline two", "second message"]);
+});
+
+Deno.test("splitMessages collapses runs of blank lines and trims", () => {
+  const text = "\n\n  a\n\n\n\n  b  \n\n";
+  assertEquals(splitMessages(text), ["a", "b"]);
+});
+
+Deno.test("splitMessages is CRLF-safe (Windows box), normalizing breaks to LF", () => {
+  const text = "a line\r\nand more\r\n \t \r\nnext one";
+  assertEquals(splitMessages(text), ["a line\nand more", "next one"]);
+});
+
+Deno.test("splitMessages returns [] for empty or whitespace-only input", () => {
+  assertEquals(splitMessages(""), []);
+  assertEquals(splitMessages("\n\n   \n"), []);
 });

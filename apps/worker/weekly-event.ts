@@ -11,6 +11,7 @@ import {
   opTitle,
   pickRandom,
   planWeeklyOp,
+  splitMessages,
   type WeeklyOpPlan,
 } from "@7r/domain";
 import {
@@ -413,31 +414,36 @@ export async function describeWeeklyEvent(
   };
 }
 
-/** Build the @everyone message: the ping, an optional witty line, the event link. */
+/** Build the @everyone message: the ping, an optional witty message, the event link. */
 async function buildAnnouncementContent(
   deps: Pick<WeeklyEventDeps, "textFile" | "log">,
   eventUrl: string,
 ): Promise<string> {
-  const line = await pickWittyLine(deps);
+  const witty = await pickWittyMessage(deps);
   const paragraphs = ["@everyone"];
-  if (line) paragraphs.push(line);
+  if (witty) paragraphs.push(witty);
   // The URL on its own paragraph is what Discord unfurls into the event card, with
   // its cover banner and its native "Interested" button.
   paragraphs.push(eventUrl);
   return paragraphs.join("\n\n");
 }
 
-/** A random non-empty line from the witty-lines file, or undefined if unusable. */
-async function pickWittyLine(
+/**
+ * A random witty message from the file, or undefined if unusable.
+ *
+ * Messages are blank-line-separated (`splitMessages`), so one may span several
+ * lines and keep its own line breaks; those breaks are preserved into the Discord
+ * message verbatim.
+ */
+async function pickWittyMessage(
   deps: Pick<WeeklyEventDeps, "textFile" | "log">,
 ): Promise<string | undefined> {
   if (!deps.textFile) return undefined;
   try {
-    const text = await Deno.readTextFile(deps.textFile);
-    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-    return pickRandom(lines, Math.random);
+    const messages = splitMessages(await Deno.readTextFile(deps.textFile));
+    return pickRandom(messages, Math.random);
   } catch (error) {
-    // Best-effort: a missing or unreadable file just means no witty line, not a
+    // Best-effort: a missing or unreadable file just means no witty message, not a
     // failed announcement.
     deps.log("could not read announcement text file", {
       path: deps.textFile,
