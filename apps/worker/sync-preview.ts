@@ -8,6 +8,7 @@ import {
   type TeamspeakConfig,
 } from "@7r/config";
 import { closeDb, getDb } from "@7r/db";
+import { configureLogging } from "@7r/logging";
 import { connectTeamspeak } from "@7r/teamspeak";
 import { runSyncPass } from "./sync.ts";
 
@@ -27,6 +28,20 @@ async function main(): Promise<number> {
     [TeamspeakConfig, DiscordBotConfig, SyncConfig]
   >([getTeamspeakConfig, getDiscordBotConfig, getSyncConfig]);
 
+  /**
+   * Logging off, and said out loud rather than left to the default (ADR 0019).
+   *
+   * A pass logs its progress line by line, and the human-readable diff printed
+   * below IS the output of this command: interleaving the two would bury it.
+   * The conditions worth knowing about still arrive, through the `alert`
+   * callback below, which this script points at stderr.
+   *
+   * Silence is also what an unconfigured process does, so this line changes
+   * nothing today. It is here so that the day somebody configures logging one
+   * level up, this command does not start narrating over its own report.
+   */
+  configureLogging({ shape: "off" });
+
   const db = getDb();
   const teamspeak = await connectTeamspeak({
     host: ts.TS_QUERY_HOST,
@@ -45,7 +60,6 @@ async function main(): Promise<number> {
         discord: { botToken: bot.DISCORD_BOT_TOKEN },
         guildId: bot.DISCORD_GUILD_ID,
         maxRemovals: sync.SYNC_MAX_REMOVALS,
-        log: () => {}, // the human-readable print below is the output
         alert: (summary, detail) =>
           console.error(`ALERT: ${summary}${detail ? `\n${detail}` : ""}`),
       },

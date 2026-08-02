@@ -5,6 +5,9 @@ import {
 } from "@7r/teamspeak";
 import { type Db, listTeamspeakLinks, ping } from "@7r/db";
 import { pickableClients } from "@7r/identity";
+import { getLogger } from "@7r/logging";
+
+const log = getLogger(["7r", "worker", "api"]);
 
 /**
  * The worker's internal HTTP API. The Compose network only: never proxied, never
@@ -22,7 +25,7 @@ export interface InternalApiDeps {
   db: Db;
   teamspeak: TeamspeakConnection;
   token: string;
-  log: (message: string, extra?: Record<string, unknown>) => void;
+  /** Threaded, unlike the logger: see `SyncDeps.alert` (sync.ts) and ADR 0019. */
   alert: (summary: string, detail?: unknown) => void;
 }
 
@@ -55,7 +58,7 @@ function authorized(request: Request, token: string): boolean {
 export function createInternalApiHandler(
   deps: InternalApiDeps,
 ): (request: Request) => Promise<Response> {
-  const { db, teamspeak, token, log, alert } = deps;
+  const { db, teamspeak, token, alert } = deps;
 
   return async (request: Request): Promise<Response> => {
     const { pathname } = new URL(request.url);
@@ -68,7 +71,7 @@ export function createInternalApiHandler(
         await ping(db);
         return Response.json({ ok: true, db: "up" });
       } catch (cause) {
-        log("health check failed", { error: String(cause) });
+        log.error("health check failed", { error: String(cause) });
         return Response.json({ ok: false, db: "down" }, { status: 503 });
       }
     }
@@ -94,7 +97,7 @@ export function createInternalApiHandler(
       // A ServerQuery call blew up. The website is waiting on this, so answer
       // it, but make sure the failure is visible: the member sees "TeamSpeak is
       // unreachable" and somebody needs to know why.
-      log("internal api failed", { pathname, error: String(cause) });
+      log.error("internal api failed", { pathname, error: String(cause) });
       alert(`internal api ${pathname} failed`, cause);
       return Response.json(
         { error: "teamspeak_unavailable" },

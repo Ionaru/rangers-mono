@@ -29,6 +29,7 @@ import {
   removeClientFromServerGroup,
   type TeamspeakConnection,
 } from "@7r/teamspeak";
+import { getLogger } from "@7r/logging";
 
 /**
  * One reconcile pass, Discord -> TeamSpeak (IMPLEMENTATION §6), shared by the
@@ -38,13 +39,20 @@ import {
  * testable without a live server.
  */
 
+const log = getLogger(["7r", "worker", "sync"]);
+
 export interface SyncDeps {
   db: Db;
   teamspeak: TeamspeakConnection;
   discord: DiscordRestOptions;
   guildId: string;
   maxRemovals: number;
-  log: (message: string, extra?: Record<string, unknown>) => void;
+  /**
+   * Still threaded, unlike the logger (ADR 0019). `startSyncLoop` hands
+   * `runSyncPass` a *wrapped* alerter, and that wrapper is where the page
+   * de-duplication lives; a module-scope alerter would let every call site here
+   * page around it.
+   */
   alert: (summary: string, detail?: unknown) => void;
 }
 
@@ -107,7 +115,7 @@ export async function runSyncPass(
   deps: SyncDeps,
   opts: { apply: boolean },
 ): Promise<SyncPassResult> {
-  const { db, teamspeak, discord, guildId, log, alert } = deps;
+  const { db, teamspeak, discord, guildId, alert } = deps;
 
   /**
    * @param reason a summary that is CONSTANT per condition. The loop's page
@@ -119,7 +127,7 @@ export async function runSyncPass(
     reason: string,
     opts: { page?: boolean; detail?: unknown } = {},
   ): SyncPassResult => {
-    log("sync pass aborted", { reason, detail: opts.detail });
+    log.warn("sync pass aborted", { reason, detail: opts.detail });
     // Most aborts are real failures worth paging (an empty guild poll is a
     // Discord outage or a revoked GUILD_MEMBERS intent). A few are expected
     // states that must not page the error webhook every tick: those callers
@@ -196,7 +204,7 @@ export async function runSyncPass(
     // it are meaningless, so drop those entries for this pass and alert; the
     // durable fix is re-running the seed.
     const names = deadEntries.map(([, a]) => `${a.name} (sgid ${a.tsSgid})`);
-    log("mapped sgids missing from live servergrouplist", { names });
+    log.warn("mapped sgids missing from live servergrouplist", { names });
     alert(
       "sync: mapped TeamSpeak groups no longer exist; re-run the seed",
       names.join(", "),
@@ -325,7 +333,7 @@ export async function runSyncPass(
         detail: unreadableGroups.join("\n"),
       });
     }
-    log("sync: owned groups excluded from this pass", {
+    log.warn("sync: owned groups excluded from this pass", {
       groups: unreadableGroups,
     });
     // Stable summary, the group names and errors in the detail, so a standing
@@ -396,7 +404,7 @@ export async function runSyncPass(
   const skippedErrors = skipped.filter((s) => s.kind === "lookup_error");
   const skippedUnknown = skipped.filter((s) => s.kind === "unknown_identity");
   if (skippedErrors.length > 0) {
-    log("sync: members errored on TeamSpeak lookup", {
+    log.warn("sync: members errored on TeamSpeak lookup", {
       members: skippedErrors.map((s) => `${s.displayName}: ${s.reason}`),
     });
     alert(
@@ -421,7 +429,7 @@ export async function runSyncPass(
   // `plan.changed` here silently dropped exactly the converged-conflict case.
   for (const memberPlan of plan.members) {
     for (const warning of memberPlan.warnings) {
-      log("sync warning", { member: memberPlan.displayName, warning });
+      log.warn("sync warning", { member: memberPlan.displayName, warning });
     }
   }
 
@@ -461,7 +469,7 @@ export async function runSyncPass(
     // often the whole membership (a bad or empty mapping), so the names are
     // sampled rather than dumped in full every tick: the count is the signal,
     // and sync:preview enumerates them in full on demand.
-    log("sync halted by blast-radius guard", {
+    log.error("sync halted by blast-radius guard", {
       removalMembers: plan.removalMemberCount,
       maxRemovals: plan.maxRemovals,
       dryRun: !opts.apply,
@@ -483,7 +491,16 @@ export async function runSyncPass(
 
   if (!opts.apply) {
     for (const m of plan.changed) {
-      log("sync dry-run diff", {
+      /**
+       * `debug`, and the only line in the worker below `info` (ADR 0019). It is
+       * one line per changed member per pass, forever, while SYNC_DRY_RUN is
+       * true, which is the default and where this system spends its first
+       * weeks: a fresh mapping on this roster is a hundred lines every five
+       * minutes. The summary below carries the counts, and `sync:preview`
+       * prints the whole diff on demand, which is the gate ADR 0009 actually
+       * points at. `LOG_LEVEL=debug` brings it back.
+       */
+      log.debug("sync dry-run diff", {
         member: m.displayName,
         tsUid: m.tsUid,
         toAdd: m.toAdd,
@@ -492,7 +509,7 @@ export async function runSyncPass(
         clearDisabled: m.clearDisabled,
       });
     }
-    log("sync pass (dry run)", {
+    log.info("sync pass (dry run)", {
       members: members.length,
       changed: plan.changed.length,
       removalMembers: plan.removalMemberCount,
@@ -536,13 +553,13 @@ export async function runSyncPass(
       }
       if (memberPlan.stampDisabled) {
         await setMemberDisabledAt(db, memberPlan.memberId);
-        log("member stamped disabled (missing from guild)", {
+        log.info("member stamped disabled (missing from guild)", {
           member: memberPlan.displayName,
         });
       }
       if (memberPlan.clearDisabled) {
         await clearMemberDisabledAt(db, memberPlan.memberId);
-        log("member re-enabled (back in guild)", {
+        log.info("member re-enabled (back in guild)", {
           member: memberPlan.displayName,
         });
       }
@@ -555,7 +572,7 @@ export async function runSyncPass(
     // Log the members every pass: the page below is de-duped on a stable
     // summary, so without this log a *different* member failing on a later pass
     // (same summary, suppressed page) would leave no trace anywhere.
-    log("sync write failures", { members: writeFailures });
+    log.error("sync write failures", { members: writeFailures });
     // Stable summary, count in the detail, so the loop's de-dup pages a standing
     // write fault once per episode rather than every tick.
     alert(
@@ -564,7 +581,7 @@ export async function runSyncPass(
     );
   }
 
-  log("sync pass applied", {
+  log.info("sync pass applied", {
     members: members.length,
     changed: plan.changed.length,
     adds: appliedAdds,
@@ -622,7 +639,7 @@ export function startSyncLoop(
    * per condition (the varying counts and names live in the `detail` argument,
    * which is ignored here). A summary pages only when it was absent from the
    * previous pass; while it persists it stays quiet; if it clears and later
-   * returns it pages again. runSyncPass still `log()`s every condition every
+   * returns it pages again. runSyncPass still logs every condition every
    * pass, so nothing goes dark, only the paging is de-duplicated. This is
    * category-level on purpose: a different `detail` under the same summary (a
    * different member failing) does not re-page, which the per-pass logs cover,
@@ -660,7 +677,7 @@ export function startSyncLoop(
   const pass = async () => {
     if (running) {
       skippedTicks++;
-      deps.log("sync pass still running, skipping this tick", { skippedTicks });
+      log.warn("sync pass still running, skipping this tick", { skippedTicks });
       if (skippedTicks >= STALL_ALERT_AFTER && !pagedStall) {
         pagedStall = true;
         deps.alert(
@@ -705,7 +722,7 @@ export function startSyncLoop(
       }
     } catch (error) {
       failureScore++;
-      deps.log("sync pass failed", { error: String(error), failureScore });
+      log.error("sync pass failed", { error: String(error), failureScore });
       // `pagedFailure` is the episode latch, not `pagedLastPass`: a fault that
       // flaps (fail, succeed, fail) would otherwise clear the one-pass de-dup
       // every other tick and page again and again. One page per episode, one
@@ -723,7 +740,7 @@ export function startSyncLoop(
     }
   };
 
-  deps.log("sync loop started", {
+  log.info("sync loop started", {
     intervalSeconds: opts.intervalSeconds,
     dryRun: opts.dryRun,
   });

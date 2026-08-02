@@ -4,6 +4,7 @@ import {
   TeamSpeak,
   type TeamSpeakClient,
 } from "ts3-nodejs-library";
+import { getLogger } from "@7r/logging";
 import {
   type CommandThrottle,
   type CommandThrottleOptions,
@@ -40,6 +41,14 @@ import {
  * types into every file that touches it.
  */
 export type TeamspeakConnection = TeamSpeak;
+
+/**
+ * This package's logger. Module scope is safe: an unconfigured LogTape logger
+ * emits nothing and touches nothing, so importing this file costs no I/O and
+ * decides no policy. Whether these lines are seen, and in what shape, is the
+ * calling process's business (ADR 0019).
+ */
+const log = getLogger(["7r", "teamspeak"]);
 
 export interface TeamspeakConnectionOptions {
   host: string;
@@ -271,25 +280,22 @@ export async function connectTeamspeak(
  * is down for an hour must not leave a worker that never reconnects, because the
  * only thing that would fix it is somebody noticing.
  */
-export function keepConnected(
-  teamspeak: TeamSpeak,
-  log: (message: string, extra?: Record<string, unknown>) => void,
-): void {
+export function keepConnected(teamspeak: TeamSpeak): void {
   teamspeak.on("error", (error) => {
-    log("teamspeak error", { error: String(error) });
+    log.error("teamspeak error", { error: String(error) });
   });
 
   teamspeak.on("close", async (error) => {
-    log("teamspeak connection closed, reconnecting", {
+    log.warn("teamspeak connection closed, reconnecting", {
       error: error ? String(error) : undefined,
     });
     try {
       await teamspeak.reconnect(-1, 5_000);
-      log("teamspeak reconnected");
+      log.info("teamspeak reconnected");
     } catch (cause) {
       // reconnect(-1) does not give up, so arriving here means it was told to
       // stop (a deliberate quit) or something threw outside the retry loop.
-      log("teamspeak reconnect failed", { error: String(cause) });
+      log.error("teamspeak reconnect failed", { error: String(cause) });
     }
   });
 
@@ -306,7 +312,7 @@ export function keepConnected(
      * the budget is sized wrong for what this box now sends. `gateWaitMs` on the
      * sync pass is the number to look at.
      */
-    log("teamspeak flood limit hit despite the command budget", {
+    log.error("teamspeak flood limit hit despite the command budget", {
       error: String(error),
     });
   });

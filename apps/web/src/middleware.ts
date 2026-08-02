@@ -44,6 +44,33 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // consult. Skip before importing or touching anything.
   if (context.isPrerendered) return next();
 
+  /**
+   * Logging, installed once per process (ADR 0019).
+   *
+   * Astro has no startup hook, so the first server-rendered request installs
+   * it and every one after that is a boolean check inside `configureLogging`.
+   * It belongs **below** the prerender guard and **above** the interactions
+   * short-circuit: below, because reading `LOG_LEVEL` parses the environment
+   * and the build has none; above, because the interactions endpoint and the
+   * handlers it defers are the loudest thing in this app.
+   *
+   * **Setting up logging may not fail a request.** Being above that
+   * short-circuit puts this in front of the Discord interactions endpoint,
+   * which until now answered a PING without touching config at all; a config
+   * parse that throws there would turn a missing `DATABASE_URL` into an
+   * endpoint Discord cannot verify, which is the silent bot death §8 is built
+   * to avoid. So a failed read falls back to the default level rather than
+   * propagating: strictly better than the `console.error` this replaced, which
+   * had no level to get wrong.
+   */
+  const { configureLogging } = await import("@7r/logging");
+  try {
+    const { getCoreConfig } = await import("@7r/config");
+    configureLogging({ level: getCoreConfig().LOG_LEVEL });
+  } catch {
+    configureLogging();
+  }
+
   // The Discord interactions endpoint authenticates every request by an Ed25519
   // signature, not a session cookie (ADR 0003). Running the session lookup and
   // its database round-trip for it would spend part of the 3-second interaction
@@ -159,12 +186,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
      * so, and put it where an operator will see it (the logs) rather than only in
      * front of a member who cannot act on it.
      */
-    console.error(
-      "[web] the Discord guild check failed, so the login could not be completed.",
-      "This is usually a Phase 0 step: a bad DISCORD_BOT_TOKEN, the bot not being",
-      "in the guild, or the GUILD_MEMBERS privileged intent. Run `deno task",
-      "phase0:check` to find out which.",
-      cause,
+    const { getLogger } = await import("@7r/logging");
+    getLogger(["7r", "web", "auth"]).error(
+      "the Discord guild check failed, so the login could not be completed. " +
+        "This is usually a Phase 0 step: a bad DISCORD_BOT_TOKEN, the bot not " +
+        "being in the guild, or the GUILD_MEMBERS privileged intent. Run " +
+        "`deno task phase0:check` to find out which.",
+      { discordId: resolved.discordId, error: String(cause) },
     );
 
     return new Response(

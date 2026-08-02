@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getDb, isUniqueViolation, setSteamLink } from "@7r/db";
 import { verifySteamCallback } from "@7r/identity";
+import { getLogger } from "@7r/logging";
 import { redirectWith } from "../../../lib/forms.ts";
 
 /**
@@ -22,7 +23,10 @@ export const GET: APIRoute = async ({ url, locals }) => {
   const result = await verifySteamCallback(url.searchParams);
 
   if (!result.ok) {
-    console.warn("[web] steam link refused:", result.reason);
+    getLogger(["7r", "web", "steam"]).warn("steam link refused", {
+      member: member.id,
+      reason: result.reason,
+    });
     return redirectWith("/me", { error: "steam_failed" });
   }
 

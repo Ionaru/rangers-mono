@@ -1,0 +1,11 @@
+{
+  "name": "@7r/logging",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "dependencies": {
+    "@logtape/logtape": "2.3.0"
+  }
+}

@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { getDb, ping } from "@7r/db";
+import { getLogger } from "@7r/logging";
 
 export const prerender = false;
 
@@ -24,7 +25,9 @@ export const GET: APIRoute = async () => {
     await ping(getDb());
     return Response.json({ ok: true, db: "up" });
   } catch (cause) {
-    console.error("[web] health check failed:", cause);
+    getLogger(["7r", "web"]).error("health check failed", {
+      error: String(cause),
+    });
     return Response.json({ ok: false, db: "down" }, { status: 503 });
   }
 };

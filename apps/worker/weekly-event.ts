@@ -25,6 +25,9 @@ import {
   listGuildScheduledEvents,
   type ScheduledEvent,
 } from "@7r/discord";
+import { getLogger } from "@7r/logging";
+
+const log = getLogger(["7r", "worker", "event"]);
 
 /**
  * The weekly Saturday Operation: create the Discord scheduled event (with a random
@@ -128,19 +131,22 @@ export interface WeeklyEventDeps {
   textFile?: string;
   /** Optional path to an image folder; unset -> no image. */
   imageDir?: string;
-  log: (message: string, extra?: Record<string, unknown>) => void;
+  /** Threaded, unlike the logger: see `SyncDeps.alert` (sync.ts) and ADR 0019. */
   alert: (summary: string, detail?: unknown) => void;
 }
 
 /**
  * The subset of deps the announcement builder and the preview read: the guild (for
- * the event URL), the schedule, the optional asset paths, and a logger. No
- * database, no Discord auth, no channel id. Naming it lets `op:preview` pass only
- * what it actually uses instead of stubbing a database it never touches.
+ * the event URL), the schedule and the optional asset paths. No database, no
+ * Discord auth, no channel id. Naming it lets `op:preview` pass only what it
+ * actually uses instead of stubbing a database it never touches.
+ *
+ * `op:preview` still sees the file-read failures this path can report: they go
+ * to the module logger now, and the CLI turns that on itself (op-preview.ts).
  */
 export type WeeklyEventPreviewDeps = Pick<
   WeeklyEventDeps,
-  "guildId" | "schedule" | "textFile" | "imageDir" | "log"
+  "guildId" | "schedule" | "textFile" | "imageDir"
 >;
 
 export interface WeeklyEventResult {
@@ -219,7 +225,7 @@ export async function runWeeklyEventPass(
     if (existingId !== null) {
       eventId = existingId;
       eventOutcome = "adopted";
-      deps.log("weekly event already on Discord; adopted it", {
+      log.info("weekly event already on Discord; adopted it", {
         date: plan.saturdayDate,
         eventId,
         title,
@@ -247,7 +253,7 @@ export async function runWeeklyEventPass(
   // it and do NOT re-ping the whole guild.
   if (await announcementAlreadyPosted(deps, eventUrl)) {
     await markOperationAnnounced(deps.db, op.id);
-    deps.log("weekly event announcement already present; not re-posting", {
+    log.info("weekly event announcement already present; not re-posting", {
       date: plan.saturdayDate,
       channel: deps.announceChannelId,
     });
@@ -263,7 +269,7 @@ export async function runWeeklyEventPass(
     allowedMentions: { parse: ["everyone"] },
   });
   await markOperationAnnounced(deps.db, op.id);
-  deps.log("weekly event announced", {
+  log.info("weekly event announced", {
     date: plan.saturdayDate,
     channel: deps.announceChannelId,
   });
@@ -276,10 +282,7 @@ export async function runWeeklyEventPass(
  * if Discord rejects the image. Returns the new event id.
  */
 async function createEvent(
-  deps: Pick<
-    WeeklyEventDeps,
-    "discord" | "guildId" | "imageDir" | "log" | "alert"
-  >,
+  deps: Pick<WeeklyEventDeps, "discord" | "guildId" | "imageDir" | "alert">,
   title: string,
   plan: WeeklyOpPlan,
 ): Promise<string> {
@@ -307,7 +310,7 @@ async function createEvent(
     // (planWeeklyOp closes the window at attendanceStart), so a 400 is never a
     // stale-start-time rejection that dropping the image could not fix.
     if (cover && error instanceof DiscordApiError && error.status === 400) {
-      deps.log("event cover image rejected; retrying without it", {
+      log.warn("event cover image rejected; retrying without it", {
         image: cover.filename,
         error: String(error),
       });
@@ -326,7 +329,7 @@ async function createEvent(
     }
   }
 
-  deps.log("weekly event created", {
+  log.info("weekly event created", {
     date: plan.saturdayDate,
     eventId: event.id,
     title,
@@ -363,7 +366,7 @@ const ANNOUNCEMENT_SCAN_LIMIT = 50;
  * anyway; the only thing forfeited is the guard against the rare double-post.
  */
 async function announcementAlreadyPosted(
-  deps: Pick<WeeklyEventDeps, "discord" | "announceChannelId" | "log">,
+  deps: Pick<WeeklyEventDeps, "discord" | "announceChannelId">,
   eventUrl: string,
 ): Promise<boolean> {
   try {
@@ -374,7 +377,7 @@ async function announcementAlreadyPosted(
     );
     return recent.some((m) => m.content.includes(eventUrl));
   } catch (error) {
-    deps.log(
+    log.warn(
       "could not read channel history before announcing; posting anyway",
       { error: String(error) },
     );
@@ -416,7 +419,7 @@ export async function describeWeeklyEvent(
 
 /** Build the @everyone message: the ping, an optional witty message, the event link. */
 async function buildAnnouncementContent(
-  deps: Pick<WeeklyEventDeps, "textFile" | "log">,
+  deps: Pick<WeeklyEventDeps, "textFile">,
   eventUrl: string,
 ): Promise<string> {
   const witty = await pickWittyMessage(deps);
@@ -436,7 +439,7 @@ async function buildAnnouncementContent(
  * message verbatim.
  */
 async function pickWittyMessage(
-  deps: Pick<WeeklyEventDeps, "textFile" | "log">,
+  deps: Pick<WeeklyEventDeps, "textFile">,
 ): Promise<string | undefined> {
   if (!deps.textFile) return undefined;
   try {
@@ -445,7 +448,7 @@ async function pickWittyMessage(
   } catch (error) {
     // Best-effort: a missing or unreadable file just means no witty message, not a
     // failed announcement.
-    deps.log("could not read announcement text file", {
+    log.warn("could not read announcement text file", {
       path: deps.textFile,
       error: String(error),
     });
@@ -455,7 +458,7 @@ async function pickWittyMessage(
 
 /** A random image from the folder, named only, or undefined if unusable. */
 async function chooseImage(
-  deps: Pick<WeeklyEventDeps, "imageDir" | "log">,
+  deps: Pick<WeeklyEventDeps, "imageDir">,
 ): Promise<ChosenImage | undefined> {
   if (!deps.imageDir) return undefined;
   try {
@@ -474,7 +477,7 @@ async function chooseImage(
     }
     return pickRandom(candidates, Math.random);
   } catch (error) {
-    deps.log("could not read announcement image folder", {
+    log.warn("could not read announcement image folder", {
       dir: deps.imageDir,
       error: String(error),
     });
@@ -484,7 +487,7 @@ async function chooseImage(
 
 /** A random image from the folder, read into memory, or undefined if unusable. */
 async function pickImage(
-  deps: Pick<WeeklyEventDeps, "imageDir" | "log">,
+  deps: Pick<WeeklyEventDeps, "imageDir">,
 ): Promise<PickedImage | undefined> {
   const chosen = await chooseImage(deps);
   if (!chosen) return undefined;
@@ -498,7 +501,7 @@ async function pickImage(
   } catch (error) {
     // Best-effort, like the folder scan: an unreadable file means no cover, not a
     // failed event.
-    deps.log("could not read announcement image", {
+    log.warn("could not read announcement image", {
       path: chosen.path,
       error: String(error),
     });
@@ -542,7 +545,7 @@ export function startWeeklyEventLoop(
       ) {
         dryRunLoggedDate = result.saturdayDate;
         const preview = await describeWeeklyEvent(deps, new Date());
-        deps.log(
+        log.info(
           "weekly event (dry run): would create the event and announce",
           {
             date: preview.plan.saturdayDate,
@@ -564,7 +567,7 @@ export function startWeeklyEventLoop(
         );
       }
     } catch (error) {
-      deps.log("weekly event pass failed", { error: String(error) });
+      log.error("weekly event pass failed", { error: String(error) });
       if (!pagedFailure) {
         pagedFailure = true;
         deps.alert("weekly event pass failed", error);
@@ -574,7 +577,7 @@ export function startWeeklyEventLoop(
     }
   };
 
-  deps.log("weekly event loop started", {
+  log.info("weekly event loop started", {
     intervalSeconds: opts.intervalSeconds,
     dryRun: opts.dryRun,
     timeZone: deps.schedule.timeZone,
