@@ -1,4 +1,4 @@
-import { getLogger } from "@7r/logging";
+import { getLogger, ROOT_CATEGORY } from "@7r/logging";
 
 /**
  * Errors go where somebody will see them.
@@ -22,7 +22,7 @@ import { getLogger } from "@7r/logging";
  * leaky bucket and an episode latch (sync.ts), and a global that any file could
  * page from would route straight around all of it.
  */
-const log = getLogger(["7r", "worker", "alert"]);
+const log = getLogger([ROOT_CATEGORY, "worker", "alert"]);
 
 export function makeAlerter(
   webhookUrl: string | undefined,

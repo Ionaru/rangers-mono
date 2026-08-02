@@ -5,9 +5,9 @@ import {
 } from "@7r/teamspeak";
 import { type Db, listTeamspeakLinks, ping } from "@7r/db";
 import { pickableClients } from "@7r/identity";
-import { getLogger } from "@7r/logging";
+import { getLogger, ROOT_CATEGORY } from "@7r/logging";
 
-const log = getLogger(["7r", "worker", "api"]);
+const log = getLogger([ROOT_CATEGORY, "worker", "api"]);
 
 /**
  * The worker's internal HTTP API. The Compose network only: never proxied, never

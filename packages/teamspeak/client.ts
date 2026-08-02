@@ -4,7 +4,7 @@ import {
   TeamSpeak,
   type TeamSpeakClient,
 } from "ts3-nodejs-library";
-import { getLogger } from "@7r/logging";
+import { getLogger, ROOT_CATEGORY } from "@7r/logging";
 import {
   type CommandThrottle,
   type CommandThrottleOptions,
@@ -48,7 +48,7 @@ export type TeamspeakConnection = TeamSpeak;
  * decides no policy. Whether these lines are seen, and in what shape, is the
  * calling process's business (ADR 0019).
  */
-const log = getLogger(["7r", "teamspeak"]);
+const log = getLogger([ROOT_CATEGORY, "teamspeak"]);
 
 export interface TeamspeakConnectionOptions {
   host: string;

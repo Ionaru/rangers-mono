@@ -1,7 +1,7 @@
 import { editOriginalInteractionResponse, messageEdit } from "@7r/discord";
-import { getLogger } from "@7r/logging";
+import { getLogger, ROOT_CATEGORY } from "@7r/logging";
 
-const log = getLogger(["7r", "web", "discord"]);
+const log = getLogger([ROOT_CATEGORY, "web", "discord"]);
 
 /**
  * The two things every deferred interaction handler needs: the ACK goes back

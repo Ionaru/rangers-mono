@@ -25,9 +25,9 @@ import {
   listGuildScheduledEvents,
   type ScheduledEvent,
 } from "@7r/discord";
-import { getLogger } from "@7r/logging";
+import { getLogger, ROOT_CATEGORY } from "@7r/logging";
 
-const log = getLogger(["7r", "worker", "event"]);
+const log = getLogger([ROOT_CATEGORY, "worker", "event"]);
 
 /**
  * The weekly Saturday Operation: create the Discord scheduled event (with a random

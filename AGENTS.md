@@ -86,9 +86,10 @@ missing-required key. The DB password/URL stay file-based in `./secrets/` (ADR 0
 - **Config is lazy.** Never parse the environment at module scope: `astro build`
   executes module code, so a top-level parse turns a missing production secret
   into a failed build.
-- **Logging is LogTape, through `@7r/logging` only (ADR 0019).** `getLogger(["7r",
-  ...])` at module scope is safe anywhere (an unconfigured logger is a silent
-  no-op); `configureLogging` belongs in an entry point and **nowhere else**, once,
+- **Logging is LogTape, through `@7r/logging` only (ADR 0019).**
+  `getLogger([ROOT_CATEGORY, ...])` at module scope is safe anywhere (an
+  unconfigured logger is a silent no-op); `configureLogging` belongs in an entry
+  point and **nowhere else**, once,
   because a second `configureSync` throws. A `console.*` in service code is now a
   defect, with two commented exceptions in `apps/worker/main.ts` that run before
   logging exists. The one-shot operator CLIs are the opposite case: their

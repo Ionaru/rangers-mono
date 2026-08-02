@@ -16,7 +16,7 @@ import {
   type WorkerServerConfig,
 } from "@7r/config";
 import { closeDb, getDb, ping } from "@7r/db";
-import { configureLogging, getLogger } from "@7r/logging";
+import { configureLogging, getLogger, ROOT_CATEGORY } from "@7r/logging";
 import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
 import { makeAlerter } from "./alert.ts";
 import { createInternalApiHandler } from "./internal-api.ts";
@@ -64,7 +64,7 @@ const HEARTBEAT_MS = 60_000;
  */
 const WEEKLY_EVENT_CHECK_SECONDS = 300;
 
-const log = getLogger(["7r", "worker"]);
+const log = getLogger([ROOT_CATEGORY, "worker"]);
 
 async function main() {
   /**

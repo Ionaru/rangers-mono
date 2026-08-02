@@ -29,7 +29,7 @@ import {
   removeClientFromServerGroup,
   type TeamspeakConnection,
 } from "@7r/teamspeak";
-import { getLogger } from "@7r/logging";
+import { getLogger, ROOT_CATEGORY } from "@7r/logging";
 
 /**
  * One reconcile pass, Discord -> TeamSpeak (IMPLEMENTATION §6), shared by the
@@ -39,7 +39,7 @@ import { getLogger } from "@7r/logging";
  * testable without a live server.
  */
 
-const log = getLogger(["7r", "worker", "sync"]);
+const log = getLogger([ROOT_CATEGORY, "worker", "sync"]);
 
 export interface SyncDeps {
   db: Db;

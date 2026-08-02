@@ -32,7 +32,10 @@ export type { Logger } from "@logtape/logtape";
 /**
  * The root of the category tree. Every logger in the platform hangs off it, so
  * one config entry can set a floor for the whole system and a deeper entry can
- * lift it for one subsystem.
+ * lift it for one subsystem. Call sites spread it (`[ROOT_CATEGORY, "web"]`)
+ * rather than retyping the string: a logger whose root drifts from this
+ * constant sits outside the configured tree, and an unconfigured logger drops
+ * every line with nothing saying why.
  */
 export const ROOT_CATEGORY = "7r";
 
@@ -50,22 +53,25 @@ export const ROOT_CATEGORY = "7r";
  */
 export type LogShape = "json" | "text" | "off";
 
+/**
+ * The four levels an operator can set, and the one list of them: the env
+ * schema (`packages/config`) builds its `LOG_LEVEL` enum from this tuple, so
+ * the code and the config cannot drift. Four values rather than LogTape's six:
+ * `warn` is spelled `warning` inside LogTape and is translated below, and
+ * offering `trace` or `fatal` would be offering levels that nothing in this
+ * codebase logs at.
+ */
+export const LOG_LEVELS = ["debug", "info", "warn", "error"] as const;
+
 export interface LoggingOptions {
-  /**
-   * `LOG_LEVEL`, straight from `@7r/config`. Below this, nothing is emitted.
-   *
-   * The schema's four values are the ones an operator sets, not LogTape's six:
-   * `warn` is spelled `warning` inside LogTape and is translated below. Adding
-   * `trace` and `fatal` to the env schema would be offering levels that nothing
-   * in this codebase logs at.
-   */
-  level?: "debug" | "info" | "warn" | "error";
+  /** `LOG_LEVEL`, straight from `@7r/config`. Below this, nothing is emitted. */
+  level?: (typeof LOG_LEVELS)[number];
   /** Defaults to `json`: the shape the services want, and the safer default. */
   shape?: LogShape;
 }
 
 /** The env schema's spelling, mapped onto LogTape's. */
-const LEVELS: Record<NonNullable<LoggingOptions["level"]>, LogLevel> = {
+const LEVELS: Record<(typeof LOG_LEVELS)[number], LogLevel> = {
   debug: "debug",
   info: "info",
   warn: "warning",
@@ -140,7 +146,7 @@ export function configureLogging(options: LoggingOptions = {}): void {
     ),
   };
 
-  const sinkIds = shape === "off" ? [] : ["out"];
+  const sinkIds = Object.keys(sinks);
 
   configureSync({
     sinks,

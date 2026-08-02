@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DEFAULT_ATTENDANCE_MIN_MINUTES } from "@7r/domain";
+import { LOG_LEVELS } from "@7r/logging";
 
 /**
  * The environment, grouped by concern (IMPLEMENTATION.md §2).
@@ -44,7 +45,7 @@ export type DatabaseConfig = z.infer<typeof databaseSchema>;
 
 /** What any long-running service needs: a database and a log level. */
 export const coreSchema = databaseSchema.extend({
-  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+  LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
 });
 export type CoreConfig = z.infer<typeof coreSchema>;
 
