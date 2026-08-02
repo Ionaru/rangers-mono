@@ -1,4 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
+// Type-only, so it is erased before the bundler sees it and cannot drag
+// @7r/logging into the prerender step the way a value import would.
+import type { LoggingOptions } from "@7r/logging";
 
 /**
  * Resolve the session, resolve the Member behind it, and gate the member area.
@@ -54,22 +57,29 @@ export const onRequest = defineMiddleware(async (context, next) => {
    * and the build has none; above, because the interactions endpoint and the
    * handlers it defers are the loudest thing in this app.
    *
-   * **Setting up logging may not fail a request.** Being above that
+   * **Reading the level may not fail a request.** Being above that
    * short-circuit puts this in front of the Discord interactions endpoint,
    * which until now answered a PING without touching config at all; a config
    * parse that throws there would turn a missing `DATABASE_URL` into an
    * endpoint Discord cannot verify, which is the silent bot death §8 is built
-   * to avoid. So a failed read falls back to the default level rather than
-   * propagating: strictly better than the `console.error` this replaced, which
-   * had no level to get wrong.
+   * to avoid. So the *read* is guarded and falls back to the default level.
+   *
+   * `configureLogging` itself is not guarded, deliberately. It parses nothing
+   * and can only fail on a mistake inside `@7r/logging`, which is a programming
+   * error that should be as loud here as the worker's boot already makes it,
+   * not something to swallow per request. Calling it exactly once, outside the
+   * catch, is also what keeps a failed read from turning into two throwing
+   * calls.
    */
   const { configureLogging } = await import("@7r/logging");
+  let level: LoggingOptions["level"];
   try {
     const { getCoreConfig } = await import("@7r/config");
-    configureLogging({ level: getCoreConfig().LOG_LEVEL });
+    level = getCoreConfig().LOG_LEVEL;
   } catch {
-    configureLogging();
+    // Unreadable config: log at the default level rather than not at all.
   }
+  configureLogging({ level });
 
   // The Discord interactions endpoint authenticates every request by an Ed25519
   // signature, not a session cookie (ADR 0003). Running the session lookup and

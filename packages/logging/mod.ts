@@ -89,9 +89,14 @@ const ALL_TO_STDERR = {
 } as const;
 
 /**
- * Whether `configureLogging` has already run. Not a courtesy: LogTape throws
- * `ConfigError` on a second `configureSync` without a reset, and the web app
- * calls this from middleware, which is to say on every single request.
+ * Whether `configureLogging` has already **succeeded**. Not a courtesy: LogTape
+ * throws `ConfigError` on a second `configureSync` without a reset, and the web
+ * app calls this from middleware, which is to say on every single request.
+ *
+ * Set after the call, never before. Flipping it first would mean that a
+ * `configureSync` which threw left the process latched into "configured" with no
+ * sinks installed, and an unconfigured logger is silent: every line in the
+ * process would be dropped, forever, with nothing saying why.
  */
 let configured = false;
 
@@ -112,7 +117,6 @@ let configured = false;
  */
 export function configureLogging(options: LoggingOptions = {}): void {
   if (configured) return;
-  configured = true;
 
   const shape = options.shape ?? "json";
   const lowestLevel = LEVELS[options.level ?? "info"];
@@ -162,4 +166,6 @@ export function configureLogging(options: LoggingOptions = {}): void {
      */
     contextLocalStorage: new AsyncLocalStorage(),
   });
+
+  configured = true;
 }
