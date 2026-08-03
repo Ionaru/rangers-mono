@@ -15,6 +15,7 @@ ADR wins.
 ```
 packages/config    env parsing (zod), fails loud at boot, lazy
 packages/domain    types and pure rules. Zero I/O. Keep it that way
+packages/logging   LogTape: getLogger everywhere, configureLogging at entry points
 packages/db        Drizzle schema, queries, migrations
 apps/web           Astro 7 SSR on Deno. Also serves the Discord interactions endpoint
 apps/worker        long-running Deno process: TeamSpeak, scheduled jobs
@@ -85,6 +86,16 @@ missing-required key. The DB password/URL stay file-based in `./secrets/` (ADR 0
 - **Config is lazy.** Never parse the environment at module scope: `astro build`
   executes module code, so a top-level parse turns a missing production secret
   into a failed build.
+- **Logging is LogTape, through `@7r/logging` only (ADR 0019).**
+  `getLogger([ROOT_CATEGORY, ...])` at module scope is safe anywhere (an
+  unconfigured logger is a silent no-op); `configureLogging` belongs in an entry
+  point and **nowhere else**, once,
+  because a second `configureSync` throws. A `console.*` in service code is now a
+  defect, with two commented exceptions in `apps/worker/main.ts` that run before
+  logging exists. The one-shot operator CLIs are the opposite case: their
+  `console.log` output is a user interface printed to stdout, and it stays. Astro
+  leaves `@logtape/logtape` **external** in `entry.mjs`, so its pin lives in
+  `apps/web/deno.prod.json` too, and CI compares the two.
 - **The Discord interactions endpoint fails closed.** Verify the Ed25519
   signature over the raw request bytes (`timestamp + rawBody`) before parsing or
   acting on anything, and return 401 on *any* failure. Discord probes the

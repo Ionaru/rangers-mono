@@ -1,4 +1,7 @@
 import { editOriginalInteractionResponse, messageEdit } from "@7r/discord";
+import { getLogger, ROOT_CATEGORY } from "@7r/logging";
+
+const log = getLogger([ROOT_CATEGORY, "web", "discord"]);
 
 /**
  * The two things every deferred interaction handler needs: the ACK goes back
@@ -47,7 +50,10 @@ export function deferThen(
     try {
       await work();
     } catch (error) {
-      console.error("[discord] deferred interaction work failed", error);
+      // The interaction id rides along without being passed in: the endpoint
+      // opened a `withContext` scope before dispatching, and this callback was
+      // spawned inside it (interactions.ts, ADR 0019).
+      log.error("deferred interaction work failed", { error: String(error) });
       try {
         await editOriginal(
           interaction,
@@ -58,10 +64,9 @@ export function deferThen(
       } catch (editError) {
         // The follow-up window may have closed, or Discord is down. Nothing left
         // to do but log; the member sees a spinner that eventually times out.
-        console.error(
-          "[discord] could not edit @original after a failure",
-          editError,
-        );
+        log.error("could not edit @original after a failure", {
+          error: String(editError),
+        });
       }
     }
   })();

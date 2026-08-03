@@ -27,7 +27,6 @@ function handler() {
     db: fakeDb,
     teamspeak: fakeTeamspeak,
     token: TOKEN,
-    log: () => {},
     alert: () => {},
   });
 }

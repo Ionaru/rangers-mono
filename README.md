@@ -23,7 +23,7 @@ Turbo).
 - `apps/worker`: a long-running Deno process. Holds the TeamSpeak ServerQuery
   connection (SSH transport) and runs the scheduled jobs: role reconcile,
   attendance sampling, the weekly event.
-- `packages/*`: shared `config`, `domain`, `db` (Drizzle), `discord`,
+- `packages/*`: shared `config`, `domain`, `logging`, `db` (Drizzle), `discord`,
   `teamspeak`, `identity`.
 - **Postgres** is the shared state. Everything ships as one `compose.yaml`.
 

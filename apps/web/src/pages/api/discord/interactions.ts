@@ -7,6 +7,7 @@ import {
   pong,
   verifyInteractionSignature,
 } from "@7r/discord";
+import { withContext } from "@7r/logging";
 import {
   linkCode,
   linkCommand,
@@ -68,7 +69,26 @@ export const POST: APIRoute = async ({ request }) => {
     return Response.json(pong());
   }
 
-  const routed = dispatch(interaction);
+  /**
+   * Everything logged from here down carries the interaction, without a single
+   * handler having to be handed anything (ADR 0019).
+   *
+   * This is the one place in the codebase where that is not a convenience. The
+   * handlers below `defer`, which spawns the slow half of the work **detached**
+   * and returns the ACK immediately (lib/discord/respond.ts): by the time that
+   * work fails, the request is long over and there is nothing left to correlate
+   * its error line with. `withContext` is entered synchronously here and the
+   * detached promise is created inside it, so the async context, and with it
+   * the interaction id, follows the work rather than the request.
+   */
+  const routed = withContext(
+    {
+      interaction: interaction.id,
+      interactionType: interaction.type,
+      user: interaction.member?.user?.id ?? interaction.user?.id,
+    },
+    () => dispatch(interaction),
+  );
   if (routed) return routed;
 
   // A well-formed interaction we do not handle. Acknowledge nothing; a 400 keeps

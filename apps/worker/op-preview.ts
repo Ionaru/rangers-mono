@@ -5,6 +5,7 @@ import {
   loadAll,
   type OpsConfig,
 } from "@7r/config";
+import { configureLogging } from "@7r/logging";
 import {
   describeWeeklyEvent,
   EVENT_LOCATION,
@@ -36,6 +37,18 @@ async function main(): Promise<void> {
     getOpsConfig,
   ]);
 
+  /**
+   * Turn the shared code's own logging on, in text, on stderr (ADR 0019).
+   *
+   * `describeWeeklyEvent` reaches two log lines that this preview exists to
+   * show: the announcement text file and the image folder each report here when
+   * they are configured but unreadable. Without this the preview would print
+   * "no witty line" and "cover image (none)" and an operator could not tell a
+   * bad path from an empty folder, which is exactly the diagnosis they came for.
+   * stderr keeps them out of the printed plan below, which is stdout.
+   */
+  configureLogging({ shape: "text" });
+
   const { plan, title, coverImageName, announcement } =
     await describeWeeklyEvent(
       {
@@ -43,7 +56,6 @@ async function main(): Promise<void> {
         schedule: opScheduleFrom(ops),
         textFile: ops.OP_ANNOUNCE_TEXT_PATH,
         imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,
-        log: (message, extra) => console.error(`  (${message})`, extra ?? ""),
       },
       new Date(),
     );

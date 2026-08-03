@@ -5,6 +5,7 @@
     "better-auth/": "npm:/better-auth@1.7.0-rc.1/",
     "drizzle-orm": "npm:drizzle-orm@1.0.0-rc.4",
     "drizzle-orm/": "npm:/drizzle-orm@1.0.0-rc.4/",
+    "@logtape/logtape": "npm:@logtape/logtape@2.3.0",
     "postgres": "npm:postgres@3.4.9",
     "zod": "npm:zod@4.4.3",
     "zod/": "npm:/zod@4.4.3/"

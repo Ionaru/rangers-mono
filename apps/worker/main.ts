@@ -16,6 +16,7 @@ import {
   type WorkerServerConfig,
 } from "@7r/config";
 import { closeDb, getDb, ping } from "@7r/db";
+import { configureLogging, getLogger, ROOT_CATEGORY } from "@7r/logging";
 import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
 import { makeAlerter } from "./alert.ts";
 import { createInternalApiHandler } from "./internal-api.ts";
@@ -41,6 +42,12 @@ import { opScheduleFrom, startWeeklyEventLoop } from "./weekly-event.ts";
  * Deno's default is to exit. This process holds the ServerQuery connection, so a
  * stray rejection anywhere would drop TeamSpeak linking, and later the sync and
  * the attendance sampling with it. Log it, keep going.
+ *
+ * `console.error`, and one of only two places in the worker that still is (ADR
+ * 0019). This listener is armed at module scope and the logger is not configured
+ * until `main()` has parsed the environment, so a rejection thrown during boot
+ * would land here with every LogTape sink still absent, which is to say silently.
+ * The whole point of this handler is that it fires when nothing else worked.
  */
 addEventListener("unhandledrejection", (event) => {
   event.preventDefault();
@@ -57,11 +64,7 @@ const HEARTBEAT_MS = 60_000;
  */
 const WEEKLY_EVENT_CHECK_SECONDS = 300;
 
-function log(message: string, extra: Record<string, unknown> = {}) {
-  console.log(
-    JSON.stringify({ ts: new Date().toISOString(), msg: message, ...extra }),
-  );
-}
+const log = getLogger([ROOT_CATEGORY, "worker"]);
 
 async function main() {
   /**
@@ -93,11 +96,20 @@ async function main() {
     getOpsConfig,
   ]);
 
+  /**
+   * The first thing after the config, and before anything that could want to
+   * say something: every logger in the process is a silent no-op until this
+   * runs (ADR 0019). It cannot go any earlier, because the level it installs is
+   * `LOG_LEVEL`, and reading that means the environment must already have
+   * parsed.
+   */
+  configureLogging({ level: core.LOG_LEVEL });
+
   const { WORKER_INTERNAL_PORT, WORKER_INTERNAL_TOKEN } = workerServer;
   const { ERROR_ALERT_DISCORD_WEBHOOK } = alerts;
 
   const db = getDb();
-  const alert = makeAlerter(ERROR_ALERT_DISCORD_WEBHOOK, log);
+  const alert = makeAlerter(ERROR_ALERT_DISCORD_WEBHOOK);
 
   // Connectivity only. Deliberately not a query against a table: booting must
   // not depend on the schema being migrated, or a fresh deploy crash-loops the
@@ -121,9 +133,9 @@ async function main() {
     virtualServerId: ts.TS_VIRTUALSERVER_ID,
     nickname: ts.TS_BOT_NICKNAME,
   });
-  keepConnected(teamspeak, log);
+  keepConnected(teamspeak);
 
-  log("worker started", {
+  log.info("worker started", {
     logLevel: core.LOG_LEVEL,
     port: WORKER_INTERNAL_PORT,
     teamspeak: `${ts.TS_QUERY_HOST}:${ts.TS_QUERY_PORT}`,
@@ -147,7 +159,6 @@ async function main() {
       discord: { botToken: bot.DISCORD_BOT_TOKEN },
       guildId: bot.DISCORD_GUILD_ID,
       maxRemovals: sync.SYNC_MAX_REMOVALS,
-      log,
       alert,
     },
     {
@@ -171,7 +182,6 @@ async function main() {
       schedule: opScheduleFrom(ops),
       textFile: ops.OP_ANNOUNCE_TEXT_PATH,
       imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,
-      log,
       alert,
     },
     {
@@ -190,12 +200,11 @@ async function main() {
       db,
       teamspeak,
       token: WORKER_INTERNAL_TOKEN,
-      log,
       alert,
     }),
   );
 
-  const heartbeat = setInterval(() => log("heartbeat"), HEARTBEAT_MS);
+  const heartbeat = setInterval(() => log.info("heartbeat"), HEARTBEAT_MS);
 
   /**
    * Survival rule 2: shut down cleanly on SIGTERM.
@@ -215,7 +224,7 @@ async function main() {
   const onSignal = () => void shutdown();
 
   const shutdown = async () => {
-    log("shutting down");
+    log.info("shutting down");
     stopSync();
     stopWeeklyEvent();
     clearInterval(heartbeat);
@@ -234,7 +243,7 @@ async function main() {
   Deno.addSignalListener("SIGINT", onSignal);
 
   await server.finished;
-  log("stopped");
+  log.info("stopped");
 }
 
 if (import.meta.main) {
@@ -244,6 +253,11 @@ if (import.meta.main) {
   // *boot* failure too (a port already in use, a bad config, TeamSpeak refusing
   // the login) and leave a worker that is up, silent, and doing nothing at all.
   // Crash instead: Compose restarts it, and the error is visible.
+  //
+  // The second deliberate `console.error` (ADR 0019). The most likely thing to
+  // fail here is the config parse, which is what decides the log level, so the
+  // failure that matters most is precisely the one the logger may not be
+  // configured to report.
   try {
     await main();
   } catch (error) {

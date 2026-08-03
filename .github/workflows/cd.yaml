@@ -68,10 +68,11 @@ jobs:
               fail=1
             fi
           }
-          check drizzle-orm packages/db/package.json
-          check postgres    packages/db/package.json
-          check zod         packages/config/package.json
-          check better-auth apps/web/package.json
+          check drizzle-orm      packages/db/package.json
+          check postgres         packages/db/package.json
+          check zod              packages/config/package.json
+          check better-auth      apps/web/package.json
+          check @logtape/logtape packages/logging/package.json
           exit $fail
 
       # Installs strictly from deno.lock and fails if it is stale. Without this,

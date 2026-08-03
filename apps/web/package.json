@@ -16,6 +16,7 @@
     "@7r/discord": "workspace:*",
     "@7r/domain": "workspace:*",
     "@7r/identity": "workspace:*",
+    "@7r/logging": "workspace:*",
     "@astrojs/starlight": "0.41.3",
     "@deno/astro-adapter": "0.6.0",
     "astro": "7.0.7",
