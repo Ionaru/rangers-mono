@@ -218,6 +218,8 @@ Build notes: build Astro **with Deno** (`deno run -A npm:astro build`), and add 
 
 **Known hazard, owned by the operator, not solved here:** on Windows, Docker Desktop's engine only starts inside an interactive Windows login session (docker/roadmap#515, open since 2023). After an unattended reboot there is no daemon, `restart: unless-stopped` never fires, and the stack stays down silently. Recorded, not fixed.
 
+**Second known hazard, same owner:** starting a container on that box can fail with `failed to add the host (veth…) <=> sandbox (veth…) pair interfaces: cannot allocate memory`, Docker Desktop's Linux VM refusing to allocate the container's veth pair. It is a documented intermittent with no upstream root cause (moby#46401, docker/for-linux#1443), it fires with RAM to spare, and the only lever on the box is how much memory the VM is given. It bit the deploy on 2026-08-03, in the window where ADR 0013 has already stopped `web` and `worker`, so the failure was an outage rather than a no-op. `cd.yaml` retries the final `up` three times to take the common case off the table; the fault itself is the operator's.
+
 ---
 
 ## 7. Security
