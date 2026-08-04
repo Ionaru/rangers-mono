@@ -422,8 +422,34 @@ jobs:
             docker compose --profile migrate run --rm migrate
             if ($LASTEXITCODE -ne 0) { docker compose logs; exit $LASTEXITCODE }
 
-            docker compose up --pull=never --no-build --wait --remove-orphans -d
-            $deployExit = $LASTEXITCODE
+            # A failed `up` here is not like the other failures in this script.
+            # web and worker were stopped above for the migration (ADR 0013), so
+            # there is no previous release still serving to fall back on: the box
+            # runs nothing until this line succeeds, or until a human notices the
+            # red run and presses re-run.
+            #
+            # And it can fail for reasons that have nothing to do with the release
+            # being deployed. On 2026-08-03 the worker died at endpoint creation
+            # with
+            #
+            #   failed to add the host (vetheeea868) <=> sandbox (veth1c62b1d)
+            #   pair interfaces: cannot allocate memory
+            #
+            # which is the Linux side of Docker Desktop failing to allocate the
+            # container's veth pair. It is a known intermittent (moby#46401,
+            # docker/for-linux#1443): it fires with RAM to spare, nobody upstream
+            # has a root cause, and retrying is the whole of the advice. The
+            # `pull` above extracts a few hundred MB of layers immediately before
+            # this line, which is the memory spike Docker Desktop's VM handles
+            # worst. A re-run minutes later, same commit, deployed fine.
+            #
+            # So: three attempts, 15s apart, before giving up. This does not make
+            # a broken release deploy. A crash-looping container or a bad image
+            # still fails, three times over and slower, but `--wait` returns as
+            # soon as a container exits or goes unhealthy, and the ssh step has
+            # 30m. What it buys is that a transient daemon fault costs half a
+            # minute of retrying instead of however long it takes to be noticed.
+            foreach ($attempt in 1..3) { docker compose up --pull=never --no-build --wait --remove-orphans -d; $deployExit = $LASTEXITCODE; if ($deployExit -eq 0) { break }; if ($attempt -lt 3) { Write-Host "compose up failed (exit $deployExit) on attempt $attempt of 3, retrying in 15s"; Start-Sleep -Seconds 15 } }
             docker compose logs
             if ($deployExit -ne 0) { exit $deployExit }
 
