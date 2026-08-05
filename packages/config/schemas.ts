@@ -189,6 +189,32 @@ export const opsSchema = z.object({
   /** The local time on that weekday to fire (18:00). */
   OP_ANNOUNCE_TIME: time().default("18:00"),
   /**
+   * The mission-maker channel the event is posted to ahead of the announcement,
+   * so the mission and location can be filled in on it before the guild is
+   * pinged.
+   *
+   * Optional, and it is the switch for the whole prep step: unset, the worker
+   * behaves exactly as it did before (create the event and announce it in the
+   * same pass at the announce moment). Set, the event is created
+   * `OP_PREP_LEAD_DAYS` earlier and this channel is pinged then.
+   */
+  OP_PREP_CHANNEL_ID: z.string().min(1).optional(),
+  /**
+   * The role mentioned in that prep ping (the Mission maker role). Unset -> the
+   * message is posted without a mention, which notifies nobody: it is worth
+   * setting. Mentioning a role that is not "allow anyone to @mention" in Discord
+   * needs the bot's Mention @everyone permission in the channel.
+   */
+  OP_PREP_MENTION_ROLE_ID: z.string().min(1).optional(),
+  /**
+   * How many days before the announce moment the event is created and the prep
+   * ping posted, at the same local time (1 = the day before). Only read when
+   * OP_PREP_CHANNEL_ID is set.
+   */
+  OP_PREP_LEAD_DAYS: int()
+    .pipe(z.number().int().min(0).max(6))
+    .default(1),
+  /**
    * Optional path to a UTF-8 file of witty announcement messages, blank-line
    * separated (a message may span multiple lines), one picked at random. Unset (or
    * empty/missing) -> no witty message.

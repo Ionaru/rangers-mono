@@ -187,10 +187,21 @@ export interface OpScheduleConfig {
   attendanceEnd: string;
   /** Discord event end, "HH:MM" local (23:30). */
   eventEnd: string;
-  /** The weekday the event is created and announced. 0 = Sunday .. 6 = Saturday (3 = Wednesday). */
+  /** The weekday the op is announced to the guild. 0 = Sunday .. 6 = Saturday (3 = Wednesday). */
   announceWeekday: number;
   /** The local time on that weekday to announce, "HH:MM" (18:00). */
   announceTime: string;
+  /**
+   * How many days *before* the announce moment the event is created, so the
+   * mission makers have it to edit before it goes out (1 = the day before, at
+   * the same local time).
+   *
+   * `0` collapses the prep moment onto the announce moment, which is the
+   * behaviour that shipped first: create and announce in the same pass. The
+   * worker sets this to 0 when no mission-maker channel is configured, so there
+   * is never an event sitting unannounced with nobody asked to fill it in.
+   */
+  prepLeadDays: number;
 }
 
 /** The computed schedule for one week's Saturday op. */
@@ -203,10 +214,16 @@ export interface WeeklyOpPlan {
   attendanceEnd: Date;
   /** 23:30 local as a UTC instant; the Discord event's end. */
   eventEnd: Date;
-  /** The moment the event should be created and @everyone posted (Wed 18:00 local). */
+  /**
+   * The moment the event should exist and the mission makers be pinged to fill it
+   * in (Tue 18:00 local, `prepLeadDays` before `announceAt`). Equal to
+   * `announceAt` when the lead is 0.
+   */
+  prepareAt: Date;
+  /** The moment @everyone is pinged with the finished event (Wed 18:00 local). */
   announceAt: Date;
   /**
-   * Whether `now` is inside the acting window: at or past `announceAt`, and before
+   * Whether `now` is inside the acting window: at or past `prepareAt`, and before
    * the op **starts** (`attendanceStart`). Outside it, the worker does nothing this
    * tick.
    *
@@ -217,6 +234,13 @@ export interface WeeklyOpPlan {
    * catch-up therefore works right up until the op starts, not until it ends.
    */
   withinWindow: boolean;
+  /**
+   * Whether `now` has reached the announce moment (and is still before the op
+   * starts). The narrower half of `withinWindow`: between `prepareAt` and
+   * `announceAt` the worker creates the event and pings the mission makers, but
+   * holds the @everyone back so they have their day to edit it.
+   */
+  withinAnnounceWindow: boolean;
 }
 
 /**
@@ -256,23 +280,32 @@ export function planWeeklyOp(
   // Wednesday (3) that is 3 days before; the modulo keeps it correct for any
   // configured weekday.
   const daysBeforeSaturday = (6 - config.announceWeekday + 7) % 7;
-  const announceAt = at(
-    shiftDays(saturday, -daysBeforeSaturday),
+  const announceDay = shiftDays(saturday, -daysBeforeSaturday);
+  const announceAt = at(announceDay, config.announceTime);
+  // The lead is counted in *calendar days at the same wall clock*, not in fixed
+  // hours: a lead that crossed a DST change would otherwise land an hour off the
+  // announce moment it is measured from.
+  const prepareAt = at(
+    shiftDays(announceDay, -config.prepLeadDays),
     config.announceTime,
   );
 
   // Upper bound is the op start, not the event end: Discord will not schedule an
   // event whose start is already past, so the window has to close when the op does.
-  const withinWindow = now.getTime() >= announceAt.getTime() &&
-    now.getTime() < attendanceStart.getTime();
+  const beforeOp = now.getTime() < attendanceStart.getTime();
+  const withinWindow = now.getTime() >= prepareAt.getTime() && beforeOp;
+  const withinAnnounceWindow = now.getTime() >= announceAt.getTime() &&
+    beforeOp;
 
   return {
     saturdayDate: isoDate(saturday.year, saturday.month, saturday.day),
     attendanceStart,
     attendanceEnd,
     eventEnd,
+    prepareAt,
     announceAt,
     withinWindow,
+    withinAnnounceWindow,
   };
 }
 

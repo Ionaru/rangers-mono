@@ -87,6 +87,14 @@ Deno.test("collectSchemaKeys reads the real schemas (zod introspection smoke tes
     required: false,
     default: undefined,
   });
+  // The mission-maker prep step is opt-in: required here would fail every deploy
+  // that has not added the channel yet, for a step whose absence is the old
+  // behaviour.
+  assertEquals(known.get("OP_PREP_CHANNEL_ID"), {
+    required: false,
+    default: undefined,
+  });
+  assertEquals(known.get("OP_PREP_LEAD_DAYS"), { required: false, default: 1 });
 });
 
 Deno.test("no config key ends in _FILE (the suffix is reserved for secret files)", () => {

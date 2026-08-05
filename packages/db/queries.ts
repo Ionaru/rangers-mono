@@ -485,10 +485,11 @@ export async function upsertAssignable(
  * ticks racing to open the same week both call this, one inserts and one no-ops,
  * and both read back the same row.
  *
- * It writes only the op's windows, never the Discord event id or the announced
- * stamp: those are filled by `setOperationDiscordEvent` and
- * `markOperationAnnounced` as their steps succeed, so a re-run after a partial
- * failure resumes rather than overwriting progress with nulls.
+ * It writes only the op's windows, never the Discord event id or the prep and
+ * announce stamps: those are filled by `setOperationDiscordEvent`,
+ * `markOperationPrepared` and `markOperationAnnounced` as their steps succeed, so
+ * a re-run after a partial failure resumes rather than overwriting progress with
+ * nulls.
  */
 export async function getOrCreateWeeklyOperation(
   db: Db,
@@ -530,6 +531,17 @@ export async function setOperationDiscordEvent(
     .where(
       and(eq(operation.id, operationId), isNull(operation.discordEventId)),
     );
+}
+
+/** Stamp that the mission-maker prep ping went out. No-op if already stamped. */
+export async function markOperationPrepared(
+  db: Db,
+  operationId: string,
+): Promise<void> {
+  await db
+    .update(operation)
+    .set({ preparedAt: new Date() })
+    .where(and(eq(operation.id, operationId), isNull(operation.preparedAt)));
 }
 
 /** Stamp that the @everyone announcement went out. No-op if already stamped. */
