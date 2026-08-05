@@ -15,9 +15,13 @@ import {
 /**
  * `deno task op:preview`: the dry-run gate before the weekly event goes live,
  * the sibling of `sync:preview`. It prints the coming Saturday's event (title,
- * window, announce moment) and the exact @everyone message it would post,
- * including the witty line and image it picked, and writes NOTHING: no database
- * row, no Discord call, whatever OP_EVENT_DRY_RUN says.
+ * window, prep and announce moments) and the exact messages it would post: the
+ * mission-maker ping and the @everyone announcement, including the witty line and
+ * image it picked. It writes NOTHING: no database row, no Discord call, whatever
+ * OP_EVENT_DRY_RUN says.
+ *
+ * The prep ping's deadline prints as raw `<t:…>` markup, which is what goes on the
+ * wire; Discord renders it as a local date and time in the reader's own timezone.
  *
  * It needs no database or TeamSpeak connection: the whole plan is a pure function
  * of the clock and the config, and the announcement is read from local files.
@@ -49,13 +53,14 @@ async function main(): Promise<void> {
    */
   configureLogging({ shape: "text" });
 
-  const { plan, title, coverImageName, announcement } =
+  const { plan, title, coverImageName, prepPing, announcement } =
     await describeWeeklyEvent(
       {
         guildId: bot.DISCORD_GUILD_ID,
         schedule: opScheduleFrom(ops),
         textFile: ops.OP_ANNOUNCE_TEXT_PATH,
         imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,
+        prepMentionRoleId: ops.OP_PREP_MENTION_ROLE_ID,
       },
       new Date(),
     );
@@ -72,6 +77,13 @@ async function main(): Promise<void> {
     }  (${tz})`,
   );
   console.log(
+    `  prep at         ${isoInZone(plan.prepareAt, tz)}  (${tz})${
+      ops.OP_PREP_CHANNEL_ID
+        ? ""
+        : "  (no OP_PREP_CHANNEL_ID: no prep step, same moment as the announcement)"
+    }`,
+  );
+  console.log(
     `  announce at     ${isoInZone(plan.announceAt, tz)}  (${tz})`,
   );
   console.log(
@@ -79,7 +91,23 @@ async function main(): Promise<void> {
       coverImageName ?? "(none - no image dir set, or no image chosen)"
     }`,
   );
-  console.log(`  channel id      ${ops.OP_ANNOUNCE_CHANNEL_ID}`);
+  console.log(
+    `  prep ping to    ${ops.OP_PREP_CHANNEL_ID ?? "(none - step disabled)"}`,
+  );
+  console.log(`  announce to     ${ops.OP_ANNOUNCE_CHANNEL_ID}`);
+
+  if (ops.OP_PREP_CHANNEL_ID) {
+    console.log("\n  mission-maker ping it would post at the prep moment:\n");
+    for (const line of prepPing.split("\n")) {
+      console.log(`    | ${line}`);
+    }
+    if (!ops.OP_PREP_MENTION_ROLE_ID) {
+      console.log(
+        "\n  (no OP_PREP_MENTION_ROLE_ID: the ping mentions nobody and so notifies nobody)",
+      );
+    }
+  }
+
   console.log("\n  announcement it would post:\n");
   for (const line of announcement.split("\n")) {
     console.log(`    | ${line}`);
@@ -87,10 +115,13 @@ async function main(): Promise<void> {
 
   console.log(
     plan.withinWindow
-      ? "\n  A live pass RIGHT NOW is inside the window and would create + announce " +
-        "(unless already done)."
+      ? plan.withinAnnounceWindow
+        ? "\n  A live pass RIGHT NOW is past the announce moment and would create + announce " +
+          "(unless already done)."
+        : "\n  A live pass RIGHT NOW is between the prep and announce moments: it would " +
+          "create the event and ping the mission makers, and hold the @everyone back."
       : "\n  A live pass right now is OUTSIDE the window and would do nothing yet; " +
-        "it acts from the announce moment above until the op starts.",
+        "it acts from the prep moment above until the op starts.",
   );
   console.log(
     ops.OP_EVENT_DRY_RUN

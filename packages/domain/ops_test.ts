@@ -18,12 +18,17 @@ const CONFIG: OpScheduleConfig = {
   eventEnd: "23:30",
   announceWeekday: 3, // Wednesday
   announceTime: "18:00",
+  prepLeadDays: 1, // Tuesday 18:00: the mission makers' day with the event
 };
 
+/** The lead switched off: prep and announce collapse onto the same moment. */
+const NO_PREP: OpScheduleConfig = { ...CONFIG, prepLeadDays: 0 };
+
 // A concrete summer week: the op is Saturday 2026-07-25. CEST is UTC+2, so the
-// 20:00 wall clock is 18:00Z, and Wednesday 18:00 local is 16:00Z.
+// 20:00 wall clock is 18:00Z, and 18:00 local is 16:00Z on Wednesday (announce)
+// and on Tuesday (prep) alike.
 // A concrete winter week: the op is Saturday 2026-01-24. CET is UTC+1, so 20:00
-// local is 19:00Z, and Wednesday 18:00 local is 17:00Z.
+// local is 19:00Z and 18:00 local is 17:00Z, on Wednesday and Tuesday alike.
 
 // ---------------------------------------------------------------- local <-> UTC
 
@@ -96,8 +101,10 @@ Deno.test("planWeeklyOp computes the summer op's instants DST-correct", () => {
   assertEquals(plan.attendanceStart, new Date("2026-07-25T18:00:00Z"));
   assertEquals(plan.attendanceEnd, new Date("2026-07-25T21:00:00Z"));
   assertEquals(plan.eventEnd, new Date("2026-07-25T21:30:00Z"));
+  assertEquals(plan.prepareAt, new Date("2026-07-21T16:00:00Z"));
   assertEquals(plan.announceAt, new Date("2026-07-22T16:00:00Z"));
   assertEquals(plan.withinWindow, true);
+  assertEquals(plan.withinAnnounceWindow, true);
 });
 
 Deno.test("planWeeklyOp computes the winter op's instants DST-correct", () => {
@@ -107,22 +114,44 @@ Deno.test("planWeeklyOp computes the winter op's instants DST-correct", () => {
   assertEquals(plan.attendanceStart, new Date("2026-01-24T19:00:00Z"));
   assertEquals(plan.attendanceEnd, new Date("2026-01-24T22:00:00Z"));
   assertEquals(plan.eventEnd, new Date("2026-01-24T22:30:00Z"));
+  assertEquals(plan.prepareAt, new Date("2026-01-20T17:00:00Z"));
   assertEquals(plan.announceAt, new Date("2026-01-21T17:00:00Z"));
   assertEquals(plan.withinWindow, true);
+  assertEquals(plan.withinAnnounceWindow, true);
 });
 
 Deno.test("planWeeklyOp: Sunday before the op is out of the window", () => {
   // Sunday 2026-07-19 12:00 local = 10:00Z. Coming Saturday is 2026-07-25,
-  // but Wednesday's announce moment is still days away.
+  // but Tuesday's prep moment is still days away.
   const plan = planWeeklyOp(new Date("2026-07-19T10:00:00Z"), CONFIG);
   assertEquals(plan.saturdayDate, "2026-07-25");
   assertEquals(plan.withinWindow, false);
+  assertEquals(plan.withinAnnounceWindow, false);
 });
 
-Deno.test("planWeeklyOp: Wednesday just before 18:00 has not opened yet", () => {
-  // Wednesday 2026-07-22 17:00 local = 15:00Z, one hour before announceAt.
-  const plan = planWeeklyOp(new Date("2026-07-22T15:00:00Z"), CONFIG);
+Deno.test("planWeeklyOp: Tuesday just before 18:00 has not opened yet", () => {
+  // Tuesday 2026-07-21 17:00 local = 15:00Z, one hour before prepareAt (16:00Z).
+  const plan = planWeeklyOp(new Date("2026-07-21T15:00:00Z"), CONFIG);
   assertEquals(plan.withinWindow, false);
+  assertEquals(plan.withinAnnounceWindow, false);
+});
+
+Deno.test("planWeeklyOp: Tuesday at 18:30 opens the prep window, not the announcement", () => {
+  // Tuesday 2026-07-21 18:30 local = 16:30Z, past prepareAt (16:00Z) and a day
+  // short of announceAt (Wednesday 16:00Z). This is the whole point of the lead:
+  // the event gets created and the mission makers pinged, and the guild does not.
+  const plan = planWeeklyOp(new Date("2026-07-21T16:30:00Z"), CONFIG);
+  assertEquals(plan.saturdayDate, "2026-07-25");
+  assertEquals(plan.withinWindow, true);
+  assertEquals(plan.withinAnnounceWindow, false);
+});
+
+Deno.test("planWeeklyOp: Wednesday just before 18:00 still holds the announcement back", () => {
+  // Wednesday 2026-07-22 17:00 local = 15:00Z, one hour before announceAt: the
+  // last tick of the mission makers' window.
+  const plan = planWeeklyOp(new Date("2026-07-22T15:00:00Z"), CONFIG);
+  assertEquals(plan.withinWindow, true);
+  assertEquals(plan.withinAnnounceWindow, false);
 });
 
 Deno.test("planWeeklyOp: Wednesday at 18:30 has opened", () => {
@@ -130,6 +159,31 @@ Deno.test("planWeeklyOp: Wednesday at 18:30 has opened", () => {
   const plan = planWeeklyOp(new Date("2026-07-22T16:30:00Z"), CONFIG);
   assertEquals(plan.saturdayDate, "2026-07-25");
   assertEquals(plan.withinWindow, true);
+  assertEquals(plan.withinAnnounceWindow, true);
+});
+
+Deno.test("planWeeklyOp: no lead collapses prep onto the announce moment", () => {
+  // Tuesday 2026-07-21 18:30 local: inside the prep window with a lead, outside
+  // every window without one. This is what an unset OP_PREP_CHANNEL_ID buys: the
+  // behaviour that shipped first, unchanged.
+  const plan = planWeeklyOp(new Date("2026-07-21T16:30:00Z"), NO_PREP);
+  assertEquals(plan.prepareAt, plan.announceAt);
+  assertEquals(plan.withinWindow, false);
+  assertEquals(plan.withinAnnounceWindow, false);
+});
+
+Deno.test("planWeeklyOp: the lead is a calendar day at the same wall clock, not 24 hours", () => {
+  // The one week where the difference is visible: Europe/Amsterdam springs forward
+  // on Sunday 2026-03-29, so with a Sunday announce weekday the prep moment
+  // (Saturday 18:00 CET = 17:00Z) and the announce moment (Sunday 18:00 CEST =
+  // 16:00Z) are 23 hours apart, not 24. Both must still read 18:00 locally; a lead
+  // subtracted in fixed hours would put the prep ping out at 19:00 local.
+  const sundayAnnounce: OpScheduleConfig = { ...CONFIG, announceWeekday: 0 };
+  const plan = planWeeklyOp(new Date("2026-03-30T10:00:00Z"), sundayAnnounce);
+  assertEquals(plan.saturdayDate, "2026-04-04");
+  assertEquals(plan.prepareAt, new Date("2026-03-28T17:00:00Z"));
+  assertEquals(plan.announceAt, new Date("2026-03-29T16:00:00Z"));
+  assertEquals(plan.attendanceStart, new Date("2026-04-04T18:00:00Z"));
 });
 
 Deno.test("planWeeklyOp: Saturday before the op starts still opens (late catch-up)", () => {

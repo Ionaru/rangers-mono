@@ -3,15 +3,17 @@ import { discordJson, type DiscordRestOptions } from "./rest.ts";
 /**
  * Posting a message to a channel, as `7R_Bot`.
  *
- * The one caller is the weekly op announcement (IMPLEMENTATION §7): an @everyone
- * ping in #arma_general carrying the event link, plus an optional witty line.
- * Posting the event's URL is what makes Discord unfurl the event card (with its
- * cover banner and its native "Interested" button), so the message body does the
- * RSVP plumbing for free and the in-game image rides along on the event itself
- * (events.ts), not as an attachment here.
+ * Both callers are the weekly op (IMPLEMENTATION §7): the mission-maker ping that
+ * asks for the event to be filled in, and the @everyone announcement in
+ * #arma_general a day later. Both carry the event link, and posting that URL is
+ * what makes Discord unfurl the event card (with its cover banner and its native
+ * "Interested" button), so the message body does the RSVP plumbing for free and
+ * the in-game image rides along on the event itself (events.ts), not as an
+ * attachment here.
  *
- * The bot needs **Send Messages** in the channel and **Mention @everyone** for the
- * ping to actually notify (without it the text renders but pings nobody).
+ * The bot needs **Send Messages** in each channel, and **Mention @everyone** for a
+ * ping to actually notify (without it the text renders but pings nobody: that
+ * permission covers a non-mentionable role too, not just @everyone).
  */
 
 /**
@@ -19,9 +21,32 @@ import { discordJson, type DiscordRestOptions } from "./rest.ts";
  * content unless it is permitted here (or `allowed_mentions` is omitted entirely,
  * which also permits it); passing it explicitly keeps the intent visible and stops
  * a stray @role or @user in a witty line from pinging by accident.
+ *
+ * `roles` is the by-id allowlist and is deliberately preferred over
+ * `parse: ["roles"]` for the mission-maker ping: it names the one role that may be
+ * notified rather than "whatever role mentions the content happens to contain".
+ * Discord rejects a request that both parses a category and lists ids for it, so
+ * the two are set one or the other, never together.
  */
 export interface AllowedMentions {
-  parse: ("everyone" | "roles" | "users")[];
+  parse?: ("everyone" | "roles" | "users")[];
+  /** Role ids permitted to ping. Must not be combined with `parse: ["roles"]`. */
+  roles?: string[];
+}
+
+/**
+ * A Discord timestamp markup for an instant, e.g. `<t:1753459200:F>`.
+ *
+ * Rendered by every client in the *reader's* own timezone and locale, which is
+ * the point: the mission-maker ping states its deadline once and a member in
+ * another country still reads it correctly, with no timezone label to explain.
+ * Styles are Discord's: `F` long date+time, `f` short, `R` relative.
+ */
+export function discordTimestamp(
+  date: Date,
+  style: "F" | "f" | "R" = "F",
+): string {
+  return `<t:${Math.floor(date.getTime() / 1000)}:${style}>`;
 }
 
 /** Send a message to a channel. */

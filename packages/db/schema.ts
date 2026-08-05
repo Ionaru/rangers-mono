@@ -92,11 +92,18 @@ export const operation = pgTable("operation", {
   eventEnd: tstz("event_end").notNull(),
   discordEventId: text("discord_event_id"),
   /**
+   * When the mission makers were pinged to fill the event in, a day ahead of the
+   * announcement. Null until they have been (and stays null for as long as no
+   * mission-maker channel is configured, which is what turns the step off).
+   */
+  preparedAt: tstz("prepared_at"),
+  /**
    * When the @everyone announcement was posted to #arma_general. Null until it
-   * has been. The weekly job creates the event and posts the announcement as two
-   * independently-idempotent steps: `discord_event_id` guards the first, this
-   * guards the second, so a Discord blip that lets the event through but drops the
-   * post is retried on the next tick rather than leaving nobody pinged.
+   * has been. The weekly job creates the event, pings the mission makers and posts
+   * the announcement as three independently-idempotent steps: `discord_event_id`
+   * guards the first, `prepared_at` the second and this the third, so a Discord
+   * blip that lets one through but drops the next is retried on the following tick
+   * rather than leaving nobody pinged.
    */
   announcedAt: tstz("announced_at"),
   name: text("name"),

@@ -169,8 +169,9 @@ async function main() {
 
   /**
    * Phase 5: the weekly Saturday op. A DST-correct reconciler that creates the
-   * scheduled event + Operation row on the announce weekday and pings @everyone
-   * in #arma_general, behind OP_EVENT_DRY_RUN (default true) exactly as the sync
+   * scheduled event + Operation row a day before the announce weekday, pings the
+   * mission makers to fill it in, and then pings @everyone in #arma_general on the
+   * announce weekday, behind OP_EVENT_DRY_RUN (default true) exactly as the sync
    * loop sits behind SYNC_DRY_RUN.
    */
   const stopWeeklyEvent = startWeeklyEventLoop(
@@ -179,6 +180,8 @@ async function main() {
       discord: { botToken: bot.DISCORD_BOT_TOKEN },
       guildId: bot.DISCORD_GUILD_ID,
       announceChannelId: ops.OP_ANNOUNCE_CHANNEL_ID,
+      prepChannelId: ops.OP_PREP_CHANNEL_ID,
+      prepMentionRoleId: ops.OP_PREP_MENTION_ROLE_ID,
       schedule: opScheduleFrom(ops),
       textFile: ops.OP_ANNOUNCE_TEXT_PATH,
       imageDir: ops.OP_ANNOUNCE_IMAGE_DIR,

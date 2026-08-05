@@ -4,6 +4,7 @@ import type { Db } from "@7r/db";
 import {
   getOrCreateWeeklyOperation,
   markOperationAnnounced,
+  markOperationPrepared,
   setOperationDiscordEvent,
 } from "@7r/db";
 import {
@@ -19,6 +20,7 @@ import {
   createMessage,
   DiscordApiError,
   type DiscordRestOptions,
+  discordTimestamp,
   type EventCoverImage,
   guildScheduledEventUrl,
   listChannelMessages,
@@ -31,24 +33,37 @@ const log = getLogger([ROOT_CATEGORY, "worker", "event"]);
 
 /**
  * The weekly Saturday Operation: create the Discord scheduled event (with a random
- * in-game image as its cover banner) and its `operation` row, then ping @everyone
- * in #arma_general with the event link (ARCHITECTURE §4.2, IMPLEMENTATION §7).
+ * in-game image as its cover banner) and its `operation` row, ping the mission
+ * makers to fill the event in, then a day later ping @everyone in #arma_general
+ * with the event link (ARCHITECTURE §4.2, IMPLEMENTATION §7).
+ *
+ * The event is created ahead of the announcement on purpose: it is born with
+ * "Mission: TBD / Location: TBD" on it, and the mission makers are the ones who
+ * can replace that. Creating it at the announce moment left them no window, so the
+ * @everyone went out to a guild that could not yet be told what it was turning up
+ * for. The prep moment is `prepLeadDays` before the announce moment
+ * (`planWeeklyOp`), and the whole step is off unless a mission-maker channel is
+ * configured.
  *
  * This is a reconciler, not a fire-once cron. Every tick it recomputes the coming
- * Saturday and this week's announce moment (pure, `@7r/domain` `planWeeklyOp`), and
- * inside the window it ensures three things exist. Each is guarded by a database
- * column AND reconciled against Discord's own state, so a pass that crashed between
- * a Discord write and the database write that records it resumes rather than
- * duplicates:
+ * Saturday and this week's prep and announce moments (pure, `@7r/domain`
+ * `planWeeklyOp`), and inside the window it ensures four things exist. Each is
+ * guarded by a database column AND reconciled against Discord's own state, so a
+ * pass that crashed between a Discord write and the database write that records it
+ * resumes rather than duplicates:
  *   - the `operation` row (unique `date`);
  *   - the scheduled event (`operation.discord_event_id`; before creating, the pass
  *     lists the guild's events and adopts a matching one, so a lost event id never
  *     spawns a second event: this reconcile fails closed, aborting the pass if the
  *     list cannot be read);
- *   - the announcement (`operation.announced_at`; before posting, the pass scans the
- *     channel for its own prior message so a crash between posting and recording
- *     does not re-ping the guild. This scan is best-effort: if the history cannot
- *     be read it posts anyway, so a double-ping is made unlikely, not impossible).
+ *   - the mission-maker ping (`operation.prepared_at`);
+ *   - the announcement (`operation.announced_at`), held back until the announce
+ *     moment even though the event has existed since the prep one.
+ * Before either ping the pass scans that channel for its own prior message so a
+ * crash between posting and recording does not re-ping. Those scans are
+ * best-effort: if the history cannot be read it posts anyway, so a double-ping is
+ * made unlikely, not impossible.
+ *
  * A fixed UTC cron was rejected on purpose: it would misplace the op by an hour
  * across a DST change, and it would not survive a missed tick.
  */
@@ -59,6 +74,9 @@ const log = getLogger([ROOT_CATEGORY, "worker", "event"]);
  * `EVENT_LOCATION` is exported because `op:preview` prints it: the preview is the
  * gate before the job goes live, so every field it shows has to come from the code
  * that acts rather than from a literal of its own.
+ *
+ * The two TBD lines are not a placeholder we forgot to fill: they are the form the
+ * mission makers edit between the prep ping and the announcement.
  */
 export const EVENT_LOCATION = "7R Operations Server";
 const EVENT_DESCRIPTION = [
@@ -117,6 +135,11 @@ export function opScheduleFrom(ops: OpsConfig): OpScheduleConfig {
     eventEnd: ops.OP_EVENT_END,
     announceWeekday: ops.OP_ANNOUNCE_WEEKDAY,
     announceTime: ops.OP_ANNOUNCE_TIME,
+    // One switch, read here so the plan and the acting pass cannot disagree about
+    // it: with no mission-maker channel there is nobody to ping, and pulling the
+    // event creation a day earlier anyway would only mean an event sitting in the
+    // guild for a day with "Mission: TBD" on it and no one asked to fix it.
+    prepLeadDays: ops.OP_PREP_CHANNEL_ID ? ops.OP_PREP_LEAD_DAYS : 0,
   };
 }
 
@@ -126,6 +149,13 @@ export interface WeeklyEventDeps {
   guildId: string;
   /** #arma_general. */
   announceChannelId: string;
+  /**
+   * The mission-maker channel pinged ahead of the announcement; unset -> no prep
+   * step (and `opScheduleFrom` collapses the lead to 0 to match).
+   */
+  prepChannelId?: string;
+  /** The role mentioned in the prep ping; unset -> the ping mentions nobody. */
+  prepMentionRoleId?: string;
   schedule: OpScheduleConfig;
   /** Optional path to a witty-lines file; unset -> no witty line. */
   textFile?: string;
@@ -146,7 +176,7 @@ export interface WeeklyEventDeps {
  */
 export type WeeklyEventPreviewDeps = Pick<
   WeeklyEventDeps,
-  "guildId" | "schedule" | "textFile" | "imageDir"
+  "guildId" | "schedule" | "textFile" | "imageDir" | "prepMentionRoleId"
 >;
 
 export interface WeeklyEventResult {
@@ -158,14 +188,25 @@ export interface WeeklyEventResult {
    *   recording its id; this pass recorded it and created nothing. Kept distinct
    *   from `created` because reporting a creation that did not happen is exactly
    *   how a duplicate-event bug would hide.
+   * - `prepared`: pinged the mission makers to fill the event in this pass.
+   * - `waiting`: the event and the prep ping are done and the announce moment has
+   *   not arrived yet. The steady state of the day the mission makers have to
+   *   edit, and distinct from `noop` so a stuck announcement can be told apart
+   *   from one that is simply not due.
    * - `announced`: posted the @everyone announcement this pass.
-   * - `noop`: inside the window but the event and announcement already existed.
+   * - `noop`: inside the window but every step was already done.
+   *
+   * A pass that does several of these reports the last one it got to, so the
+   * first live pass of a week that also reaches the announcement reports
+   * `announced`, not `created`.
    */
   outcome:
     | "idle"
     | "dry_run"
     | "created"
     | "adopted"
+    | "prepared"
+    | "waiting"
     | "announced"
     | "noop";
   saturdayDate: string;
@@ -174,7 +215,8 @@ export interface WeeklyEventResult {
 /**
  * One pass. `apply: false` computes and logs without writing anything or calling
  * Discord (SYNC_DRY_RUN's sibling); `apply: true` creates the event, records it,
- * and posts the announcement, each step only if Discord does not already have it.
+ * pings the mission makers and posts the announcement, each step only if Discord
+ * does not already have it and only once its moment has come.
  */
 export async function runWeeklyEventPass(
   deps: WeeklyEventDeps,
@@ -239,26 +281,74 @@ export async function runWeeklyEventPass(
     await setOperationDiscordEvent(deps.db, op.id, eventId);
   }
 
-  if (op.announcedAt !== null) {
+  const eventUrl = guildScheduledEventUrl(deps.guildId, eventId);
+
+  // What this pass did about the prep ping, or null if there was nothing to do.
+  let prepOutcome: "prepared" | null = null;
+
+  // The mission-maker ping, reconciled exactly like the announcement below: the
+  // event link in that channel is the record a crashed pass left behind, so a
+  // dropped `prepared_at` write costs a stamp, not a second ping.
+  //
+  // Not posted once the announce moment has passed: a pass catching up after the
+  // worker was down through the prep moment would otherwise ask the mission makers
+  // to edit the event before a deadline that is already behind them, and then ping
+  // @everyone in the same breath. The announcement still goes out; `prepared_at`
+  // stays null, because it records that they were asked and they were not.
+  if (
+    deps.prepChannelId && op.preparedAt === null && !plan.withinAnnounceWindow
+  ) {
+    if (await alreadyPosted(deps, deps.prepChannelId, eventUrl)) {
+      log.info("mission-maker ping already present; not re-posting", {
+        date: plan.saturdayDate,
+        channel: deps.prepChannelId,
+      });
+    } else {
+      await createMessage(deps.discord, deps.prepChannelId, {
+        content: buildPrepContent(deps, eventUrl, plan.announceAt),
+        // By id, not `parse: ["roles"]`: this names the one role that may be
+        // notified rather than permitting whatever the content happens to hold.
+        allowedMentions: {
+          roles: deps.prepMentionRoleId ? [deps.prepMentionRoleId] : [],
+        },
+      });
+      prepOutcome = "prepared";
+      log.info("mission makers pinged to fill in the event", {
+        date: plan.saturdayDate,
+        channel: deps.prepChannelId,
+      });
+    }
+    await markOperationPrepared(deps.db, op.id);
+  }
+
+  // The announcement is the one step gated on a second moment: the event has
+  // existed since `prepareAt`, and the whole point of the lead is that the guild
+  // is not pinged until the mission makers have had their day with it.
+  if (!plan.withinAnnounceWindow) {
     return {
-      outcome: eventOutcome ?? "noop",
+      outcome: prepOutcome ?? eventOutcome ?? "waiting",
       saturdayDate: plan.saturdayDate,
     };
   }
 
-  const eventUrl = guildScheduledEventUrl(deps.guildId, eventId);
+  if (op.announcedAt !== null) {
+    return {
+      outcome: prepOutcome ?? eventOutcome ?? "noop",
+      saturdayDate: plan.saturdayDate,
+    };
+  }
 
   // Reconcile the announcement the same way. If a prior pass posted it but crashed
   // before recording announced_at, the event link is already in the channel: record
   // it and do NOT re-ping the whole guild.
-  if (await announcementAlreadyPosted(deps, eventUrl)) {
+  if (await alreadyPosted(deps, deps.announceChannelId, eventUrl)) {
     await markOperationAnnounced(deps.db, op.id);
     log.info("weekly event announcement already present; not re-posting", {
       date: plan.saturdayDate,
       channel: deps.announceChannelId,
     });
     return {
-      outcome: eventOutcome ?? "noop",
+      outcome: prepOutcome ?? eventOutcome ?? "noop",
       saturdayDate: plan.saturdayDate,
     };
   }
@@ -356,30 +446,35 @@ async function findExistingEvent(
   return match?.id ?? null;
 }
 
-/** How many recent messages to scan for a prior announcement before posting. */
+/** How many recent messages to scan for a prior post before posting. */
 const ANNOUNCEMENT_SCAN_LIMIT = 50;
 
 /**
- * Whether the channel already holds our announcement for this event, found by the
+ * Whether the channel already holds one of our posts for this event, found by the
  * event link it carries. Best-effort: if the history cannot be read (no Read
- * Message History permission, say), it returns false and the announcement is posted
+ * Message History permission, say), it returns false and the message is posted
  * anyway; the only thing forfeited is the guard against the rare double-post.
+ *
+ * One helper for both channels: the prep ping and the announcement carry the same
+ * link and want the same guard, and a second copy would be a second place for the
+ * "posted but not recorded" fix to land in one and miss the other.
  */
-async function announcementAlreadyPosted(
-  deps: Pick<WeeklyEventDeps, "discord" | "announceChannelId">,
+async function alreadyPosted(
+  deps: Pick<WeeklyEventDeps, "discord">,
+  channelId: string,
   eventUrl: string,
 ): Promise<boolean> {
   try {
     const recent = await listChannelMessages(
       deps.discord,
-      deps.announceChannelId,
+      channelId,
       ANNOUNCEMENT_SCAN_LIMIT,
     );
     return recent.some((m) => m.content.includes(eventUrl));
   } catch (error) {
     log.warn(
-      "could not read channel history before announcing; posting anyway",
-      { error: String(error) },
+      "could not read channel history before posting; posting anyway",
+      { channel: channelId, error: String(error) },
     );
     return false;
   }
@@ -399,22 +494,51 @@ export async function describeWeeklyEvent(
   title: string;
   /** The cover image that would go on the event, or null if none is available. */
   coverImageName: string | null;
+  /** The mission-maker ping text posted at the prep moment. */
+  prepPing: string;
   /** The @everyone message text (the image rides on the event, not the message). */
   announcement: string;
 }> {
   const plan = planWeeklyOp(now, deps.schedule);
   const title = opTitle(plan.attendanceStart, deps.schedule.timeZone);
   const cover = await chooseImage(deps);
-  const announcement = await buildAnnouncementContent(
-    deps,
-    guildScheduledEventUrl(deps.guildId, "<event-id>"),
-  );
+  const eventUrl = guildScheduledEventUrl(deps.guildId, "<event-id>");
+  const announcement = await buildAnnouncementContent(deps, eventUrl);
   return {
     plan,
     title,
     coverImageName: cover?.filename ?? null,
+    prepPing: buildPrepContent(deps, eventUrl, plan.announceAt),
     announcement,
   };
+}
+
+/**
+ * Build the mission-maker ping: the role mention, what is wanted and by when, then
+ * the event link.
+ *
+ * It says nothing about @everyone in so many words, deliberately: the literal text
+ * renders as a highlighted-looking mention that pings nobody (the `allowed_mentions`
+ * on this post permits only the one role), and a ping-shaped thing that does not
+ * ping is exactly the confusion not to post into a staff channel.
+ *
+ * The deadline goes in as a Discord timestamp, so every reader sees it in their own
+ * timezone rather than in the unit's.
+ */
+function buildPrepContent(
+  deps: Pick<WeeklyEventDeps, "prepMentionRoleId">,
+  eventUrl: string,
+  announceAt: Date,
+): string {
+  const mention = deps.prepMentionRoleId
+    ? `<@&${deps.prepMentionRoleId}>`
+    : "Mission makers";
+  return [
+    mention,
+    `Saturday's op event is up. Set the mission and location on it before it goes ` +
+    `out to the rest of the unit ${discordTimestamp(announceAt)}.`,
+    eventUrl,
+  ].join("\n\n");
 }
 
 /** Build the @everyone message: the ping, an optional witty message, the event link. */
@@ -546,12 +670,16 @@ export function startWeeklyEventLoop(
         dryRunLoggedDate = result.saturdayDate;
         const preview = await describeWeeklyEvent(deps, new Date());
         log.info(
-          "weekly event (dry run): would create the event and announce",
+          "weekly event (dry run): would create the event, ping the mission makers and announce",
           {
             date: preview.plan.saturdayDate,
             title: preview.title,
             location: EVENT_LOCATION,
             coverImage: preview.coverImageName,
+            prepChannel: deps.prepChannelId ?? null,
+            prepAt: preview.plan.prepareAt,
+            prepPing: deps.prepChannelId ? preview.prepPing : null,
+            announceAt: preview.plan.announceAt,
             channel: deps.announceChannelId,
             announcement: preview.announcement,
           },
@@ -583,6 +711,11 @@ export function startWeeklyEventLoop(
     timeZone: deps.schedule.timeZone,
     announceWeekday: deps.schedule.announceWeekday,
     announceTime: deps.schedule.announceTime,
+    // Whether the mission makers get their day with the event is a mode of this
+    // loop, like the dry run above: an operator reading one line has to be able to
+    // see that the step is off rather than deduce it from a ping that never came.
+    prepChannel: deps.prepChannelId ?? null,
+    prepLeadDays: deps.schedule.prepLeadDays,
   });
   pass();
   const interval = setInterval(pass, opts.intervalSeconds * 1_000);
