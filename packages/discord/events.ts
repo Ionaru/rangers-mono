@@ -7,8 +7,13 @@ import { discordJson, type DiscordRestOptions } from "./rest.ts";
  * The op is an EXTERNAL event (it happens on TeamSpeak and the game server, not in
  * a Discord voice channel), and creating one needs **`CREATE_EVENTS` (1<<44)**,
  * not `MANAGE_EVENTS` (1<<33): the latter only edits and deletes events that
- * already exist and 403s on create. `phase0:check` reported `7R_Bot` was missing
- * `CREATE_EVENTS`, so this 403s until that grant is added.
+ * already exist and 403s on create.
+ *
+ * `phase0:check` reported `7R_Bot` missing `CREATE_EVENTS` on 2026-07-14, and
+ * this comment said the create therefore 403s. It does not: events have been
+ * created weekly since at least 2026-08-29 (OPEN-QUESTIONS E9). Left as a note
+ * rather than deleted, because the permission is still the thing that breaks
+ * this call, and it breaks it silently.
  */
 
 /** Discord's `entity_type` for an event with a free-text location. */
