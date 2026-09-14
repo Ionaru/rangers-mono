@@ -1,6 +1,8 @@
 import { loadConfig, memoize } from "./load.ts";
 import {
   alertSchema,
+  attendanceChannelSchema,
+  attendanceCreditSchema,
   coreSchema,
   databaseSchema,
   discordBotSchema,
@@ -53,6 +55,16 @@ export const getSyncConfig = memoize(() => loadConfig(syncSchema));
 /** Phase 5 (the weekly event + announcement) and Phase 6 (attendance). Worker only. */
 export const getOpsConfig = memoize(() => loadConfig(opsSchema));
 
+/**
+ * Phase 6. The attendance credit threshold, for `apps/web`: credit is computed
+ * on read, so the website is what needs the number. Deliberately not
+ * `getOpsConfig`, which would make the site require the worker's announce
+ * channel to render a page.
+ */
+export const getAttendanceCreditConfig = memoize(() =>
+  loadConfig(attendanceCreditSchema)
+);
+
 /** Phase 2. Steam OpenID is stateless, so this is one URL and nothing else. */
 export const getSteamConfig = memoize(() => loadConfig(steamSchema));
 
@@ -63,6 +75,16 @@ export const getWorkerClientConfig = memoize(() =>
 
 /** Phase 2 (the poke-link flow) and Phase 4 (the reconcile). Worker only. */
 export const getTeamspeakConfig = memoize(() => loadConfig(teamspeakSchema));
+
+/**
+ * Phase 6. The one Operations channel the attendance sampler reads. Worker only,
+ * and separate from `getTeamspeakConfig` for the reason the schema gives: it is
+ * an attendance concept, and folding it into the transport config would make
+ * whoever sets up linking invent a channel id to get past a fail-loud boot.
+ */
+export const getAttendanceChannelConfig = memoize(() =>
+  loadConfig(attendanceChannelSchema)
+);
 
 /** The worker posts its own errors here, so a failure is visible without log-diving. */
 export const getAlertConfig = memoize(() => loadConfig(alertSchema));

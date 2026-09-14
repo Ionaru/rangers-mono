@@ -1,8 +1,10 @@
 import {
   type AlertConfig,
+  type AttendanceChannelConfig,
   type CoreConfig,
   type DiscordBotConfig,
   getAlertConfig,
+  getAttendanceChannelConfig,
   getCoreConfig,
   getDiscordBotConfig,
   getOpsConfig,
@@ -19,6 +21,7 @@ import { closeDb, getDb, ping } from "@7r/db";
 import { configureLogging, getLogger, ROOT_CATEGORY } from "@7r/logging";
 import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
 import { makeAlerter } from "./alert.ts";
+import { startAttendanceLoop } from "./attendance.ts";
 import { createInternalApiHandler } from "./internal-api.ts";
 import { startSyncLoop } from "./sync.ts";
 import { opScheduleFrom, startWeeklyEventLoop } from "./weekly-event.ts";
@@ -76,7 +79,7 @@ async function main() {
    * redeploy, be told about TS_QUERY_HOST, redeploy, be told about
    * TS_QUERY_PASS. `loadAll` collects them.
    */
-  const [core, workerServer, ts, alerts, bot, sync, ops] = loadAll<
+  const [core, workerServer, ts, alerts, bot, sync, ops, attendance] = loadAll<
     [
       CoreConfig,
       WorkerServerConfig,
@@ -85,6 +88,7 @@ async function main() {
       DiscordBotConfig,
       SyncConfig,
       OpsConfig,
+      AttendanceChannelConfig,
     ]
   >([
     getCoreConfig,
@@ -94,6 +98,7 @@ async function main() {
     getDiscordBotConfig,
     getSyncConfig,
     getOpsConfig,
+    getAttendanceChannelConfig,
   ]);
 
   /**
@@ -145,6 +150,10 @@ async function main() {
     // same: its first live pass @everyone-pings the guild, so its mode belongs here.
     syncDryRun: sync.SYNC_DRY_RUN,
     eventDryRun: ops.OP_EVENT_DRY_RUN,
+    // Attendance has no mode to report, so report its one input instead. A
+    // wrong channel id records every op as empty and never errors, so the
+    // number belongs where somebody might read it (ADR 0007).
+    operationsChannelCid: attendance.TS_OPERATIONS_CHANNEL_CID,
   });
 
   /**
@@ -193,6 +202,29 @@ async function main() {
     },
   );
 
+  /**
+   * Phase 6: the Operations-channel sampler. Idle on every tick but the three
+   * hours an op runs, when it reads the channel every ATTENDANCE_SAMPLE_SECONDS
+   * and reconstructs presence spans from the diff (ADR 0007).
+   *
+   * It carries no dry-run switch, and that is deliberate rather than an
+   * oversight: see the note on `startAttendanceLoop`.
+   */
+  const stopAttendance = startAttendanceLoop(
+    {
+      db,
+      teamspeak,
+      discord: { botToken: bot.DISCORD_BOT_TOKEN },
+      guildId: bot.DISCORD_GUILD_ID,
+      operationsChannelCid: attendance.TS_OPERATIONS_CHANNEL_CID,
+      schedule: opScheduleFrom(ops),
+      sampleSeconds: ops.ATTENDANCE_SAMPLE_SECONDS,
+      rsvpRefreshSeconds: ops.ATTENDANCE_RSVP_REFRESH_SECONDS,
+      alert,
+    },
+    { intervalSeconds: ops.ATTENDANCE_SAMPLE_SECONDS },
+  );
+
   const server = Deno.serve(
     {
       port: WORKER_INTERNAL_PORT,
@@ -230,6 +262,7 @@ async function main() {
     log.info("shutting down");
     stopSync();
     stopWeeklyEvent();
+    stopAttendance();
     clearInterval(heartbeat);
     Deno.removeSignalListener("SIGTERM", onSignal);
     Deno.removeSignalListener("SIGINT", onSignal);

@@ -96,9 +96,27 @@ export interface ComponentPayload {
   component?: ComponentPayload;
 }
 
+/**
+ * One submitted option on a command, as Discord sends it.
+ *
+ * Subcommands are options too: `/attendance claim x y` arrives as a single
+ * option named "claim" of type SUB_COMMAND, whose own `options` are the
+ * arguments. That nesting is the reason `subcommandOf` and `optionValue` exist
+ * rather than every handler walking this by hand.
+ */
+export interface CommandOptionPayload {
+  name: string;
+  type: number;
+  /** Absent on a SUB_COMMAND, which carries `options` instead. */
+  value?: string | number | boolean;
+  options?: CommandOptionPayload[];
+}
+
 export interface InteractionData {
   /** APPLICATION_COMMAND: the command name. */
   name?: string;
+  /** APPLICATION_COMMAND: the submitted options, subcommands included. */
+  options?: CommandOptionPayload[];
   /** MESSAGE_COMPONENT / MODAL_SUBMIT: the component's namespaced id. */
   custom_id?: string;
   /** MESSAGE_COMPONENT (string select): the selected option values. */
@@ -210,6 +228,46 @@ export function parseCustomId(
     namespace: customId.slice(0, colon),
     action: customId.slice(colon + 1),
   };
+}
+
+/**
+ * Discord's option type for a subcommand. Mirrors `CommandOptionType.SUB_COMMAND`
+ * in commands.ts; repeated here rather than imported because this module is the
+ * pure wire format and deliberately depends on nothing (ADR 0006).
+ */
+const COMMAND_OPTION_SUB_COMMAND = 1;
+
+/**
+ * The subcommand a command interaction invoked, or null for a bare command.
+ *
+ * Discord sends at most one SUB_COMMAND option at the top level, so the first
+ * match is the answer.
+ */
+export function subcommandOf(
+  data: InteractionData | undefined,
+): CommandOptionPayload | null {
+  const sub = data?.options?.find((option) =>
+    option.type === COMMAND_OPTION_SUB_COMMAND
+  );
+  return sub ?? null;
+}
+
+/**
+ * One option's value by name, as a string, from a command or from a subcommand.
+ *
+ * `undefined` covers both "not sent" and "sent empty", which is the same thing
+ * to a handler: Discord omits an option the member did not fill in rather than
+ * sending it null. A USER option's value is the user's snowflake, already a
+ * string, so the same reader serves both types `/attendance claim` uses.
+ */
+export function optionValue(
+  options: readonly CommandOptionPayload[] | undefined,
+  name: string,
+): string | undefined {
+  const value = options?.find((option) => option.name === name)?.value;
+  if (value === undefined || value === null) return undefined;
+  const text = String(value);
+  return text.length === 0 ? undefined : text;
 }
 
 /** The values a string select submitted. Empty when there are none. */

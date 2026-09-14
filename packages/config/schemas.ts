@@ -164,16 +164,42 @@ export const workerClientSchema = z.object({
 });
 export type WorkerClientConfig = z.infer<typeof workerClientSchema>;
 
+/**
+ * Phase 6. The credit rule's threshold, and nothing else.
+ *
+ * Its own schema because of where it is *read*: credit is computed on read
+ * (IMPLEMENTATION §7), so the thing that needs this number is `apps/web`
+ * rendering an attendance view, not the worker taking samples. Folded into
+ * `opsSchema` it would drag `OP_ANNOUNCE_CHANNEL_ID` (required, worker-only)
+ * onto the website, which is exactly the coupling "every loader asks for what
+ * its caller reads" exists to prevent. `opsSchema` extends it, so the key is
+ * defined once and the two cannot drift.
+ */
+export const attendanceCreditSchema = z.object({
+  ATTENDANCE_MIN_MINUTES: int().default(DEFAULT_ATTENDANCE_MIN_MINUTES),
+});
+export type AttendanceCreditConfig = z.infer<typeof attendanceCreditSchema>;
+
 /** Phase 5 (the weekly event) and Phase 6 (attendance). Saturday only. */
-export const opsSchema = z.object({
+export const opsSchema = attendanceCreditSchema.extend({
   OP_TIMEZONE: z.string().min(1).default("Europe/Amsterdam"),
   /** Event/attendance start, the op's mission time (20:00 local). */
   OP_ATTENDANCE_START: time().default("20:00"),
   OP_ATTENDANCE_END: time().default("23:00"),
   /** Discord event end, past the mission to cover debrief (23:30 local). */
   OP_EVENT_END: time().default("23:30"),
-  ATTENDANCE_MIN_MINUTES: int().default(DEFAULT_ATTENDANCE_MIN_MINUTES),
   ATTENDANCE_SAMPLE_SECONDS: int().default(90),
+  /**
+   * How often, during the op, the Discord event's Interested list is re-read
+   * into `operation_rsvp` (ADR 0020).
+   *
+   * Much coarser than the presence sample because it answers a much coarser
+   * question: whether somebody said they were coming, not when. Fifteen minutes
+   * over a three-hour op is about a dozen REST calls, which also means a worker
+   * that boots at 20:40 still captures a list rather than losing the op's RSVP
+   * data entirely.
+   */
+  ATTENDANCE_RSVP_REFRESH_SECONDS: int().default(900),
 
   // --- weekly event creation + announcement (Phase 5) ---
 

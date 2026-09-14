@@ -149,3 +149,78 @@ export function listGuildScheduledEvents(
     `/guilds/${guildId}/scheduled-events`,
   );
 }
+
+/**
+ * One entry on an event's "Interested" list, reduced to what the RSVP snapshot
+ * stores.
+ *
+ * `global_name` is Discord's display name and is what a reader recognises;
+ * `username` is the handle and is always present. Both are snapshots: they are
+ * stored so a responder who is not a member can still be named on the page, and
+ * anyone who *is* a member is named from `member.display_name` instead.
+ */
+export interface ScheduledEventSubscriber {
+  id: string;
+  username: string;
+  displayName: string | null;
+}
+
+/** The raw shape Discord returns, before it is reduced. */
+interface ScheduledEventUser {
+  user: { id: string; username: string; global_name?: string | null };
+}
+
+/** Discord's cap on this endpoint, and also its default. */
+const EVENT_USERS_PAGE = 100;
+
+/**
+ * Everyone currently subscribed ("Interested") to one scheduled event.
+ *
+ * This is the RSVP snapshot the attendance pass takes during the op (ADR 0020).
+ * Discord exposes no way to read an event's RSVP list after the fact, which is
+ * the whole reason it is captured live and stored rather than read on demand.
+ *
+ * Paginated exactly as `listGuildMembers` is, and for the same reason: the cap
+ * is 100 per page, users come back ascending by id, and `after` is the cursor.
+ * `before` is deliberately never sent: Discord respects only `before` when both
+ * are given, which would silently paginate backwards forever.
+ *
+ * The docs name no permission for this endpoint and `7R_Bot` created the event
+ * itself, so it is expected to read. That is an expectation and not a
+ * measurement (there is no test guild, ARCHITECTURE §9), so the caller must
+ * treat a 403 as a missing grant rather than a reason to abandon the pass: the
+ * attendance sample matters more than the RSVP list does.
+ */
+export async function listGuildScheduledEventUsers(
+  options: DiscordRestOptions,
+  guildId: string,
+  eventId: string,
+): Promise<ScheduledEventSubscriber[]> {
+  const subscribers: ScheduledEventSubscriber[] = [];
+  let after: string | null = null;
+
+  while (true) {
+    const query = `limit=${EVENT_USERS_PAGE}` +
+      (after === null ? "" : `&after=${after}`);
+    const page: ScheduledEventUser[] = await discordJson<ScheduledEventUser[]>(
+      options,
+      `/guilds/${guildId}/scheduled-events/${eventId}/users?${query}`,
+    );
+
+    for (const entry of page) {
+      subscribers.push({
+        id: entry.user.id,
+        username: entry.user.username,
+        displayName: entry.user.global_name ?? null,
+      });
+    }
+
+    if (page.length < EVENT_USERS_PAGE) return subscribers;
+    // Snowflakes exceed Number range, so the cursor is compared as BigInt. The
+    // list is documented as ascending, but taking the max rather than the last
+    // element costs nothing and cannot loop if it ever stops being.
+    after = page
+      .map((entry) => entry.user.id)
+      .reduce((a, b) => (BigInt(a) > BigInt(b) ? a : b));
+  }
+}

@@ -35,6 +35,10 @@ function needsSession(pathname: string): boolean {
   return (
     pathname === "/me" ||
     pathname.startsWith("/me/") ||
+    // Phase 6. A top-level path rather than /me/attendance because it is the
+    // unit's attendance, not yours; the page gates itself to admins on top of
+    // this (ADR 0009, lib/admin.ts).
+    pathname === "/attendance" ||
     pathname.startsWith("/link/") ||
     pathname.startsWith("/unlink/") ||
     pathname === "/signout"

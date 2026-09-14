@@ -1,5 +1,14 @@
-import { assert, assertFalse } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertFalse,
+  assertStringIncludes,
+} from "@std/assert";
+import { and, eq, isNull, lt, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { isUniqueViolation } from "./queries.ts";
+import { attendanceSession, operation, operationRsvp } from "./schema.ts";
 
 /**
  * Drizzle 1.0 wraps every driver error in a `DrizzleQueryError`, so the Postgres
@@ -54,4 +63,76 @@ Deno.test("a cause chain that loops does not hang", () => {
   looped.cause = looped;
   // Guards against the obvious naive `while (e.cause)` walk.
   assertFalse(isUniqueViolation(looped));
+});
+
+/**
+ * The two attendance statements that are not plain Drizzle, rendered to SQL.
+ *
+ * There is no database in the test suite and there is not going to be one
+ * (ARCHITECTURE §9), but rendering is not querying: `toSQL()` is pure, and a
+ * `postgres.js` client does not dial anything until a query actually runs. So
+ * the two statements whose shape could silently be wrong are checked here.
+ *
+ * They earn it. `closeDanglingSessions` is an `UPDATE ... FROM`, which is the
+ * one statement in the file that reads a *second* table's column while writing
+ * the first, and getting it wrong would stamp the wrong instant onto every
+ * dangling span. The RSVP upsert has to land on the composite unique index, and
+ * a conflict target that does not match an index is a runtime error Postgres
+ * only raises when a row actually collides, which is to say on the second
+ * refresh of the first real op.
+ */
+const renderDb = drizzle({ client: postgres("postgres://u:p@127.0.0.1:1/x") });
+
+Deno.test("closing dangling spans reads the op's own window end", () => {
+  const { sql: rendered } = renderDb
+    .update(attendanceSession)
+    .set({ leftAt: sql`${operation.attendanceEnd}` })
+    .from(operation)
+    .where(
+      and(
+        eq(attendanceSession.operationId, operation.id),
+        isNull(attendanceSession.leftAt),
+        lt(operation.attendanceEnd, new Date()),
+      ),
+    )
+    .returning({ id: attendanceSession.id })
+    .toSQL();
+
+  // left_at takes the OP's attendance_end, not `now()` and not a bound
+  // parameter: that is what stops a worker that woke up on Sunday crediting
+  // everybody until Sunday.
+  assertStringIncludes(
+    rendered,
+    `set "left_at" = "operation"."attendance_end"`,
+  );
+  assertStringIncludes(rendered, `from "operation"`);
+  assertStringIncludes(rendered, `"attendance_session"."left_at" is null`);
+});
+
+Deno.test("the RSVP upsert conflicts on the op-and-person unique index", () => {
+  const now = new Date();
+  const { sql: rendered } = renderDb
+    .insert(operationRsvp)
+    .values([{
+      operationId: "op",
+      discordId: "d1",
+      username: "u",
+      firstSeenAt: now,
+      lastSeenAt: now,
+    }])
+    .onConflictDoUpdate({
+      target: [operationRsvp.operationId, operationRsvp.discordId],
+      set: { lastSeenAt: now, username: sql`excluded.username` },
+    })
+    .toSQL();
+
+  assertStringIncludes(rendered, `on conflict ("operation_id","discord_id")`);
+  // first_seen_at is NOT in the update set: a re-read must not reset when we
+  // first saw somebody on the list.
+  assertStringIncludes(rendered, `do update set`);
+  assertEquals(rendered.includes(`do update set "first_seen_at"`), false);
+  assertEquals(
+    rendered.slice(rendered.indexOf("do update set")).includes("first_seen_at"),
+    false,
+  );
 });

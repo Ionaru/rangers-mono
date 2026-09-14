@@ -60,7 +60,11 @@ TS_VIRTUALSERVER_ID=1
 TS_BOT_NICKNAME=7R Bot                         # the ServerQuery client's nickname, set on connect
 TS_OPERATIONS_CHANNEL_CID=…                    # the single Operations channel. PHASE 6 (attendance) only:
                                                # kept out of the group above so the link flow does not
-                                               # demand a channel id it never reads
+                                               # demand a channel id it never reads. REQUIRED from Phase 6:
+                                               # the worker fails loud at boot without it, so add it to the
+                                               # GitHub `production` Environment BEFORE deploying Phase 6.
+                                               # `deno task attendance:preview` prints the channel's NAME
+                                               # next to the id, which is the only way to eyeball it
 
 # Internal web -> worker API (Compose network only; never proxied, never public)
 WORKER_INTERNAL_URL=http://worker:8080
@@ -73,6 +77,7 @@ OP_ATTENDANCE_END=23:00
 OP_EVENT_END=23:30
 ATTENDANCE_MIN_MINUTES=60
 ATTENDANCE_SAMPLE_SECONDS=90
+ATTENDANCE_RSVP_REFRESH_SECONDS=900            # how often the event's Interested list is captured
 
 # Weekly event creation + announcement (Phase 5). OP_ANNOUNCE_CHANNEL_ID is REQUIRED:
 # the worker fails loud at boot without it. The rest have defaults.
@@ -147,6 +152,8 @@ operation = pgTable('operation', {
   discordEventId: text('discord_event_id'),
   preparedAt: timestamp('prepared_at'),                     // mission makers pinged to fill the event in
   announcedAt: timestamp('announced_at'),                   // @everyone posted
+  lastSampleAt: timestamp('last_sample_at'),                // sampler liveness AND the restart close-at instant
+  rsvpRefreshedAt: timestamp('rsvp_refreshed_at'),          // pacing marker for the Interested-list capture
   name: text(),
   source: text().notNull().default('auto_weekly'),          // 'auto_weekly' | 'manual'
 })
@@ -161,6 +168,18 @@ attendanceSession = pgTable('attendance_session', {
   joinedAt: timestamp('joined_at').notNull(),
   leftAt: timestamp('left_at'),
 })
+
+// operation_rsvp: one Discord account on the event's "Interested" list while the op ran (ADR 0020).
+// No member_id: the join to member.discord_id happens on READ, so somebody who first signs
+// in a month after an op is still matched against it and nothing needs backfilling.
+operationRsvp = pgTable('operation_rsvp', {
+  id: uuid().primaryKey().defaultRandom(),
+  operationId: uuid('operation_id').notNull().references(() => operation.id, { onDelete: 'cascade' }),
+  discordId: text('discord_id').notNull(),
+  username: text('username'),                               // snapshot, for responders who are not members
+  firstSeenAt: timestamp('first_seen_at').notNull(),
+  lastSeenAt: timestamp('last_seen_at').notNull(),
+}, (t) => [uniqueIndex().on(t.operationId, t.discordId)])   // the upsert target for each refresh
 
 // link_code: one-time TeamSpeak possession challenge (Steam uses OpenID, no code)
 linkCode = pgTable('link_code', {
@@ -227,7 +246,7 @@ Ranks/roles/badges are Discord roles (ADR 0002). Two ways they change, both writ
    - `/role add @member <assignable>` / `/role remove @member <assignable>`: add/remove a single Discord role via `PUT` / `DELETE /guilds/{guild}/members/{user}/roles/{role}` (single-role endpoints, so no clobbering), with an `X-Audit-Log-Reason` header. Autocomplete the assignable from the `assignable` table.
    - `/rank set @member <rank>`: enforces **rank exclusivity**: remove any other rank-kind role the member has, then add the chosen one.
    - `/link-force @member <ts_uid|steam_id>`: set an identity link by hand, stamped `manual` so it is visibly not self-verified (§4).
-   - `/attendance claim <ts_uid> @member`: attribute a guest attendance session to a member. Rare: linking auto-backfills guests (§7), so this is only for leftovers.
+   - `/attendance claim <ts_uid> @member`: attribute a guest attendance session to a member. Rare: linking auto-backfills guests (§7), so this is only for leftovers. **Built (Phase 6), and it was the first of its kind twice over**: the first admin-gated command, and the first command with arguments at all, so it added an `options` field to `CommandDefinition` and to `InteractionData` plus the two readers (`subcommandOf`, `optionValue`) that every later command with arguments will use. The admin check reads `interaction.member.roles`, so it costs no REST call.
    - Role hierarchy: `7R_Bot`'s highest role must sit above every managed role, and managed (integration) roles are never assignable. Surface a clear error otherwise. Administrator does **not** exempt it from this, and `7R_Bot`'s role was positioned for a `/loa` bot that wrote no roles at all, so assume it is too low until someone has looked (Phase 0). **Somebody has now looked, and it is: measured 2026-07-14, its highest role is at position 28, below Officer (30) and NCO (29).** So every write to those two 403s while the bot looks perfectly healthy. It does outrank the other six. `deno task phase0:check` re-checks it.
 
 The platform DB does **not** store per-member role assignments; a member's current Discord roles are the truth. The `assignable` table only holds the definitions/mappings.
@@ -289,22 +308,32 @@ Four side effects. Each is guarded by a database column **and** reconciled again
 
 Both pings scan the target channel for the event link before posting (`listChannelMessages`), so a crash after posting but before the DB write never re-pings; the dedup is best-effort either way.
 
-`deno task op:preview` prints the coming op, both moments, and the exact messages it would post, writing nothing. The event's native RSVP ("Interested") list is the unit's op-planning tool. We store nothing for it and build no UI for it.
+`deno task op:preview` prints the coming op, both moments, and the exact messages it would post, writing nothing. The event's native RSVP ("Interested") list is the unit's op-planning tool. **Phase 6 records it** during the op, into `operation_rsvp`, so turnout can be compared against it (ADR 0020); it still drives nothing. (An earlier version of this line said "we store nothing for it and build no UI for it", which was right while the list had one job.)
 
-### Attendance sampling
-During `[attendanceStart, attendanceEnd]` (20:00 to 23:00 local):
-1. Every `ATTENDANCE_SAMPLE_SECONDS` (~90s), `clientList({ cid: TS_OPERATIONS_CHANNEL_CID, clientType: Regular })` gives the set of `{uid, nickname}` present in the Operations channel.
-2. Keep an in-memory "currently open sessions by uid". Diff each sample against the previous:
-   - uid newly present: open a session (`joinedAt = sampleTime`).
-   - uid no longer present: close its session (`leftAt = sampleTime`).
-3. At `attendanceEnd`, close all still-open sessions at `attendanceEnd`. Persist `attendance_session` rows.
-4. Resolve `tsUid -> member`. Unmatched uids stay guests (`memberId = null`). Guests **auto-backfill**: the moment that person links their TeamSpeak identity (§4), past `attendance_session` rows with the matching `ts_uid` are attributed to them. Any leftover is claimed via an admin slash command (ADR 0009).
+### Attendance sampling (`apps/worker/attendance.ts`)
+A reconciler on a timer, like the weekly event job: what to do is recomputed from the clock and the database every tick, so restarts and missed ticks are ordinary rather than special.
+
+**The window test is the loop's own, not `plan.withinWindow`.** That flag closes at `attendanceStart`, because Discord refuses to schedule an event whose start is past (`planWeeklyOp`), which makes it false for the whole of the op: exactly the stretch this loop cares about. The sampler tests `now >= attendanceStart && now < attendanceEnd`.
+
+Outside the window the pass does one cheap thing: `UPDATE attendance_session SET left_at = operation.attendance_end` for every span still open on an op whose window has passed. That one statement closes everyone still in the channel at 23:00 **and** repairs a worker that was killed mid-op, so neither case needs its own code path and neither depends on this process having been alive at the moment it mattered.
+
+Inside the window, per tick:
+1. `getOrCreateWeeklyOperation` for the coming Saturday. Called here rather than waited for: the weekly job creates the same row (same pure plan, same unique `date`), but only when `OP_EVENT_DRY_RUN` is false, and attendance must not stop recording because an unrelated switch has not been flipped.
+2. **Gap check.** If `last_sample_at` is more than `2 × ATTENDANCE_SAMPLE_SECONDS` old, the worker was away: close every open span at `last_sample_at` first. Without this, an open span is read as "present until the window end" and a worker that was down 20:30-21:30 credits everybody for the blind hour. Two intervals rather than one, so an ordinary redeploy keeps spans whole instead of fragmenting every member's evening on every release.
+3. `listChannelClients(teamspeak, TS_OPERATIONS_CHANNEL_CID)`: one ServerQuery command, through the throttle. **`cid` is stringified, and that is load-bearing**: the library sends one plain `clientlist` and filters in JavaScript against `ClientEntry.cid`, which is a *string*. A number matches nothing and returns an empty channel on every sample, silently, forever.
+4. Diff against the spans the database says are open (`applySample` in `@7r/domain`), then insert the arrivals, close the departures and carry any nickname change across. **State lives in the table, not in a module variable**: an op runs for three hours and a deploy in the middle of one must not lose it. This departs from the earlier sketch here ("keep an in-memory map", "persist at the window's end") for exactly that reason.
+5. Stamp `last_sample_at`, after the writes, so it never claims more than has been recorded.
+6. **Capture the Interested list** if `ATTENDANCE_RSVP_REFRESH_SECONDS` has elapsed (ADR 0020). Best-effort: a failure is logged and swallowed, because the RSVP list is the half of the feature that can be lost and the presence sample is the half that cannot.
+
+Resolve `tsUid -> member` at insert; unmatched uids are guests (`memberId = null`). Guests **auto-backfill**: the moment that person links their TeamSpeak identity (§4), past `attendance_session` rows with the matching `ts_uid` are attributed to them, and `/link` now reports how many. Any leftover is claimed via `/attendance claim` (ADR 0009).
+
+**Errors** use the sync loop's leaky bucket, not the weekly job's page-on-first-failure: a single failed sample costs 90 seconds of resolution, a run of them means the op is being recorded wrong. There is **no `ATTENDANCE_DRY_RUN`**, and that is a deliberate departure from the house pattern: this writes only our own tables from read-only calls, so a flag would guard nothing while adding the failure ADR 0007 warns about (shipped, never flipped, unnoticed for two years, which is how the legacy recorder died in July 2024). `deno task attendance:preview` is the pre-flight check instead: it names the channel `TS_OPERATIONS_CHANNEL_CID` actually points at, and prints how many clients are on the server against how many the filter kept.
 
 ### Credit
-A member is credited for an op if `sum(min(leftAt, attendanceEnd) - max(joinedAt, attendanceStart))` across their sessions ≥ `ATTENDANCE_MIN_MINUTES` (60). Compute on read; no need to materialize.
+A member is credited for an op if `sum(min(leftAt, attendanceEnd) - max(joinedAt, attendanceStart))` across their sessions ≥ `ATTENDANCE_MIN_MINUTES` (60). Compute on read; no need to materialize. Because it is computed on read, `ATTENDANCE_MIN_MINUTES` is read by **`apps/web`**, not the worker, which is why it has its own tiny schema (`attendanceCreditSchema`) that `opsSchema` extends: loading the full ops config on the website would drag the worker-only, required `OP_ANNOUNCE_CHANNEL_ID` onto it.
 
 ### What attendance is for
-**Attendance is a statistic and nothing else.** Nobody acts on it. It gates no promotion, triggers no removal, and feeds no process. It shows on a member's own profile and in a read-only site view. Build exactly that and no more. No historical attendance is imported (MIGRATION.md); the counter starts at zero.
+**Attendance is a statistic and nothing else.** Nobody acts on it. It gates no promotion, triggers no removal, and feeds no process. It shows on a member's own profile and in an admin-gated unit-wide view (turnout over time, the per-op RSVP cross-tab, roster counts, the guest worklist). The roster shows **counts, never an Active/Inactive label**: where that line sits is arguable, nothing consumes the answer, and a flag is an invitation for something to start. No historical attendance is imported (MIGRATION.md); the counter starts at zero.
 
 This reuses the legacy `record-operation-attendees` approach (sample the Operations channel + diff), at a finer cadence. No Arma-side anything.
 
@@ -343,7 +372,7 @@ Public content comes next, as the MVP, now that the identity layer (Phases 1-2) 
 3. **Public content (the MVP).** Public site, branding, handbook (Starlight, no versioning; migrate the 21 `.md` files, move the 103 images to `public/wiki/images/` or rewrite the 96 absolute paths, strip the inline `float:right;width:500px` styles, restore the dropped sections), the stateless briefing generator (SQF byte-for-byte). Ends with the cutover: the domain switches to the new stack, replacing the current public site. None of this needs Phase 0 or a Discord application; only logging in to the member area does.
 4. **TeamSpeak sync.** ServerQuery worker, seed the `assignable` mapping from git config (sgids resolved live, by name), Discord to TS reconcile with `deno task sync:preview` first, then the blast-radius guard. **This is the phase that pays for the project.**
 5. **Discord bot.** Interactions endpoint (commands, components, modals), slash memes, role inspection, `/role` and `/rank set`, `/link` and `/unlink` (which replace the Phase 2 web link pages, removed here: ADR 0017), `/link-force`, the weekly scheduled-event job (which creates Operations).
-6. **Attendance.** Operations-channel sampling, session reconstruction, read-only member/site views, guest auto-backfill on link. No historical import.
+6. **Attendance.** Operations-channel sampling, session reconstruction, read-only member and admin views, guest auto-backfill on link, `/attendance claim`, and the event RSVP captured and compared against turnout (ADR 0020). No historical import. `TS_OPERATIONS_CHANNEL_CID` becomes **required**, so it must be in the GitHub `production` Environment before this deploys or `env:check` stops the release.
 
 There is no hardening phase. Backups are cut (ADR/ARCHITECTURE: the only irreplaceable data is ~100 TeamSpeak links) and infrastructure is out of scope (the deliverable is a `compose.yaml`). Log rotation and error-to-Discord alerts fold into the phases that need them.
 
@@ -355,7 +384,12 @@ There is no hardening phase. Backups are cut (ADR/ARCHITECTURE: the only irrepla
 
 What is tested: **pure unit tests over the pure functions, plus whatever else can be reached without a socket.**
 1. The three-way group reconcile (§6): given a member's Discord roles, the `assignable` mapping, and their current TS groups, produce `toAdd` / `toRemove`. Cover the leaver (no roles at all, so everything owned is removed), the unmapped role, the manual TS group outside `owned` (must be untouched), the >1 rank case, and the blast-radius trip.
-2. The sample-to-session reconstruction (§7): given an ordered list of channel samples, produce `attendance_session` spans. Cover join, leave, rejoin, present-throughout, and the close-at-`attendanceEnd` case.
+2. The sample-to-session reconstruction (§7): given an ordered list of channel samples, produce `attendance_session` spans. Cover join, leave, rejoin, present-throughout, a mid-op rename, one identity connected twice (one person, one span, or their minutes double), and the close-at-`attendanceEnd` case. The rollups over those spans are pure too and are tested beside them: the per-op summary, the RSVP cross-tab (including the two matches that are structurally impossible, ADR 0020), and the per-member totals.
+
+Three more things turned out to be reachable without a socket and are covered:
+- **The Discord RSVP pagination** (`listGuildScheduledEventUsers`), against a stubbed `fetch`. Worth it because the failure is silent and the data unrecoverable: Discord cannot be asked after the op, so a bug that drops page two is a permanently short list rather than an error.
+- **The command-option readers** (`subcommandOf`, `optionValue`), against real-shaped payloads. Including that a user option's snowflake survives as a string: round-trip it through a Number and `/attendance claim` credits the wrong person.
+- **Two SQL statements, rendered rather than run.** `toSQL()` is pure and a `postgres.js` client dials nothing until a query runs, so the `UPDATE ... FROM` that closes dangling spans and the RSVP upsert's conflict target are checked in `packages/db/queries_test.ts`. Both fail in ways Postgres only raises at runtime, on the second refresh of the first real op.
 
 Both take plain data in and return plain data out. Keep them that way: the I/O (ServerQuery calls, Discord REST) lives outside them, or this section stops being true.
 
@@ -374,6 +408,8 @@ Learned by running them. Ignoring any one of these costs a day.
 **Every shared package that `apps/web` consumes needs a `package.json` alongside its `deno.json`.** Astro's bundler cannot resolve a `deno.json`-only workspace member: `Rolldown failed to resolve import "@7r/db"`. The npm/Deno split is *not* contained to `apps/web` (ADR 0006 said it was; it was wrong). Without the dual manifests, the monorepo's only stated benefit, a shared `domain`/`db` layer consumed by both web and worker, does not materialise for the website.
 
 **Build Astro with Deno** (`deno run -A npm:astro build`) and add `RUN deno cache dist/server/entry.mjs` at image-build time, or a cold boot pulls 119 files from jsr.io and a jsr outage kills the container. See §1.
+
+**A layout's `<style>` does not reach the pages that use it.** Astro scopes a component's CSS to that component's own elements, rewriting `.panel` to `.panel:where(.astro-hkbrpulz)` and stamping the hash onto the elements in that file. Page content arrives through `<slot />` carrying the *page's* hash, so every class the layout defines for it matches nothing. The member area shipped like this from Phase 2: `.panel`, `.row`, `button` and `.notice` were dead the whole time, and only the shell (`body`, `header`, `main`) looked right, which is exactly why nobody spotted it. Fixed by `<style is:global>` in `Base.astro`. Its CSS only ships with pages using that layout, so "global" means the member area and nothing else; the public site has its own stylesheets.
 
 **No Astro session driver.** A full Discord login runs on Deno + Postgres with none configured. Better Auth owns its session table and signed cookie. (You cannot remove the `unstorage` package, Astro hard-depends on it; what you remove is the *config*.)
 

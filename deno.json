@@ -21,11 +21,17 @@
     // `deno check` cannot read .astro files, so apps/web is typechecked by
     // `astro check` instead. Both halves run, or the web app's strict tsconfig
     // is enforced nowhere outside an editor and `astro build` only transpiles.
-    "check": "deno check packages/config/mod.ts packages/config/env-check.ts packages/domain/mod.ts packages/logging/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/discord/phase0-check.ts packages/discord/register.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts apps/worker/badge-backfill.ts apps/worker/ts-check.ts apps/worker/assignable-seed.ts apps/worker/sync-preview.ts apps/worker/op-preview.ts && deno task web:check",
+    "check": "deno check packages/config/mod.ts packages/config/env-check.ts packages/domain/mod.ts packages/logging/mod.ts packages/db/mod.ts packages/db/migrate.ts packages/db/import-legacy.ts packages/discord/mod.ts packages/discord/phase0-check.ts packages/discord/register.ts packages/teamspeak/mod.ts packages/identity/mod.ts apps/worker/main.ts apps/worker/badge-backfill.ts apps/worker/ts-check.ts apps/worker/assignable-seed.ts apps/worker/sync-preview.ts apps/worker/op-preview.ts apps/worker/attendance-preview.ts && deno task web:check",
     // apps/ as well as packages/. The worker's internal API is the one
     // authorisation boundary in the system, and it is pure request-handling, so
     // it is testable even though the TeamSpeak connection behind it is not.
-    "test": "deno test --allow-read --allow-env --allow-write=/tmp packages/ apps/",
+    //
+    // `apps/web/src` is named SEPARATELY and that is not redundant: apps/web is
+    // a package.json-only workspace member (ADR 0006, it has to be, or Astro's
+    // bundler cannot resolve @7r/*), and Deno's test discovery walks `apps/`
+    // without descending into it. Until this was added, briefing.test.ts had
+    // never run in CI; admin.test.ts would have been dead on arrival too.
+    "test": "deno test --allow-read --allow-env --allow-write=/tmp packages/ apps/ apps/web/src/",
     "fmt": "deno fmt --unstable-component",
     "fmt:check": "deno fmt --check --unstable-component",
     "lint": "deno lint",
@@ -66,7 +72,12 @@
     // Phase 5, read-only. Prints the coming Saturday's op (title, window, announce
     // moment) and the exact @everyone message it would post. Required reading
     // before flipping OP_EVENT_DRY_RUN (IMPLEMENTATION §7).
-    "op:preview": "deno task --cwd apps/worker op:preview"
+    "op:preview": "deno task --cwd apps/worker op:preview",
+    // Phase 6, read-only. Names the channel TS_OPERATIONS_CHANNEL_CID actually
+    // points at and lists who is in it. Attendance has no dry-run flag, and a
+    // wrong channel id records every op as empty without ever erroring, so this
+    // is the check that has to happen before the first Saturday (ADR 0007).
+    "attendance:preview": "deno task --cwd apps/worker attendance:preview"
   },
   "fmt": {
     "exclude": [

@@ -15,6 +15,7 @@ import {
   linkPick,
 } from "../../../lib/discord/link.ts";
 import { unlinkCommand } from "../../../lib/discord/unlink.ts";
+import { attendanceCommand } from "../../../lib/discord/attendance.ts";
 
 export const prerender = false;
 
@@ -104,6 +105,8 @@ function dispatch(interaction: Interaction): Response | null {
         return linkCommand(interaction);
       case "unlink":
         return unlinkCommand(interaction);
+      case "attendance":
+        return attendanceCommand(interaction);
     }
     return null;
   }

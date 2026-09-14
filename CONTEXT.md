@@ -53,8 +53,12 @@ The single TeamSpeak channel where members sit during an op (in-game squad comms
 _Avoid_: Op channel, voice channel.
 
 **Attendance session**:
-One continuous span a Member (resolved by their TeamSpeak identity) was present in the Operations channel during an Operation, with a join and leave time, reconstructed from periodic presence samples. A Member is credited for an op if their total in-window presence is at least 60 minutes. Attendance is a **statistic and nothing else**: it is shown on a Member's own profile and in a read-only site view. Nothing acts on it. It gates no promotion and triggers no removal.
+One continuous span a Member (resolved by their TeamSpeak identity) was present in the Operations channel during an Operation, with a join and leave time, reconstructed from periodic presence samples. Spans are written as they open and closed as they close, not batched at the window's end, so a worker restarted mid-op resumes rather than losing the evening. A Member is credited for an op if their total in-window presence is at least 60 minutes. Attendance is a **statistic and nothing else**: it is shown on a Member's own profile and in an admin-gated unit-wide view. Nothing acts on it. It gates no promotion and triggers no removal.
 _Avoid_: Presence, sample (a sample is one poll; a session is the reconstructed span).
+
+**RSVP**:
+A Member's response to an Operation's Discord scheduled event: Discord's native "Interested" list. The unit's op-planning tool, and there is no other absence concept (ADR 0010). Discord cannot be asked who was interested once an event has passed, so the list is **captured during the op** and stored, which is what makes "said they were coming and did not turn up" answerable at all (ADR 0020). Like attendance, it drives nothing.
+_Avoid_: Signup, attending (which is turning up), LOA, absence.
 
 **Guest**:
 A TeamSpeak identity present in the Operations channel during an Operation that resolves to no Member. Its sessions are recorded against the bare TeamSpeak identity. If that identity is later linked to a Member, the guest sessions auto-backfill to them.
