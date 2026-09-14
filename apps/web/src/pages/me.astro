@@ -1,5 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
+import { loadMemberAttendance } from "../lib/attendance.ts";
+import { isAdminDiscordUser } from "../lib/admin.ts";
 
 /**
  * The member's profile: their three identities, and the buttons to link and
@@ -40,6 +42,25 @@ const ERRORS: Record<string, string> = {
 const tsUnverified = member.tsLinkMethod === "legacy_import" ||
   member.tsLinkMethod === "manual";
 const steamUnverified = member.steamLinkMethod === "manual";
+
+/**
+ * Your own attendance (Phase 6). A statistic and nothing else: it gates no
+ * promotion and triggers no removal (ADR 0010).
+ *
+ * Loaded even for a member with no TeamSpeak link, so the panel can say *why*
+ * the number is zero. "0 of 12" and "you have never linked TeamSpeak, so nothing
+ * could be recorded" are very different messages, and only the second is true.
+ */
+/**
+ * Concurrent: the admin check is a Discord round trip and the attendance load is
+ * a pair of database queries, and neither needs the other's answer. Serialised,
+ * the profile page would pay both latencies end to end.
+ */
+const [attendance, isAdmin] = await Promise.all([
+  loadMemberAttendance(member.id, member.discordId),
+  // The unit-wide view is admin-only, so only admins are shown the way to it.
+  isAdminDiscordUser(member.discordId),
+]);
 ---
 
 <Base title="Profile" member={member}>
@@ -49,20 +70,20 @@ const steamUnverified = member.steamLinkMethod === "manual";
   {error && ERRORS[error] && <p class="notice bad">{ERRORS[error]}</p>}
 
   <div class="panel">
-    <div class="row">
-      <div>
-        <h2>Discord</h2>
-        <p class="muted">
+  <div class="row">
+    <div>
+      <h2>Discord</h2>
+      <p class="muted">
           {member.displayName} &middot; <code>{member.discordId}</code>
         </p>
-      </div>
-      <span class="muted">how you sign in</span>
     </div>
+    <span class="muted">how you sign in</span>
   </div>
+</div>
 
   <div class="panel">
-    <div class="row">
-      <div>
+  <div class="row">
+    <div>
         <h2>TeamSpeak</h2>
         {member.tsUid
           ? (
@@ -91,8 +112,8 @@ const steamUnverified = member.steamLinkMethod === "manual";
           )}
       </div>
 
-      <div>
-        <p class="muted">
+    <div>
+      <p class="muted">
           {member.tsUid
             ? (
               <>
@@ -107,13 +128,13 @@ const steamUnverified = member.steamLinkMethod === "manual";
               </>
             )}
         </p>
-      </div>
     </div>
   </div>
+</div>
 
   <div class="panel">
-    <div class="row">
-      <div>
+  <div class="row">
+    <div>
         <h2>Steam</h2>
         {member.steamId
           ? (
@@ -137,7 +158,7 @@ const steamUnverified = member.steamLinkMethod === "manual";
           )}
       </div>
 
-      <div>
+    <div>
         <a class="button" href="/link/steam">
           {member.steamId ? "Re-link" : "Link Steam"}
         </a>
@@ -147,10 +168,89 @@ const steamUnverified = member.steamLinkMethod === "manual";
           </form>
         )}
       </div>
+  </div>
+</div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <h2>Attendance</h2>
+        <p class="muted">
+          {attendance.consideredOps === 0
+            ? "No ops recorded yet."
+            : `The last ${attendance.consideredOps} ${
+              attendance.consideredOps === 1 ? "op" : "ops"
+            }.`}{" "}
+          You are credited for an op with at least {attendance.minMinutes}{" "}
+          minutes in the Operations channel between 20:00 and 23:00. It is a
+          statistic: nothing acts on it.
+        </p>
+      </div>
+      <div>
+        <p class="muted">
+          <strong>{attendance.creditedOps}</strong> credited &middot;{" "}
+          <strong>{attendance.attendedOps}</strong> attended
+          <br />
+          last attended {attendance.lastAttended ?? "never"}
+        </p>
+      </div>
     </div>
+
+    {!member.tsUid && (
+      <p class="notice bad">
+        You have not linked TeamSpeak, so nothing can be recorded against you.
+        Run <code>/link</code>{" "}
+        in Discord. Any evenings you already attended are credited to you
+        automatically the moment you do.
+      </p>
+    )}
+
+    {attendance.operations.length === 0
+      ? <p class="muted">No ops have been recorded yet.</p>
+      : (
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Op</th>
+                <th class="num">Minutes</th>
+                <th>Credited</th>
+                <th>Said you were coming</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attendance.operations.map((op) => (
+                <tr>
+                  <td>
+                    {op.date}
+                    {!op.sampled && (
+                      <>
+                        {" "}<span class="guest" title="No samples were recorded for this op, so nobody's attendance was measured.">not sampled</span>
+                      </>
+                    )}
+                  </td>
+                  <td class="num">{Math.round(op.minutes)}</td>
+                  <td class={op.credited ? "yes" : "no"}>
+                    {op.credited ? "yes" : "no"}
+                  </td>
+                  <td class={op.responded ? "yes" : "no"}>
+                    {op.responded ? "yes" : "no"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
   </div>
 
+  {isAdmin && (
+    <p class="muted">
+      <a href="/attendance">Unit-wide attendance</a>
+    </p>
+  )}
+
   <form method="post" action="/signout">
-    <button type="submit" class="secondary">Sign out</button>
-  </form>
+  <button type="submit" class="secondary">Sign out</button>
+</form>
 </Base>

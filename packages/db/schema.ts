@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import type {
@@ -106,6 +107,29 @@ export const operation = pgTable("operation", {
    * rather than leaving nobody pinged.
    */
   announcedAt: tstz("announced_at"),
+  /**
+   * When the attendance sampler last successfully read the Operations channel
+   * for this op. Null means it never did.
+   *
+   * Two jobs, and the second is why it exists at all. It is the instant a
+   * restart closes still-open spans at, so a worker that was away for an hour
+   * does not credit everybody for the hour it was blind (apps/worker/attendance.ts).
+   * And it is the only way to answer "did the sampler run for this op?", which
+   * ADR 0007 explicitly warns nobody will otherwise notice: the legacy recorder
+   * died in July 2024 and the unit did not spot it for two years.
+   */
+  lastSampleAt: tstz("last_sample_at"),
+  /**
+   * When the Discord event's Interested list was last captured into
+   * `operation_rsvp` (ADR 0020). Null means never, which is also what it stays
+   * if the op has no `discord_event_id` to read a list from.
+   *
+   * A pacing marker rather than a one-shot guard, unlike `prepared_at` and
+   * `announced_at`: the list is re-read every ATTENDANCE_RSVP_REFRESH_SECONDS
+   * through the op, because people RSVP late and a worker that boots at 20:30
+   * must still get a list.
+   */
+  rsvpRefreshedAt: tstz("rsvp_refreshed_at"),
   name: text("name"),
   source: text("source").$type<OperationSource>().notNull().default(
     "auto_weekly",
@@ -131,6 +155,50 @@ export const attendanceSession = pgTable("attendance_session", {
   // Guest sessions backfill to a member the moment they link TeamSpeak, which
   // is a lookup by bare ts_uid across every op ever recorded.
   index("attendance_session_ts_uid_idx").on(t.tsUid),
+]);
+
+/**
+ * One Discord account that was on the op event's "Interested" list while the op
+ * was running (ADR 0020).
+ *
+ * Stored, rather than read live, because Discord offers no way to ask an event
+ * who was interested in it after the fact. Comparing "said they were coming" to
+ * "turned up" therefore needs a snapshot, and the snapshot has to be taken
+ * during the op or not at all.
+ *
+ * There is deliberately **no `member_id`**. The join to `member.discord_id`
+ * happens at read time, so somebody who first logs in a month after an op is
+ * still matched against it and no backfill is ever needed. `username` is kept
+ * only so a responder who is not a member can still be named on the page.
+ *
+ * Captured from the attendance window's start, not from the announcement: a
+ * member who RSVP'd on Wednesday and honestly withdrew on Saturday afternoon is
+ * not a no-show, and capturing earlier would brand them one.
+ */
+export const operationRsvp = pgTable("operation_rsvp", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  operationId: uuid("operation_id").notNull().references(() => operation.id, {
+    onDelete: "cascade",
+  }),
+  /** The Discord user snowflake, as a string. Joined to `member.discord_id` on read. */
+  discordId: text("discord_id").notNull(),
+  /** Display-name snapshot, for a responder who resolves to no member. */
+  username: text("username"),
+  firstSeenAt: tstz("first_seen_at").notNull(),
+  /**
+   * The last refresh that still saw them on the list. Together with
+   * `first_seen_at` this is what shows somebody who signed up mid-op, and what
+   * would show a withdrawal if one ever needs reading.
+   */
+  lastSeenAt: tstz("last_seen_at").notNull(),
+}, (t) => [
+  index("operation_rsvp_operation_idx").on(t.operationId),
+  // The refresh is an upsert on this key: one row per person per op, however
+  // many times the list is re-read.
+  uniqueIndex("operation_rsvp_operation_discord_idx").on(
+    t.operationId,
+    t.discordId,
+  ),
 ]);
 
 /** A one-time TeamSpeak possession challenge. Steam uses OpenID and needs none. */
@@ -165,3 +233,5 @@ export type AttendanceSession = typeof attendanceSession.$inferSelect;
 export type NewAttendanceSession = typeof attendanceSession.$inferInsert;
 export type LinkCode = typeof linkCode.$inferSelect;
 export type NewLinkCode = typeof linkCode.$inferInsert;
+export type OperationRsvp = typeof operationRsvp.$inferSelect;
+export type NewOperationRsvp = typeof operationRsvp.$inferInsert;

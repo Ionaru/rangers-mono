@@ -310,6 +310,21 @@ export function planWeeklyOp(
 }
 
 /**
+ * An instant as a human-readable local date and time, for the preview tasks.
+ *
+ * Here rather than in one CLI because both previews print moments in the op's
+ * timezone and a second copy had already appeared. It sits beside the other
+ * zone helpers it belongs with, and it stays pure: `Intl` and nothing else.
+ */
+export function isoInZone(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+/**
  * The event title: the op's local start time, its timezone abbreviation, and a
  * fixed suffix, e.g. `"20:00 CEST - Saturday Operation"`.
  *

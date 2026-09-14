@@ -11,9 +11,17 @@
 interface Props {
   title: string;
   member?: { displayName: string } | null;
+  /**
+   * Widen the column past the 46rem the member area reads at.
+   *
+   * One page needs it: the attendance view, whose per-op table is a date, three
+   * counts and three lists of names and simply does not fit. Everything else
+   * stays at the reading width, which is the point of having a default.
+   */
+  wide?: boolean;
 }
 
-const { title, member = null } = Astro.props;
+const { title, member = null, wide = false } = Astro.props;
 ---
 <html lang="en">
   <head>
@@ -27,10 +35,10 @@ const { title, member = null } = Astro.props;
       rewriting every selector to `.panel:where(.astro-xxxx)` and stamping the
       hash onto the elements in this file. Page content arrives through `<slot />`
       and carries the page's hash, not this one, so without `is:global` every
-      class here (`.panel`, `.row`, `button`, `.notice`) silently matched nothing
-      at all and the member area rendered as unstyled text on a dark background.
-      Only the shell itself (`body`, `header`, `main`) was ever styled, because
-      those elements are in this template, which is why it went unnoticed.
+      class here (`.panel`, `.row`, `button`, `.notice`, the tables) silently
+      matched nothing at all and the member area rendered as unstyled text on a
+      dark background. Only the shell itself (`body`, `header`, `main`) was ever
+      styled, because those elements are in this template.
 
       The CSS only ships with pages that use this layout, which is the member
       area; the public site has its own tokens and stylesheets (PublicLayout),
@@ -145,9 +153,61 @@ const { title, member = null } = Astro.props;
     form.inline {
       display: inline;
     }
+    /**
+     * Tables. Phase 6 is the first thing in the member area that has rows rather
+     * than records, and they live here rather than scoped to a page so the
+     * profile's attendance card and the attendance view cannot drift apart.
+     */
+    .scroll {
+      overflow-x: auto;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-variant-numeric: tabular-nums;
+    }
+    th,
+    td {
+      text-align: left;
+      padding: .4rem .6rem .4rem 0;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: .85rem;
+      white-space: nowrap;
+    }
+    td.nowrap,
+    th.nowrap {
+      white-space: nowrap;
+    }
+    td.num,
+    th.num {
+      text-align: right;
+      padding-right: 1rem;
+      white-space: nowrap;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    .yes {
+      color: var(--ok);
+    }
+    .no {
+      color: var(--muted);
+    }
+    .guest {
+      color: var(--bad);
+    }
+    .wide main,
+    .wide header .inner {
+      max-width: 68rem;
+    }
     </style>
   </head>
-  <body>
+  <body class={wide ? "wide" : undefined}>
     <header>
       <div class="inner">
         <a href="/">7th Ranger Group</a>

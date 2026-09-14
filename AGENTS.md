@@ -35,6 +35,7 @@ deno task worker:dev   worker (watch)
 deno task db:generate  generate a migration from schema.ts
 deno task migrate      apply migrations (one-shot, never on boot)
 deno task env:check    check a .env against the config schemas (read-only)
+deno task attendance:preview   names the channel TS_OPERATIONS_CHANNEL_CID points at (read-only)
 ```
 
 The stack: `docker compose up -d postgres`, then
@@ -58,6 +59,20 @@ missing-required key. The DB password/URL stay file-based in `./secrets/` (ADR 0
 - **Never run `deno approve-scripts` / `--allow-scripts`.** The "ignored build
   scripts" warning is correct behaviour; the script (`cpu-features`, pulled in
   by `ssh2`) is an optional native addon we do not want.
+- **Attendance has no dry-run, and it fails silently.** The sampler writes only
+  our own tables, so there is deliberately no `ATTENDANCE_DRY_RUN` to forget to
+  flip. The cost is that a wrong `TS_OPERATIONS_CHANNEL_CID` records every op as
+  empty and never errors: `clientList`'s channel filter runs client-side and
+  matches `cid` as a **string**, so a number (or a wrong id) simply returns
+  nobody. Run `deno task attendance:preview` before trusting it; it prints the
+  channel's NAME and how many of the server's clients the filter kept. The
+  legacy recorder died in July 2024 and went unnoticed for two years, which is
+  the failure mode this is guarding against (ADR 0007).
+- **A layout's `<style>` does not reach the pages that use it.** Astro scopes CSS
+  to the component's own elements, so everything `Base.astro` defines for slotted
+  page content (`.panel`, `.row`, `button`, tables) matched nothing until it was
+  marked `is:global`. Only the shell looked right, which is why it shipped
+  unnoticed from Phase 2. Keep the `is:global` on that block.
 - **Mind the ServerQuery command budget.** TeamSpeak refuses a query client that
   sends more than 10 commands in 3 seconds, and the library's answer to being
   refused is to re-send the same command every second, forever: a burst does not

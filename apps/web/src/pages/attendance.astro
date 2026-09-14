@@ -1,0 +1,361 @@
+---
+import Base from "../layouts/Base.astro";
+import { isAdminDiscordUser } from "../lib/admin.ts";
+import {
+  attendeeName,
+  DEFAULT_ATTENDANCE_RECENT_OPS,
+  loadAttendanceOverview,
+} from "../lib/attendance.ts";
+
+/**
+ * The unit-wide attendance view: turnout over time, who turned up, and the
+ * event RSVP against who actually came (ADR 0020).
+ *
+ * Read-only and admin-gated. Read-only because that is the whole member area
+ * (ADR 0009); admin-gated because "who said they were coming and did not turn
+ * up" is a list about named people, and it belongs with the handful of people
+ * who have a reason to look at it rather than on every member's screen.
+ *
+ * Nothing here acts on the numbers. There is no Active/Inactive label and no
+ * threshold that does anything: where that line sits is arguable, nothing in the
+ * platform consumes the answer (ADR 0010), and a binary flag is an invitation
+ * for something to start. The counts are shown and a human reads them.
+ */
+const member = Astro.locals.member!;
+
+if (!(await isAdminDiscordUser(member.discordId))) {
+  return Astro.redirect("/me", 302);
+}
+
+/**
+ * How far back to look. A page-level knob rather than config: it is a display
+ * window, and putting it in the environment would mean a deploy to answer "what
+ * about the last six months?".
+ */
+const requested = Number(Astro.url.searchParams.get("ops"));
+const limit = Number.isInteger(requested) && requested > 0 && requested <= 200
+  ? requested
+  : DEFAULT_ATTENDANCE_RECENT_OPS;
+
+const { operations, activity, roster, names, minMinutes } =
+  await loadAttendanceOverview(limit);
+
+/**
+ * One row per member, built once.
+ *
+ * Everybody on the roster appears, whether or not they turned up: absence is
+ * the lack of a session row, so the roll-up has no entry for them and they read
+ * as zero. Built here rather than as two JSX blocks (one for attendees, one for
+ * everybody else) so the five columns and the "left the guild" / "linked" rules
+ * exist in one place.
+ */
+const activityByMember = new Map(activity.map((a) => [a.memberId, a]));
+const rosterRows = roster
+  .map((m) => ({
+    member: m,
+    activity: activityByMember.get(m.id) ??
+      { memberId: m.id, creditedOps: 0, attendedOps: 0, lastAttended: null },
+  }))
+  .sort((a, b) =>
+    b.activity.creditedOps - a.activity.creditedOps ||
+    (b.activity.lastAttended ?? "").localeCompare(
+      a.activity.lastAttended ?? "",
+    ) ||
+    a.member.displayName.localeCompare(b.member.displayName)
+  );
+
+/** Oldest first, so the chart reads left to right like a calendar. */
+const chart = [...operations].reverse();
+const peak = Math.max(1, ...chart.map((op) => op.summary.present));
+
+/** A plain bar chart, drawn server-side. No chart library, no client JavaScript. */
+const BAR = 26;
+const GAP = 8;
+const CHART_H = 140;
+const chartWidth = Math.max(1, chart.length) * (BAR + GAP);
+
+/** Every guest identity seen across the span: the worklist for `/attendance claim`. */
+const guests = new Map<string, { nickname: string; ops: number }>();
+for (const op of operations) {
+  for (const attendee of op.summary.attendees) {
+    if (attendee.memberId !== null) continue;
+    const seen = guests.get(attendee.tsUid);
+    if (seen) seen.ops += 1;
+    else {
+      guests.set(attendee.tsUid, {
+        nickname: attendee.tsNickname ?? attendee.tsUid,
+        ops: 1,
+      });
+    }
+  }
+}
+
+const neverSampled = operations.filter((op) => !op.sampled).length;
+---
+<Base title="Attendance" member={member} wide>
+  <h1>Attendance</h1>
+
+  <p class="muted">
+    {operations.length === 0
+      ? "No ops recorded yet."
+      : `The last ${operations.length} ${
+        operations.length === 1 ? "op" : "ops"
+      }.`} A member is credited for an op with at least {minMinutes}{" "}
+    minutes in the Operations channel between 20:00 and 23:00. Attendance is a
+    statistic: nothing acts on it, it gates no promotion and triggers no removal.
+    Add <code>?ops=40</code> to look further back.
+  </p>
+
+  {neverSampled > 0 && (
+    <p class="notice bad">
+      {neverSampled} of these {operations.length}{" "}
+      ops have no recorded samples at all. That is not "nobody came": it is the
+      sampler not having run. Check the worker was up, and that{" "}
+      <code>TS_OPERATIONS_CHANNEL_CID</code> still names the Operations channel
+      (<code>deno task attendance:preview</code>).
+    </p>
+  )}
+
+  {operations.length === 0
+    ? (
+      <div class="panel">
+  <p class="muted">
+          No ops have been recorded yet. The first one will appear here after the
+          Saturday it runs.
+        </p>
+</div>
+    )
+    : (
+      <>
+        <div class="panel">
+  <h2>Turnout over time</h2>
+  <p class="muted">
+            Credited in the lighter bar, everyone else present stacked on top.
+            Oldest on the left. A dashed outline is an op that was never sampled,
+            which is not the same as an op nobody came to.
+          </p>
+  <div class="scroll">
+    <svg
+      width={chartWidth}
+      height={CHART_H + 22}
+      role="img"
+      aria-label="Turnout per op, oldest first"
+    >
+              {chart.map((op, i) => {
+                const present = op.summary.present;
+                const credited = op.summary.credited;
+                const presentH = Math.round((present / peak) * CHART_H);
+                const creditedH = Math.round((credited / peak) * CHART_H);
+                const x = i * (BAR + GAP);
+                return (
+                  <g>
+                    {/*
+                      Inside the <g>, not a sibling of it. A <title> that is a
+                      direct child of <svg> is the accessible name of the whole
+                      graphic and only the first one counts, so twelve of them
+                      side by side render no per-bar tooltip at all.
+                    */}
+                    <title>
+                      {op.date}: {op.sampled
+                        ? `${credited} credited of ${present} present`
+                        : "never sampled"}
+                    </title>
+                    {op.sampled
+                      ? (
+                        <>
+                          <rect
+                            x={x}
+                            y={CHART_H - presentH}
+                            width={BAR}
+                            height={presentH}
+                            fill="#2c343c"
+                          />
+                          <rect
+                            x={x}
+                            y={CHART_H - creditedH}
+                            width={BAR}
+                            height={creditedH}
+                            fill="#7aa2c8"
+                          />
+                        </>
+                      )
+                      : (
+                        /*
+                         * An op nobody attended and an op that was never sampled
+                         * are both a zero-height bar, and they mean completely
+                         * different things. Draw the second one as an empty
+                         * outlined slot so the gap reads as "no data" rather
+                         * than as "no turnout".
+                         */
+                        <rect
+                          x={x + 0.5}
+                          y={CHART_H - 12.5}
+                          width={BAR - 1}
+                          height={12}
+                          fill="none"
+                          stroke="#d98a8a"
+                          stroke-dasharray="3 2"
+                        />
+                      )}
+                    <text
+                      x={x + BAR / 2}
+                      y={CHART_H + 15}
+                      text-anchor="middle"
+                      font-size="10"
+                      fill="#8b97a3"
+                    >
+                      {op.date.slice(5)}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+  </div>
+</div>
+
+        <div class="panel">
+  <h2>Per op</h2>
+  <p class="muted">
+            "Said they were coming" is the Discord event's Interested list, as it
+            stood while the op was running. Turning up at all counts, not just
+            turning up long enough to be credited.
+          </p>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Op</th>
+          <th class="num">Credited</th>
+          <th class="num">Present</th>
+          <th class="num">Guests</th>
+          <th>Came as promised</th>
+          <th>Said yes, did not come</th>
+          <th>Came without saying</th>
+        </tr>
+      </thead>
+      <tbody>
+                {operations.map((op) => (
+                  <tr>
+                    <td class="nowrap">
+                      {op.date}
+                      {!op.sampled && (
+                        <>
+                          <br />
+                          <span class="guest">not sampled</span>
+                        </>
+                      )}
+                    </td>
+                    <td class="num">{op.summary.credited}</td>
+                    <td class="num">{op.summary.present}</td>
+                    <td class="num">{op.summary.guests}</td>
+                    <td>
+                      {op.rsvp.respondedAndCame.length === 0
+                        ? <span class="no">none</span>
+                        : op.rsvp.respondedAndCame.map((r) => r.name).join(", ")}
+                    </td>
+                    <td>
+                      {op.rsvp.respondedAndDidNot.length === 0
+                        ? <span class="no">none</span>
+                        : op.rsvp.respondedAndDidNot.map((r) => r.name).join(
+                          ", ",
+                        )}
+                    </td>
+                    <td>
+                      {op.rsvp.cameWithoutResponding.length === 0
+                        ? <span class="no">none</span>
+                        : op.rsvp.cameWithoutResponding.map((a, i) => (
+                          <>
+                            {i > 0 && ", "}
+                            <span
+                              class={a.memberId === null ? "guest" : undefined}
+                            >
+                              {attendeeName(a, names)}
+                            </span>
+                          </>
+                        ))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+    </table>
+  </div>
+</div>
+
+        <div class="panel">
+  <h2>Roster</h2>
+  <p class="muted">
+            Everyone with a member record, across the same span. Numbers only:
+            where "active" stops and "inactive" starts is a judgement, and this
+            page does not make it.
+          </p>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th class="num">Credited</th>
+          <th class="num">Attended</th>
+          <th>Last attended</th>
+          <th>TeamSpeak</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rosterRows.map(({ member: m, activity: row }) => (
+          <tr>
+            <td>
+              {m.displayName}
+              {m.disabledAt && <> <span class="guest">left the guild</span></>}
+            </td>
+            <td class="num">{row.creditedOps} of {operations.length}</td>
+            <td class="num">{row.attendedOps} of {operations.length}</td>
+            <td class={row.lastAttended ? undefined : "no"}>
+              {row.lastAttended ?? "never"}
+            </td>
+            <td class={m.tsUid ? "yes" : "guest"}>
+              {m.tsUid ? "linked" : "not linked"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+        <div class="panel">
+          <h2>Guests</h2>
+          <p class="muted">
+            TeamSpeak identities that were in the Operations channel and resolve
+            to no member. They adopt themselves the moment that person runs{" "}
+            <code>/link</code>; a leftover is attributed by hand with{" "}
+            <code>/attendance claim</code>.
+          </p>
+          {guests.size === 0
+            ? <p class="muted">None. Everybody who turned up is linked.</p>
+            : (
+              <div class="scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>TeamSpeak nickname</th>
+                      <th class="num">Ops</th>
+                      <th>Identity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...guests.entries()]
+                      .sort((a, b) => b[1].ops - a[1].ops)
+                      .map(([uid, guest]) => (
+                        <tr>
+                          <td class="guest">{guest.nickname}</td>
+                          <td class="num">{guest.ops}</td>
+                          <td><code>{uid}</code></td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+        </div>
+      </>
+    )}
+</Base>

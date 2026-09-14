@@ -1,7 +1,7 @@
 import { getDiscordConfig, loadAll } from "@7r/config";
 import type { DiscordConfig } from "@7r/config";
 import { discordJson, type DiscordRestOptions } from "./rest.ts";
-import { type CommandDefinition, LINK_COMMANDS } from "./commands.ts";
+import { ALL_COMMANDS, type CommandDefinition } from "./commands.ts";
 
 /**
  * Register `7R_Bot`'s slash commands.
@@ -81,10 +81,10 @@ async function main(): Promise<number> {
   console.log(`  guild  : ${names(guildNow)}`);
   console.log();
   console.log("this will PUT the guild scope to:");
-  console.log(`  guild  : ${names(LINK_COMMANDS)}`);
+  console.log(`  guild  : ${names(ALL_COMMANDS)}`);
 
   const droppedFromGuild = guildNow
-    .filter((c) => !LINK_COMMANDS.some((k) => k.name === c.name))
+    .filter((c) => !ALL_COMMANDS.some((k) => k.name === c.name))
     .map((c) => `/${c.name}`);
   if (droppedFromGuild.length > 0) {
     console.log(
@@ -120,10 +120,10 @@ async function main(): Promise<number> {
     return 0;
   }
 
-  await putGuild(auth, appId, guildId, LINK_COMMANDS);
+  await putGuild(auth, appId, guildId, ALL_COMMANDS);
   console.log(
-    `\nRegistered ${LINK_COMMANDS.length} guild command(s): ${
-      names(LINK_COMMANDS)
+    `\nRegistered ${ALL_COMMANDS.length} guild command(s): ${
+      names(ALL_COMMANDS)
     }.`,
   );
 

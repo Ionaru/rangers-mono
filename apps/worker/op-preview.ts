@@ -5,6 +5,7 @@ import {
   loadAll,
   type OpsConfig,
 } from "@7r/config";
+import { isoInZone } from "@7r/domain";
 import { configureLogging } from "@7r/logging";
 import {
   describeWeeklyEvent,
@@ -26,14 +27,6 @@ import {
  * It needs no database or TeamSpeak connection: the whole plan is a pure function
  * of the clock and the config, and the announcement is read from local files.
  */
-
-function isoInZone(date: Date, timeZone: string): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
 
 async function main(): Promise<void> {
   const [bot, ops] = loadAll<[DiscordBotConfig, OpsConfig]>([

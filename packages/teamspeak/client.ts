@@ -339,6 +339,74 @@ export async function listClients(
   }));
 }
 
+/**
+ * A channel-id filter, built in the one place that knows to stringify it.
+ *
+ * **This is load-bearing, and it is a helper rather than two inline literals so
+ * that it cannot be forgotten.** Neither `clientList` nor `channelList` filters
+ * server-side: both send one plain command for the whole virtual server and then
+ * match the filter object against each entry in JavaScript, where `cid` is a
+ * **string**. Hand either one a number and every comparison fails, so it returns
+ * an empty array, silently, every time. For the sampler that is indistinguishable
+ * from "nobody came to the op": nothing throws, nothing logs, and the op is
+ * recorded as empty. `attendance:preview` exists to catch it before a Saturday
+ * does; this helper exists so the next caller cannot reintroduce it.
+ */
+function byChannel(cid: number): { cid: string } {
+  return { cid: String(cid) };
+}
+
+/**
+ * The real people currently in one channel: the attendance sample (ADR 0007).
+ *
+ * Because the filtering is local, this costs one command per call, the same as
+ * `listClients`, which is what keeps a 90-second sampler comfortably inside the
+ * command budget (throttle.ts).
+ *
+ * `ClientType.Regular` excludes ServerQuery clients, so our own bot never turns
+ * up in its own attendance figures.
+ */
+export async function listChannelClients(
+  teamspeak: TeamSpeak,
+  cid: number,
+): Promise<OnlineClient[]> {
+  const clients: TeamSpeakClient[] = await teamspeak.clientList({
+    ...byChannel(cid),
+    clientType: ClientType.Regular,
+  });
+
+  return clients.map((client) => ({
+    clid: client.clid,
+    uid: client.uniqueIdentifier,
+    nickname: client.nickname,
+  }));
+}
+
+/**
+ * A channel, reduced to what the preview task needs to prove `cid` is right.
+ */
+export interface ChannelInfo {
+  cid: string;
+  name: string;
+}
+
+/**
+ * Name one channel by id, so an operator can see *which* channel the sampler is
+ * about to call the Operations channel.
+ *
+ * Only `attendance:preview` calls this. The sampling loop deliberately does not:
+ * it would be a second command every 90 seconds to re-read something that cannot
+ * change without a config edit and a redeploy.
+ */
+export async function getChannel(
+  teamspeak: TeamSpeak,
+  cid: number,
+): Promise<ChannelInfo | null> {
+  const channels = await teamspeak.channelList(byChannel(cid));
+  const channel = channels[0];
+  return channel ? { cid: channel.cid, name: channel.name } : null;
+}
+
 /** A server group, reduced to what the mapping needs. */
 export interface ServerGroup {
   sgid: string;

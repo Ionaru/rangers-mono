@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { DiscordApiError, discordFetch, discordJson } from "./rest.ts";
+import { ok, status, stubFetch } from "./fetch_stub_test_util.ts";
 
 /**
  * The retry loop, against a stubbed `fetch`.
@@ -17,33 +18,6 @@ const OPTIONS = {
   // race it.
   retry: { backoffMs: [0, 0], timeoutMs: 5_000 },
 };
-
-interface Stub {
-  calls: { url: string; init: RequestInit }[];
-  restore(): void;
-}
-
-/** Serve the given responses in order; the last one repeats. */
-function stubFetch(responses: (Response | Error | (() => Response))[]): Stub {
-  const original = globalThis.fetch;
-  const calls: { url: string; init: RequestInit }[] = [];
-  let index = 0;
-
-  globalThis.fetch = ((url: string | URL | Request, init: RequestInit = {}) => {
-    calls.push({ url: String(url), init });
-    const next = responses[Math.min(index, responses.length - 1)];
-    index++;
-    if (next instanceof Error) return Promise.reject(next);
-    return Promise.resolve(typeof next === "function" ? next() : next.clone());
-  }) as typeof globalThis.fetch;
-
-  return { calls, restore: () => (globalThis.fetch = original) };
-}
-
-const ok = (body: unknown = { ok: true }) =>
-  new Response(JSON.stringify(body), { status: 200 });
-const status = (code: number, body = "upstream said no") =>
-  new Response(body, { status: code });
 
 Deno.test("a healthy request is made once and returned untouched", async () => {
   const stub = stubFetch([ok({ id: "1" })]);

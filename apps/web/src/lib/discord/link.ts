@@ -368,13 +368,14 @@ export function linkCode(interaction: Interaction): Response {
       // Deliberately swallowed.
     }
 
+    let backfilledSessions = 0;
     try {
-      await completeTeamspeakLink(db, {
+      ({ backfilledSessions } = await completeTeamspeakLink(db, {
         memberId: member.id,
         linkCodeId: challenge.id,
         tsUid: challenge.targetTsUid,
         tsNickname,
-      });
+      }));
     } catch (cause) {
       // Somebody else linked that identity between the pick-list and this write.
       // The list hides taken identities, but that check and this write are not
@@ -394,9 +395,22 @@ export function linkCode(interaction: Interaction): Response {
       throw cause;
     }
 
+    /**
+     * The backfill has been part of `completeTeamspeakLink` since Phase 2 and
+     * returned zero every time, because there was no attendance to adopt until
+     * Phase 6. Now that there is, say so: somebody who sat in the Operations
+     * channel for weeks before linking has just been credited for all of it, and
+     * that is the most convincing possible argument for linking.
+     */
+    const adopted = backfilledSessions === 0
+      ? ""
+      : ` ${backfilledSessions} past ` +
+        `attendance session${backfilledSessions === 1 ? "" : "s"} ` +
+        `${backfilledSessions === 1 ? "was" : "were"} credited to you.`;
+
     await editOriginal(
       interaction,
-      messageEdit({ content: "Link successful! ✅" }),
+      messageEdit({ content: `Link successful! ✅${adopted}` }),
     );
   });
 }

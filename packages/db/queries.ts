@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lt, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import {
   assignable,
@@ -6,6 +6,7 @@ import {
   linkCode,
   member,
   operation,
+  operationRsvp,
 } from "./schema.ts";
 import { authAccount } from "./auth-schema.ts";
 import type { Assignable, LinkCode, Member, Operation } from "./schema.ts";
@@ -513,6 +514,24 @@ export async function getOrCreateWeeklyOperation(
 }
 
 /**
+ * The op for one date, or undefined if the weekly job has not opened it yet.
+ *
+ * The read-only counterpart of `getOrCreateWeeklyOperation`, and the reason it
+ * exists is `attendance:preview`: that task must be able to ask about the
+ * *coming* Saturday without creating its row as a side effect of looking.
+ */
+export async function findOperationByDate(
+  db: Db,
+  date: string,
+): Promise<Operation | undefined> {
+  const [row] = await db
+    .select()
+    .from(operation)
+    .where(eq(operation.date, date));
+  return row;
+}
+
+/**
  * Record the created event's id on the op row.
  *
  * `where discord_event_id is null` makes it a no-op once set, so a duplicate call
@@ -642,4 +661,397 @@ export async function listLinkedMembers(db: Db): Promise<LinkedMemberLite[]> {
     tsNickname: r.tsNickname,
     tsUid: r.tsUid!,
   }));
+}
+
+// ---------------------------------------------------------------- attendance
+
+/** A span the sampler opened and has not yet closed, as it comes back from the database. */
+export interface OpenAttendanceSession {
+  id: string;
+  tsUid: string;
+  tsNickname: string | null;
+  joinedAt: Date;
+}
+
+/**
+ * The spans still open for one op: the sampler's carried state.
+ *
+ * State lives here rather than in a module variable on purpose. The worker is
+ * restarted by every deploy, and an op runs for three hours: in-memory state
+ * would mean a redeploy at 21:00 either loses everyone's join time or, worse,
+ * re-opens spans that are already open and double-counts them. Reading it back
+ * each tick costs one indexed select of a handful of rows.
+ */
+export async function listOpenAttendanceSessions(
+  db: Db,
+  operationId: string,
+): Promise<OpenAttendanceSession[]> {
+  return await db
+    .select({
+      id: attendanceSession.id,
+      tsUid: attendanceSession.tsUid,
+      tsNickname: attendanceSession.tsNickname,
+      joinedAt: attendanceSession.joinedAt,
+    })
+    .from(attendanceSession)
+    .where(
+      and(
+        eq(attendanceSession.operationId, operationId),
+        isNull(attendanceSession.leftAt),
+      ),
+    );
+}
+
+/**
+ * Open spans for everyone who has just arrived in the channel.
+ *
+ * `memberId` is resolved by the caller from the identity links and is null for a
+ * Guest. It is stamped at insert rather than joined on read so the row records
+ * who we believed it was at the time; a guest row is later adopted by
+ * `completeTeamspeakLink`'s backfill, which is the only thing that changes it.
+ */
+export async function openAttendanceSessions(
+  db: Db,
+  operationId: string,
+  rows: readonly {
+    memberId: string | null;
+    tsUid: string;
+    tsNickname: string | null;
+    joinedAt: Date;
+  }[],
+): Promise<void> {
+  if (rows.length === 0) return;
+  await db
+    .insert(attendanceSession)
+    .values(rows.map((row) => ({ ...row, operationId })));
+}
+
+/** Close spans whose identities are no longer in the channel. */
+export async function closeAttendanceSessions(
+  db: Db,
+  ids: readonly string[],
+  leftAt: Date,
+): Promise<void> {
+  if (ids.length === 0) return;
+  await db
+    .update(attendanceSession)
+    .set({ leftAt })
+    .where(inArray(attendanceSession.id, ids));
+}
+
+/**
+ * Carry a mid-op rename onto the open span.
+ *
+ * Cosmetic, and only worth doing because the nickname on the row is what the
+ * views show for a Guest: an identity that nobody can name any other way is a
+ * lot easier to place under the name it was actually using.
+ */
+export async function renameAttendanceSessions(
+  db: Db,
+  renames: readonly { id: string; tsNickname: string }[],
+): Promise<void> {
+  // Concurrent rather than sequential: the rows are distinct by construction
+  // (one span per identity), so nothing here waits on anything else here, and a
+  // break where several people re-tag at once should not be N round trips deep.
+  await Promise.all(
+    renames.map((rename) =>
+      db
+        .update(attendanceSession)
+        .set({ tsNickname: rename.tsNickname })
+        .where(eq(attendanceSession.id, rename.id))
+    ),
+  );
+}
+
+/**
+ * Close every span left open on an op whose window has already ended.
+ *
+ * The self-healing sweep, run on every tick that falls outside an op window. It
+ * is what closes the spans of a worker that was killed mid-op, and what closes
+ * everyone still in the channel at 23:00, without either needing its own code
+ * path: `left_at` lands on the op's own `attendance_end`, so nobody is credited
+ * for the debrief and a dangling span can never be read as "present until the
+ * window end" forever.
+ *
+ * Returns how many it closed, which is worth logging: a non-zero count outside
+ * the ordinary end-of-op sweep means the worker missed the end of an op.
+ */
+export async function closeDanglingSessions(db: Db): Promise<number> {
+  const closed = await db
+    .update(attendanceSession)
+    .set({ leftAt: sql`${operation.attendanceEnd}` })
+    .from(operation)
+    .where(
+      and(
+        eq(attendanceSession.operationId, operation.id),
+        isNull(attendanceSession.leftAt),
+        lt(operation.attendanceEnd, new Date()),
+      ),
+    )
+    .returning({ id: attendanceSession.id });
+  return closed.length;
+}
+
+/**
+ * Stamp that the Operations channel was read for this op.
+ *
+ * Unconditional, unlike the weekly job's one-shot stamps: this is the sampler's
+ * liveness mark and the instant a restart closes open spans at, so every
+ * successful sample moves it.
+ */
+export async function recordAttendanceSample(
+  db: Db,
+  operationId: string,
+  at: Date,
+): Promise<void> {
+  await db
+    .update(operation)
+    .set({ lastSampleAt: at })
+    .where(eq(operation.id, operationId));
+}
+
+/**
+ * Attribute a Guest's sessions to a member by hand (`/attendance claim`).
+ *
+ * The rare fallback: linking backfills guests automatically
+ * (`completeTeamspeakLink`), so this is only for an identity whose owner will
+ * never link it. `member_id is null` in the WHERE is the same guard the backfill
+ * uses, and it is what makes this safe to run twice and unable to take a session
+ * some other member already owns.
+ */
+export async function claimGuestSessions(
+  db: Db,
+  tsUid: string,
+  memberId: string,
+): Promise<number> {
+  const claimed = await db
+    .update(attendanceSession)
+    .set({ memberId })
+    .where(
+      and(
+        eq(attendanceSession.tsUid, tsUid),
+        isNull(attendanceSession.memberId),
+      ),
+    )
+    .returning({ id: attendanceSession.id });
+  return claimed.length;
+}
+
+// ---------------------------------------------------------------- event RSVP
+
+/**
+ * Record the op event's Interested list as it stood at this refresh (ADR 0020).
+ *
+ * An upsert on (operation_id, discord_id): `first_seen_at` survives, `last_seen_at`
+ * moves. Run every ATTENDANCE_RSVP_REFRESH_SECONDS through the op, so somebody
+ * who signs up at 20:40 is still recorded and a worker that booted late still
+ * gets a list. Somebody who *withdraws* keeps their row with a stale
+ * `last_seen_at`, which is the honest record of what happened.
+ *
+ * `rsvp_refreshed_at` is stamped in the same transaction as the rows, so the
+ * pacing marker can never claim a refresh that did not land.
+ */
+export async function upsertOperationRsvps(
+  db: Db,
+  operationId: string,
+  users: readonly { discordId: string; username: string | null }[],
+  at: Date,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    if (users.length > 0) {
+      await tx
+        .insert(operationRsvp)
+        .values(users.map((user) => ({
+          operationId,
+          discordId: user.discordId,
+          username: user.username,
+          firstSeenAt: at,
+          lastSeenAt: at,
+        })))
+        .onConflictDoUpdate({
+          target: [operationRsvp.operationId, operationRsvp.discordId],
+          set: { lastSeenAt: at, username: sql`excluded.username` },
+        });
+    }
+
+    await tx
+      .update(operation)
+      .set({ rsvpRefreshedAt: at })
+      .where(eq(operation.id, operationId));
+  });
+}
+
+// ------------------------------------------------------- attendance, read side
+
+/**
+ * The ops that have already happened, newest first.
+ *
+ * Filtered on `attendance_start`, not on `date`: the weekly job creates the row
+ * days ahead of the op, and an op that has not started has nothing to show.
+ */
+export async function listRecentOperations(
+  db: Db,
+  limit: number,
+): Promise<Operation[]> {
+  return await db
+    .select()
+    .from(operation)
+    .where(lt(operation.attendanceStart, new Date()))
+    .orderBy(desc(operation.attendanceStart))
+    .limit(limit);
+}
+
+/** One recorded span, with the member's name where there is a member. */
+export interface AttendanceRow {
+  operationId: string;
+  memberId: string | null;
+  displayName: string | null;
+  tsUid: string;
+  tsNickname: string | null;
+  joinedAt: Date;
+  leftAt: Date | null;
+}
+
+/**
+ * Every recorded span for a set of ops, for the domain rollups to fold.
+ *
+ * Rows rather than aggregates, deliberately: the credit rule clamps each span to
+ * the op's window and that lives in `@7r/domain` (`summariseOperation`), in one
+ * place, tested. A run of ops is a few hundred rows, so there is nothing to be
+ * bought by expressing the clamp in SQL and a rule in two dialects to be lost.
+ */
+export async function listAttendanceForOperations(
+  db: Db,
+  operationIds: readonly string[],
+): Promise<AttendanceRow[]> {
+  if (operationIds.length === 0) return [];
+  return await db
+    .select({
+      operationId: attendanceSession.operationId,
+      memberId: attendanceSession.memberId,
+      displayName: member.displayName,
+      tsUid: attendanceSession.tsUid,
+      tsNickname: attendanceSession.tsNickname,
+      joinedAt: attendanceSession.joinedAt,
+      leftAt: attendanceSession.leftAt,
+    })
+    .from(attendanceSession)
+    .leftJoin(member, eq(attendanceSession.memberId, member.id))
+    .where(inArray(attendanceSession.operationId, operationIds))
+    .orderBy(asc(attendanceSession.joinedAt));
+}
+
+/**
+ * One member's own spans across a set of ops, for their profile card.
+ *
+ * Narrow on purpose. The unit-wide view needs every attendee of every op; a
+ * member looking at their own profile needs one row set, and making them pay for
+ * the whole roster's would be the most-loaded page in the app doing the most
+ * work in it.
+ */
+export async function listAttendanceForMember(
+  db: Db,
+  memberId: string,
+  operationIds: readonly string[],
+): Promise<AttendanceRow[]> {
+  if (operationIds.length === 0) return [];
+  return await db
+    .select({
+      operationId: attendanceSession.operationId,
+      memberId: attendanceSession.memberId,
+      displayName: member.displayName,
+      tsUid: attendanceSession.tsUid,
+      tsNickname: attendanceSession.tsNickname,
+      joinedAt: attendanceSession.joinedAt,
+      leftAt: attendanceSession.leftAt,
+    })
+    .from(attendanceSession)
+    .leftJoin(member, eq(attendanceSession.memberId, member.id))
+    .where(
+      and(
+        eq(attendanceSession.memberId, memberId),
+        inArray(attendanceSession.operationId, operationIds),
+      ),
+    )
+    .orderBy(asc(attendanceSession.joinedAt));
+}
+
+/**
+ * The ops one Discord account said it was coming to, out of a set.
+ *
+ * Keyed on `discord_id` rather than on a member id because that is what
+ * `operation_rsvp` stores (ADR 0020): the member join happens on read, and for a
+ * single member it is simply not needed.
+ */
+export async function listRsvpOperationsForDiscordId(
+  db: Db,
+  discordId: string,
+  operationIds: readonly string[],
+): Promise<string[]> {
+  if (operationIds.length === 0) return [];
+  const rows = await db
+    .select({ operationId: operationRsvp.operationId })
+    .from(operationRsvp)
+    .where(
+      and(
+        eq(operationRsvp.discordId, discordId),
+        inArray(operationRsvp.operationId, operationIds),
+      ),
+    );
+  return rows.map((row) => row.operationId);
+}
+
+/** One captured RSVP, resolved to a member where the responder is one. */
+export interface RsvpRow {
+  operationId: string;
+  discordId: string;
+  memberId: string | null;
+  displayName: string | null;
+  username: string | null;
+}
+
+/**
+ * The captured Interested lists for a set of ops.
+ *
+ * The join to `member` is on `discord_id` and happens **here, at read time**,
+ * which is why `operation_rsvp` stores no member id: somebody who first logs in
+ * a month after an op is matched against it correctly, with nothing to backfill.
+ */
+export async function listRsvpsForOperations(
+  db: Db,
+  operationIds: readonly string[],
+): Promise<RsvpRow[]> {
+  if (operationIds.length === 0) return [];
+  return await db
+    .select({
+      operationId: operationRsvp.operationId,
+      discordId: operationRsvp.discordId,
+      memberId: member.id,
+      displayName: member.displayName,
+      username: operationRsvp.username,
+    })
+    .from(operationRsvp)
+    .leftJoin(member, eq(operationRsvp.discordId, member.discordId))
+    .where(inArray(operationRsvp.operationId, operationIds));
+}
+
+/** Every member the roster view lists, disabled ones included but marked. */
+export interface RosterMember {
+  id: string;
+  displayName: string;
+  tsUid: string | null;
+  disabledAt: Date | null;
+}
+
+/** The roster the attendance page joins its per-member totals onto. */
+export async function listRosterMembers(db: Db): Promise<RosterMember[]> {
+  return await db
+    .select({
+      id: member.id,
+      displayName: member.displayName,
+      tsUid: member.tsUid,
+      disabledAt: member.disabledAt,
+    })
+    .from(member)
+    .orderBy(asc(member.displayName));
 }

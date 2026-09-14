@@ -1,8 +1,11 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
 import {
   extractModalValues,
+  type InteractionData,
+  optionValue,
   parseCustomId,
   selectedValues,
+  subcommandOf,
   verifyInteractionSignature,
 } from "./interactions.ts";
 
@@ -227,4 +230,71 @@ Deno.test("extractModalValues tolerates a flat component and missing data", () =
   );
   assertEquals(extractModalValues({}).size, 0);
   assertEquals(extractModalValues({ components: [] }).size, 0);
+});
+
+// ------------------------------------------------------- command options
+
+/** `/attendance claim ts_uid:<uid> member:<id>` as Discord actually sends it. */
+function claimData(
+  options: { ts_uid?: string; member?: string } = {},
+): InteractionData {
+  const args = [];
+  if (options.ts_uid !== undefined) {
+    args.push({ name: "ts_uid", type: 3, value: options.ts_uid });
+  }
+  if (options.member !== undefined) {
+    args.push({ name: "member", type: 6, value: options.member });
+  }
+  return {
+    name: "attendance",
+    options: [{ name: "claim", type: 1, options: args }],
+  };
+}
+
+Deno.test("a subcommand is found by its option type, not its position", () => {
+  const data: InteractionData = {
+    name: "attendance",
+    // A top-level option that is not a subcommand, sitting in front of one.
+    options: [
+      { name: "noise", type: 3, value: "x" },
+      { name: "claim", type: 1, options: [] },
+    ],
+  };
+  assertEquals(subcommandOf(data)?.name, "claim");
+});
+
+Deno.test("a command with no subcommand reports none", () => {
+  assertEquals(subcommandOf({ name: "link" }), null);
+  assertEquals(subcommandOf({ name: "link", options: [] }), null);
+  assertEquals(subcommandOf(undefined), null);
+});
+
+Deno.test("a subcommand's options are read by name", () => {
+  const sub = subcommandOf(claimData({ ts_uid: "abc=", member: "123" }));
+  assertEquals(optionValue(sub?.options, "ts_uid"), "abc=");
+  assertEquals(optionValue(sub?.options, "member"), "123");
+});
+
+Deno.test("a user option's snowflake survives as a string", () => {
+  // The id exceeds Number range, so anything that round-trips it through a
+  // number loses the last digits and claims sessions for the wrong person.
+  const id = "305471712546390017";
+  const sub = subcommandOf(claimData({ ts_uid: "u", member: id }));
+  assertEquals(optionValue(sub?.options, "member"), id);
+});
+
+Deno.test("an option Discord did not send reads as undefined", () => {
+  const sub = subcommandOf(claimData({ ts_uid: "abc=" }));
+  assertEquals(optionValue(sub?.options, "member"), undefined);
+});
+
+Deno.test("an option array that is absent entirely reads as undefined", () => {
+  assertEquals(optionValue(undefined, "ts_uid"), undefined);
+  assertEquals(optionValue([], "ts_uid"), undefined);
+});
+
+Deno.test("an empty option value is the same as an absent one", () => {
+  // A handler must not try to claim sessions for the empty identity.
+  const sub = subcommandOf(claimData({ ts_uid: "", member: "1" }));
+  assertEquals(optionValue(sub?.options, "ts_uid"), undefined);
 });
