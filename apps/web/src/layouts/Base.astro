@@ -20,7 +20,23 @@ const { title, member = null } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} | 7th Ranger Group</title>
-    <style>
+    <!--
+      `is:global`, and it is load-bearing rather than lazy.
+
+      Astro scopes a component's styles to that component's OWN elements, by
+      rewriting every selector to `.panel:where(.astro-xxxx)` and stamping the
+      hash onto the elements in this file. Page content arrives through `<slot />`
+      and carries the page's hash, not this one, so without `is:global` every
+      class here (`.panel`, `.row`, `button`, `.notice`) silently matched nothing
+      at all and the member area rendered as unstyled text on a dark background.
+      Only the shell itself (`body`, `header`, `main`) was ever styled, because
+      those elements are in this template, which is why it went unnoticed.
+
+      The CSS only ships with pages that use this layout, which is the member
+      area; the public site has its own tokens and stylesheets (PublicLayout),
+      so "global" here is global to the member area and to nothing else.
+    -->
+    <style is:global>
     :root {
       color-scheme: dark;
       --bg: #14181c;
