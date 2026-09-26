@@ -21,9 +21,7 @@ This section lists all gear regulations for Platoon, Squad and individual level.
   - Combat Medic
   - Autorifleman
   - Breacher
-  - Battlerifle
   - Grenadier
-  - Medium Machine Gunner
   - Medium AT Gunner
   - Heavy AT Gunner
   - Mortar Gunner
