@@ -11,3 +11,11 @@ allowBuilds:
   esbuild: false
   # Builds an optional native crypto binding; ssh2 falls back to pure JS.
   ssh2: false
+# Agent skills some packages offer to install for AI coding tools. Not part of
+# what the code needs, so denied like the build scripts above: decided here
+# once rather than left as a prompt on every install.
+permissions:
+  "@logtape/logtape":
+    skills: false
+  drizzle-kit:
+    skills: false
