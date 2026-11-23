@@ -170,7 +170,7 @@ async function main(): Promise<number> {
 }
 
 if (import.meta.main) {
-  let code = 1;
+  let code: number;
   try {
     code = await main();
   } finally {

@@ -1,0 +1,15 @@
+**/dist
+**/.astro
+**/node_modules
+packages/db/drizzle
+data
+backups
+secrets
+pnpm-lock.yaml
+apps/web/public
+.idea
+
+# Markdown is hand-authored prose, and the docs are the spec. A formatter
+# reflows it, which rewrites every paragraph it touches and buries a real
+# edit in 1,800 lines of rewrapping. Formatting is for code.
+**/*.md

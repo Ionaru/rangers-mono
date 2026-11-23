@@ -355,7 +355,7 @@ async function main(): Promise<number> {
 }
 
 if (import.meta.main) {
-  let failed = 0;
+  let failed: number;
   try {
     failed = await main() ?? 0;
   } finally {

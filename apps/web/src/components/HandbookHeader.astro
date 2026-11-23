@@ -42,7 +42,7 @@ const shouldRenderSearch = config.pagefind;
  * own client JS here, so this adds nothing new in kind).
  */
 async function showMemberInNav() {
-  let displayName: string | null = null;
+  let displayName: string | null;
   try {
     const res = await fetch("/api/nav-member", {
       headers: { accept: "application/json" },

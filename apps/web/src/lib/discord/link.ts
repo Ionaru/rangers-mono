@@ -368,7 +368,7 @@ export function linkCode(interaction: Interaction): Response {
       // Deliberately swallowed.
     }
 
-    let backfilledSessions = 0;
+    let backfilledSessions: number;
     try {
       ({ backfilledSessions } = await completeTeamspeakLink(db, {
         memberId: member.id,

@@ -6,6 +6,9 @@
   "scripts": {
     "check": "tsc -p tsconfig.json && pnpm -C apps/web run check",
     "test": "node --test \"packages/*/*_test.ts\" \"apps/worker/*_test.ts\" \"apps/web/src/**/*.test.ts\" \"apps/web/scripts/*.test.ts\"",
+    "lint": "eslint .",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check .",
     "db:generate": "pnpm -C packages/db run generate",
     "migrate": "pnpm -C packages/db run migrate",
     "import:legacy": "pnpm -C packages/db run import:legacy",
@@ -25,7 +28,13 @@
     "attendance:preview": "pnpm -C apps/worker run attendance:preview"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@types/node": "26.6.6",
-    "typescript": "6.0.3"
+    "eslint": "10.15.0",
+    "eslint-plugin-astro": "3.2.1",
+    "prettier": "3.10.1",
+    "prettier-plugin-astro": "1.1.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0"
   }
 }
