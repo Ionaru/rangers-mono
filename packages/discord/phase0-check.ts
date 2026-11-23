@@ -13,7 +13,7 @@ import { discordJson, type DiscordRestOptions } from "./rest.ts";
  * refused and the sync quietly does nothing. So this checks, rather than
  * believing.
  *
- *   deno task phase0:check
+ *   pnpm phase0:check
  *
  * Seven GETs, no writes, nothing registered, no interactions URL touched. Safe to
  * run against production, and it is meant to be: the credentials only exist on
@@ -135,18 +135,17 @@ async function main() {
     registered.includes(expectedRedirect)
       ? expectedRedirect
       : `expected ${expectedRedirect}\n     registered: ${
-        registered.length ? registered.join(", ") : "(none)"
-      }\n     Without it the login fails at Discord's end, so nothing appears in our logs.`,
+          registered.length ? registered.join(", ") : "(none)"
+        }\n     Without it the login fails at Discord's end, so nothing appears in our logs.`,
   );
 
   // ---------------------------------------------------------------- the guild
 
-  const guild = await discordJson<
-    { id: string; name: string; owner_id: string }
-  >(
-    auth,
-    `/guilds/${guildId}`,
-  );
+  const guild = await discordJson<{
+    id: string;
+    name: string;
+    owner_id: string;
+  }>(auth, `/guilds/${guildId}`);
   record("ok", "The bot can see the guild", `"${guild.name}" (${guild.id})`);
 
   const roles = await discordJson<Role[]>(auth, `/guilds/${guildId}/roles`);
@@ -181,19 +180,19 @@ async function main() {
     "GUILD_MEMBERS privileged intent is enabled",
     memberListProbe.ok
       ? `the REST member list works (application flags ${
-        flagged
-          ? "agree"
-          : "do not show it, but the call works, which is what matters"
-      })`
+          flagged
+            ? "agree"
+            : "do not show it, but the call works, which is what matters"
+        })`
       : `GET /guilds/{id}/members returned ${memberListProbe.status}. This is an APPLICATION TOGGLE (Developer Portal -> Bot -> Privileged Gateway Intents -> Server Members Intent), not a guild permission: no amount of permission substitutes for it, Administrator included. Phase 4's role sync will quietly do nothing without it.`,
   );
 
   // ---------------------------------------------------------------- role hierarchy
 
   const byId = new Map(roles.map((r) => [r.id, r]));
-  const botRoles = botMember.roles.map((id) => byId.get(id)).filter(
-    Boolean,
-  ) as Role[];
+  const botRoles = botMember.roles
+    .map((id) => byId.get(id))
+    .filter(Boolean) as Role[];
   const botTop = botRoles.reduce(
     (best, r) => (r.position > best ? r.position : best),
     0,
@@ -216,10 +215,9 @@ async function main() {
   const HAND_ASSIGNED = ["Officer", "NCO"];
 
   const mustOutrank = [
-    ...KNOWN_ASSIGNABLES
-      .filter((a) => !HAND_ASSIGNED.includes(a.name))
+    ...(KNOWN_ASSIGNABLES.filter((a) => !HAND_ASSIGNED.includes(a.name))
       .map((a) => byId.get(a.id))
-      .filter(Boolean) as Role[],
+      .filter(Boolean) as Role[]),
     ...roles.filter((r) => badgeFromDisplayName(r.name) && !r.managed),
   ];
 
@@ -229,14 +227,16 @@ async function main() {
     mustOutrank.length === 0
       ? "unknown"
       : outranked.length === 0
-      ? "ok"
-      : "fail",
+        ? "ok"
+        : "fail",
     "7R_Bot outranks every Assignable role it must WRITE",
     outranked.length === 0
       ? `the bot's highest role is at position ${botTop}, above all ${mustOutrank.length} of the roles it writes. Officer and NCO sit above it, which is deliberate: they are hand-assigned, the sync never writes a Discord role, and new badge roles land below the bot by construction. The only cost is that Phase 5's /rank set cannot promote to or demote from those two.`
-      : `the bot's highest role is at position ${botTop}, and it does NOT outrank: ${
-        outranked.map((r) => `${r.name} (${r.position})`).join(", ")
-      }\n     MANAGE_ROLES only writes roles BELOW the bot's own, and Administrator does not exempt it. Every write to these 403s while the bot looks perfectly healthy.`,
+      : `the bot's highest role is at position ${botTop}, and it does NOT outrank: ${outranked
+          .map((r) => `${r.name} (${r.position})`)
+          .join(
+            ", ",
+          )}\n     MANAGE_ROLES only writes roles BELOW the bot's own, and Administrator does not exempt it. Every write to these 403s while the bot looks perfectly healthy.`,
   );
 
   // ---------------------------------------------------------------- permissions
@@ -253,11 +253,11 @@ async function main() {
     "7R_Bot's permissions",
     isAdmin
       ? "still ADMINISTRATOR. Nothing is blocked by it, so this is hygiene, not a bug: but the token now lives in a .env on a box we do not own, and Administrator turns a leaked token into a lost guild. Dial it back to CREATE_EVENTS + MANAGE_ROLES, and do it LAST: after the badge roles exist, after the hierarchy is fixed, and after the memes are harvested."
-      : `MANAGE_ROLES=${has(MANAGE_ROLES)} CREATE_EVENTS=${
-        has(CREATE_EVENTS)
-      } MANAGE_EVENTS=${
-        has(MANAGE_EVENTS)
-      }\n     CREATE_EVENTS (1<<44) is the one that matters: MANAGE_EVENTS (1<<33) only edits events that already exist and 403s on create.`,
+      : `MANAGE_ROLES=${has(MANAGE_ROLES)} CREATE_EVENTS=${has(
+          CREATE_EVENTS,
+        )} MANAGE_EVENTS=${has(
+          MANAGE_EVENTS,
+        )}\n     CREATE_EVENTS (1<<44) is the one that matters: MANAGE_EVENTS (1<<33) only edits events that already exist and 403s on create.`,
   );
 
   // ---------------------------------------------------------------- the Assignable roles
@@ -268,9 +268,11 @@ async function main() {
     "The 8 rank/role Discord ids from the legacy dump still exist",
     missingAssignables.length === 0
       ? "all 5 ranks and 3 roles found in the guild"
-      : `not in the guild: ${
-        missingAssignables.map((a) => `${a.name} (${a.id})`).join(", ")
-      }\n     These ids come from a 2019 dump. A role that was deleted and recreated has a new id, so Phase 4 would seed an Assignable that matches nobody, silently. Nobody had checked these.`,
+      : `not in the guild: ${missingAssignables
+          .map((a) => `${a.name} (${a.id})`)
+          .join(
+            ", ",
+          )}\n     These ids come from a 2019 dump. A role that was deleted and recreated has a new id, so Phase 4 would seed an Assignable that matches nobody, silently. Nobody had checked these.`,
   );
 
   // Match by canonical badge recovered from the display name, so an emoji-bearing
@@ -288,9 +290,9 @@ async function main() {
     "The 8 badge roles exist in Discord",
     foundBadges.length === BADGE_NAMES.length
       ? "all 8 found"
-      : `missing: ${
-        BADGE_NAMES.filter((b) => !foundBadges.includes(b)).join(", ")
-      }\n     Badges only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so until these exist, 8 of the 16 Assignables can never sync. Run \`deno task badges:backfill\` (dry-run first): it creates them below 7R_Bot, mirrors the live TeamSpeak groups, and prints the ids for docs/MIGRATION.md.`,
+      : `missing: ${BADGE_NAMES.filter((b) => !foundBadges.includes(b)).join(
+          ", ",
+        )}\n     Badges only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so until these exist, 8 of the 16 Assignables can never sync. Run \`pnpm badges:backfill\` (dry-run first): it creates them below 7R_Bot, mirrors the live TeamSpeak groups, and prints the ids for docs/MIGRATION.md.`,
   );
 
   // ---------------------------------------------------------------- surviving /loa
@@ -313,8 +315,8 @@ async function main() {
     globalLoa
       ? "a GLOBAL /loa is registered. Phase 5's bulk PUT replaces only the scope it targets, so a global command SURVIVES it, and once the interactions URL points at us it is routed to an endpoint with no handler behind it. Delete it explicitly."
       : `global commands: ${
-        globalCommands.map((c) => `/${c.name}`).join(", ") || "(none)"
-      }`,
+          globalCommands.map((c) => `/${c.name}`).join(", ") || "(none)"
+        }`,
   );
 
   record(
@@ -341,7 +343,7 @@ if (import.meta.main) {
     console.error(
       "\nIf that was a 401, the bot token is wrong. If it was a 404 on the guild, the bot is not in it.",
     );
-    Deno.exit(1);
+    process.exit(1);
   }
 
   console.log("\n7R_Bot Phase 0 preflight\n");
@@ -366,5 +368,5 @@ if (import.meta.main) {
       "\n  - the meme harvest, and whether 7R_Bot can even re-sign attachments it did not post",
   );
 
-  Deno.exit(failed === 0 ? 0 : 1);
+  process.exit(failed === 0 ? 0 : 1);
 }

@@ -15,12 +15,13 @@ is the governing constraint: when in doubt, cut.
 
 ## Shape
 
-A **Deno 2 monorepo** on native workspaces. No meta build tool (no Nx, no
-Turbo).
+A **Node 26 monorepo** on pnpm workspaces. No meta build tool (no Nx, no
+Turbo). Node runs the TypeScript directly, so there is no build step for the
+packages or the worker (ADR 0021).
 
-- `apps/web`: Astro SSR on Deno. Serves the public site, the member area, and
+- `apps/web`: Astro SSR on Node. Serves the public site, the member area, and
   the **Discord interactions endpoint** (the bot is just a route).
-- `apps/worker`: a long-running Deno process. Holds the TeamSpeak ServerQuery
+- `apps/worker`: a long-running Node process. Holds the TeamSpeak ServerQuery
   connection (SSH transport) and runs the scheduled jobs: role reconcile,
   attendance sampling, the weekly event.
 - `packages/*`: shared `config`, `domain`, `logging`, `db` (Drizzle), `discord`,
@@ -81,23 +82,24 @@ the bot's slash commands (5) and attendance (6). See `ARCHITECTURE.md` §9.
 
 ## Development
 
-Deno tasks are the interface; there is no npm script layer. See `AGENTS.md`.
+`pnpm` scripts are the interface (root `package.json`). See `AGENTS.md`.
 
 ```sh
-deno task check && deno task test      # typecheck + unit tests
-deno task web:dev                      # Astro dev server
+pnpm install
+pnpm check && pnpm test                # typecheck + unit tests
+pnpm web:dev                           # Astro dev server
 
 docker compose up -d postgres
 docker compose --profile migrate run --rm migrate
 docker compose up -d                   # web + worker + postgres
 ```
 
-- **Build the Astro app with Deno**, always: `deno run -A npm:astro build`. Do
-  **not** build it with Node. A `npx astro build` artifact dies at boot on the
-  Deno runtime unless you ship node_modules into the image.
-- **Commit `deno.lock` and pin the Deno version exactly.** The TeamSpeak client
-  leans on `node:crypto` through `ssh2`, which is a code path Deno has broken
-  before.
-- **Never run `deno approve-scripts` / `--allow-scripts`.** The "ignored build
-  scripts" warning is correct behaviour; the ignored script (`cpu-features`) is
-  an optional native addon we do not want.
+- **Commit `pnpm-lock.yaml` and pin the Node and pnpm versions exactly.** Node is
+  in `.node-version`, pnpm in the root `package.json` (`packageManager`), and
+  both are repeated in the Dockerfiles; CI fails if they disagree. The repo runs
+  `.ts` through Node's native type stripping, and what that accepts has changed
+  between releases.
+- **Never approve a dependency build script.** `allowBuilds` in
+  `pnpm-workspace.yaml` denies `cpu-features` (an optional native addon pulled in
+  by `ssh2` that we do not want), and an install fails on any build script nobody
+  has reviewed. Do not run `pnpm approve-builds`.

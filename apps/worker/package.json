@@ -1,0 +1,29 @@
+{
+  "name": "@7r/worker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=../../.env main.ts",
+    "start": "node main.ts",
+    "ts:check": "node --env-file-if-exists=../../.env ts-check.ts",
+    "badges:backfill": "node --env-file-if-exists=../../.env badge-backfill.ts",
+    "assignables:seed": "node --env-file-if-exists=../../.env assignable-seed.ts",
+    "sync:preview": "node --env-file-if-exists=../../.env sync-preview.ts",
+    "op:preview": "node --env-file-if-exists=../../.env op-preview.ts",
+    "attendance:preview": "node --env-file-if-exists=../../.env attendance-preview.ts"
+  },
+  "dependencies": {
+    "@7r/config": "workspace:*",
+    "@7r/db": "workspace:*",
+    "@7r/discord": "workspace:*",
+    "@7r/domain": "workspace:*",
+    "@7r/identity": "workspace:*",
+    "@7r/logging": "workspace:*",
+    "@7r/teamspeak": "workspace:*",
+    "ts3-nodejs-library": "3.5.3"
+  },
+  "devDependencies": {
+    "@logtape/logtape": "2.3.0"
+  }
+}

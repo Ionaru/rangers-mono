@@ -1,4 +1,5 @@
-import { assert, assertFalse } from "@std/assert";
+import assert from "node:assert/strict";
+import { test } from "node:test";
 import { isAdminRole } from "./admin.ts";
 
 /**
@@ -12,31 +13,31 @@ import { isAdminRole } from "./admin.ts";
 
 const ADMINS = ["role-officer", "role-nco"];
 
-Deno.test("holding a configured admin role is admin", () => {
-  assert(isAdminRole(["role-nco"], ADMINS));
+test("holding a configured admin role is admin", () => {
+  assert.ok(isAdminRole(["role-nco"], ADMINS));
 });
 
-Deno.test("holding one of several roles is enough", () => {
-  assert(isAdminRole(["role-member", "role-medic", "role-officer"], ADMINS));
+test("holding one of several roles is enough", () => {
+  assert.ok(isAdminRole(["role-member", "role-medic", "role-officer"], ADMINS));
 });
 
-Deno.test("holding no configured role is not admin", () => {
-  assertFalse(isAdminRole(["role-member", "role-medic"], ADMINS));
+test("holding no configured role is not admin", () => {
+  assert.strictEqual(isAdminRole(["role-member", "role-medic"], ADMINS), false);
 });
 
-Deno.test("holding no roles at all is not admin", () => {
+test("holding no roles at all is not admin", () => {
   // An interaction from outside a guild carries no member, so the caller passes
   // []. That must never read as "allowed".
-  assertFalse(isAdminRole([], ADMINS));
+  assert.strictEqual(isAdminRole([], ADMINS), false);
 });
 
-Deno.test("an empty admin set admits nobody", () => {
+test("an empty admin set admits nobody", () => {
   // Fails closed rather than open: a misconfigured DISCORD_ADMIN_ROLE_IDS locks
   // admins out of a read-only page, which is the safe direction to be wrong in.
-  assertFalse(isAdminRole(["role-officer"], []));
+  assert.strictEqual(isAdminRole(["role-officer"], []), false);
 });
 
-Deno.test("role ids are matched exactly, not by prefix", () => {
-  assertFalse(isAdminRole(["role-nco-trainee"], ADMINS));
-  assertFalse(isAdminRole(["role-nc"], ADMINS));
+test("role ids are matched exactly, not by prefix", () => {
+  assert.strictEqual(isAdminRole(["role-nco-trainee"], ADMINS), false);
+  assert.strictEqual(isAdminRole(["role-nc"], ADMINS), false);
 });

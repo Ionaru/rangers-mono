@@ -13,7 +13,7 @@ import {
  *
  * Two things live here and nowhere else: the one npm dependency
  * (`@logtape/logtape`, kept to a single manifest by the "one dependency, one
- * home" rule in the root deno.json), and the policy for what a log line looks
+ * home" rule in the root package.json), and the policy for what a log line looks
  * like and which ones survive.
  *
  * Everything that logs imports `getLogger` from here and nothing else. Getting a
@@ -127,24 +127,29 @@ export function configureLogging(options: LoggingOptions = {}): void {
   const shape = options.shape ?? "json";
   const lowestLevel = LEVELS[options.level ?? "info"];
 
-  const sinks: Record<string, Sink> = shape === "off" ? {} : {
-    out: getConsoleSink(
-      shape === "json" ? { formatter: getJsonLinesFormatter() } : {
-        levelMap: { ...ALL_TO_STDERR },
-        formatter: getTextFormatter({
-          timestamp: "time",
-          // The properties are the point of a structured log line, and the
-          // stock text formatter drops them: it renders only the message.
-          format: ({ level, category, message, record }) =>
-            Object.keys(record.properties).length === 0
-              ? `${level} ${category}: ${message}`
-              : `${level} ${category}: ${message} ${
-                JSON.stringify(record.properties)
-              }`,
-        }),
-      },
-    ),
-  };
+  const sinks: Record<string, Sink> =
+    shape === "off"
+      ? {}
+      : {
+          out: getConsoleSink(
+            shape === "json"
+              ? { formatter: getJsonLinesFormatter() }
+              : {
+                  levelMap: { ...ALL_TO_STDERR },
+                  formatter: getTextFormatter({
+                    timestamp: "time",
+                    // The properties are the point of a structured log line, and the
+                    // stock text formatter drops them: it renders only the message.
+                    format: ({ level, category, message, record }) =>
+                      Object.keys(record.properties).length === 0
+                        ? `${level} ${category}: ${message}`
+                        : `${level} ${category}: ${message} ${JSON.stringify(
+                            record.properties,
+                          )}`,
+                  }),
+                },
+          ),
+        };
 
   const sinkIds = Object.keys(sinks);
 

@@ -56,9 +56,10 @@ export async function findMemberByDiscordId(
   db: Db,
   discordId: string,
 ): Promise<Member | undefined> {
-  const [row] = await db.select().from(member).where(
-    eq(member.discordId, discordId),
-  );
+  const [row] = await db
+    .select()
+    .from(member)
+    .where(eq(member.discordId, discordId));
   return row;
 }
 
@@ -205,9 +206,10 @@ export async function consumeLinkCode(
   db: Db,
   linkCodeId: string,
 ): Promise<void> {
-  await db.update(linkCode).set({ consumedAt: new Date() }).where(
-    eq(linkCode.id, linkCodeId),
-  );
+  await db
+    .update(linkCode)
+    .set({ consumedAt: new Date() })
+    .where(eq(linkCode.id, linkCodeId));
 }
 
 /**
@@ -359,10 +361,10 @@ export async function upsertLegacyMember(
     displayName: input.displayName,
     ...(input.tsUid
       ? {
-        tsUid: input.tsUid,
-        tsNickname: input.tsNickname,
-        tsLinkMethod: "legacy_import" as const,
-      }
+          tsUid: input.tsUid,
+          tsNickname: input.tsNickname,
+          tsLinkMethod: "legacy_import" as const,
+        }
       : {}),
     ...(input.steamId
       ? { steamId: input.steamId, steamLinkMethod: "manual" as const }
@@ -427,11 +429,14 @@ export async function membersByTsUid(
     .where(sql`${member.tsUid} is not null`);
 
   return new Map(
-    rows.map((row) => [row.tsUid!, {
-      id: row.id,
-      discordId: row.discordId,
-      displayName: row.displayName,
-    }]),
+    rows.map((row) => [
+      row.tsUid!,
+      {
+        id: row.id,
+        discordId: row.discordId,
+        displayName: row.displayName,
+      },
+    ]),
   );
 }
 
@@ -758,7 +763,7 @@ export async function renameAttendanceSessions(
       db
         .update(attendanceSession)
         .set({ tsNickname: rename.tsNickname })
-        .where(eq(attendanceSession.id, rename.id))
+        .where(eq(attendanceSession.id, rename.id)),
     ),
   );
 }
@@ -861,13 +866,15 @@ export async function upsertOperationRsvps(
     if (users.length > 0) {
       await tx
         .insert(operationRsvp)
-        .values(users.map((user) => ({
-          operationId,
-          discordId: user.discordId,
-          username: user.username,
-          firstSeenAt: at,
-          lastSeenAt: at,
-        })))
+        .values(
+          users.map((user) => ({
+            operationId,
+            discordId: user.discordId,
+            username: user.username,
+            firstSeenAt: at,
+            lastSeenAt: at,
+          })),
+        )
         .onConflictDoUpdate({
           target: [operationRsvp.operationId, operationRsvp.discordId],
           set: { lastSeenAt: at, username: sql`excluded.username` },

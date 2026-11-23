@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { z } from "zod";
 
 export type EnvSource = Record<string, string | undefined>;
@@ -30,7 +31,7 @@ export class ConfigError extends Error {
  *
  * **A mounted `X_FILE` beats an `X` set directly**, and that order is
  * load-bearing rather than arbitrary. The same `.env` also carries the
- * localhost `DATABASE_URL` that the host-side tasks (`deno task migrate`,
+ * localhost `DATABASE_URL` that the host-side tasks (`pnpm migrate`,
  * `web:dev`) need, so inside a container the two collide. Were the plain value
  * to win, `web` and `worker` would quietly dial `localhost:5432` inside their
  * own network namespace instead of reading the secret Compose mounted for them.
@@ -55,7 +56,9 @@ function resolveSecretFiles(source: EnvSource): EnvSource {
 
   for (const [key, value] of Object.entries(source)) {
     if (
-      !key.endsWith(SECRET_FILE_SUFFIX) || value === undefined || value === ""
+      !key.endsWith(SECRET_FILE_SUFFIX) ||
+      value === undefined ||
+      value === ""
     ) {
       continue;
     }
@@ -63,7 +66,7 @@ function resolveSecretFiles(source: EnvSource): EnvSource {
     const target = keyForSecretFile(key);
 
     try {
-      resolved[target] = Deno.readTextFileSync(value).trim();
+      resolved[target] = readFileSync(value, "utf8").trim();
     } catch (cause) {
       throw new ConfigError([
         `${key}: cannot read the secret file at ${value} (${
@@ -85,7 +88,7 @@ function resolveSecretFiles(source: EnvSource): EnvSource {
  */
 export function loadConfig<T extends z.ZodType>(
   schema: T,
-  source: EnvSource = Deno.env.toObject(),
+  source: EnvSource = process.env,
 ): z.infer<T> {
   // A key left blank in `.env` (`SYNC_DRY_RUN=`) arrives as "", which is
   // *defined*, and so beats the schema's `.default()` and fails the parse. An
@@ -130,9 +133,9 @@ export function memoize<T>(load: () => T): () => T {
  *
  * Anything that is not a ConfigError is a real failure and is rethrown at once.
  */
-export function loadAll<T extends readonly unknown[]>(
-  loaders: { [K in keyof T]: () => T[K] },
-): T {
+export function loadAll<T extends readonly unknown[]>(loaders: {
+  [K in keyof T]: () => T[K];
+}): T {
   const values: unknown[] = [];
   const problems: string[] = [];
 

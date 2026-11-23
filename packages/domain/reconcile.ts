@@ -151,9 +151,9 @@ export function planMemberSync(
   if (conflicting.length > 0) {
     const names = held.filter((a) => a.kind === "rank").map((a) => a.name);
     warnings.push(
-      `holds ${names.length} rank roles in Discord (${
-        names.join(", ")
-      }); rank is exclusive, fix it in Discord`,
+      `holds ${names.length} rank roles in Discord (${names.join(
+        ", ",
+      )}); rank is exclusive, fix it in Discord`,
     );
   }
 
@@ -173,9 +173,9 @@ export function planMemberSync(
     const current = new Set(input.currentSgids.filter((s) => owned.has(s)));
 
     toAdd = [...desired].filter((s) => !current.has(s)).sort((a, b) => a - b);
-    toRemove = [...current].filter((s) => !desired.has(s)).sort((a, b) =>
-      a - b
-    );
+    toRemove = [...current]
+      .filter((s) => !desired.has(s))
+      .sort((a, b) => a - b);
   }
 
   return {
@@ -225,12 +225,16 @@ export function planSyncPass(
 ): SyncPassPlan {
   const owned = ownedSgids(mapping);
   const members = inputs.map((input) => planMemberSync(input, mapping, owned));
-  const changed = members.filter((m) =>
-    m.toAdd.length > 0 || m.toRemove.length > 0 || m.stampDisabled ||
-    m.clearDisabled
+  const changed = members.filter(
+    (m) =>
+      m.toAdd.length > 0 ||
+      m.toRemove.length > 0 ||
+      m.stampDisabled ||
+      m.clearDisabled,
   );
-  const removalMemberCount =
-    members.filter((m) => m.toRemove.length > 0).length;
+  const removalMemberCount = members.filter(
+    (m) => m.toRemove.length > 0,
+  ).length;
 
   return {
     members,

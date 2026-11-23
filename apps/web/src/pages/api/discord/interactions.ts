@@ -42,13 +42,15 @@ export const POST: APIRoute = async ({ request }) => {
 
   const { DISCORD_PUBLIC_KEY } = getDiscordConfig();
 
-  const verified = signature !== null && timestamp !== null &&
-    await verifyInteractionSignature({
+  const verified =
+    signature !== null &&
+    timestamp !== null &&
+    (await verifyInteractionSignature({
       publicKeyHex: DISCORD_PUBLIC_KEY,
       signatureHex: signature,
       timestamp,
       body: bodyBytes,
-    });
+    }));
 
   if (!verified) {
     // No detail. A probe learns nothing from this beyond "no".

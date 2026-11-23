@@ -1,6 +1,8 @@
 # Keep the build context small, and keep two things out of the image entirely:
 #
-#   node_modules/  ~276 MB, and the runtime image ships none of it by design.
+#   node_modules/  the host's install. The images run their own `pnpm install`,
+#                  and a host tree has symlinks into a store that does not exist
+#                  in the build.
 #   data/          the legacy dump: 150 members' Discord / TeamSpeak / Steam ids.
 #                  Personal data has no business in a build layer (§7, GDPR-lite).
 node_modules/

@@ -1,3 +1,4 @@
+import { createInterface } from "node:readline/promises";
 import { getDiscordConfig, loadAll } from "@7r/config";
 import type { DiscordConfig } from "@7r/config";
 import { discordJson, type DiscordRestOptions } from "./rest.ts";
@@ -6,9 +7,9 @@ import { ALL_COMMANDS, type CommandDefinition } from "./commands.ts";
 /**
  * Register `7R_Bot`'s slash commands.
  *
- *   deno task commands:register                    # prints both scopes, writes nothing
- *   deno task commands:register -- --apply         # asks, then bulk-PUTs the guild scope
- *   deno task commands:register -- --apply --clear-global  # also clears global
+ *   pnpm commands:register                    # prints both scopes, writes nothing
+ *   pnpm commands:register --apply            # asks, then bulk-PUTs the guild scope
+ *   pnpm commands:register --apply --clear-global  # also clears global
  *
  * Two things here are destructive, and neither is reversible by re-running, so
  * the default is read-only and the write is confirmed at the terminal (there is
@@ -60,9 +61,31 @@ function names(commands: { name: string }[]): string {
     : commands.map((c) => `/${c.name}`).join(", ");
 }
 
+/**
+ * Ask a yes/no question at the terminal. A headless run (stdin is not a TTY:
+ * `echo |`, CI) answers "no" without reading, so nothing is ever written
+ * unattended.
+ */
+async function confirm(question: string): Promise<boolean> {
+  if (!process.stdin.isTTY) return false;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question(`${question} [y/N] `);
+    return /^y(es)?$/i.test(answer.trim());
+  } catch (error) {
+    // Ctrl-D or Ctrl-C at the prompt closes the interface and rejects the
+    // question with an AbortError; that is a "no", as Deno's confirm() took EOF.
+    if (error instanceof Error && error.name === "AbortError") return false;
+    throw error;
+  } finally {
+    rl.close();
+  }
+}
+
 async function main(): Promise<number> {
-  const apply = Deno.args.includes("--apply");
-  const clearGlobal = Deno.args.includes("--clear-global");
+  const args = process.argv.slice(2);
+  const apply = args.includes("--apply");
+  const clearGlobal = args.includes("--clear-global");
 
   const [discord] = loadAll<[DiscordConfig]>([getDiscordConfig]);
   const appId = discord.DISCORD_CLIENT_ID;
@@ -88,17 +111,17 @@ async function main(): Promise<number> {
     .map((c) => `/${c.name}`);
   if (droppedFromGuild.length > 0) {
     console.log(
-      `\n  the bulk PUT DROPS from the guild scope: ${
-        droppedFromGuild.join(", ")
-      }`,
+      `\n  the bulk PUT DROPS from the guild scope: ${droppedFromGuild.join(
+        ", ",
+      )}`,
     );
   }
 
   if (globalNow.length > 0) {
     console.log(
-      `\nNOTE: ${globalNow.length} GLOBAL command(s) exist: ${
-        names(globalNow)
-      }.` +
+      `\nNOTE: ${globalNow.length} GLOBAL command(s) exist: ${names(
+        globalNow,
+      )}.` +
         "\n  A guild PUT cannot touch them. If a stale /loa is global, re-run with" +
         "\n  --clear-global to wipe the global scope as well.",
     );
@@ -115,16 +138,16 @@ async function main(): Promise<number> {
 
   // confirm() needs a TTY; a headless run answers "no" and writes nothing, which
   // is the right default for a destructive action a human is meant to review.
-  if (!confirm("\nApply this registration?")) {
+  if (!(await confirm("\nApply this registration?"))) {
     console.log("Not confirmed. Nothing was registered.");
     return 0;
   }
 
   await putGuild(auth, appId, guildId, ALL_COMMANDS);
   console.log(
-    `\nRegistered ${ALL_COMMANDS.length} guild command(s): ${
-      names(ALL_COMMANDS)
-    }.`,
+    `\nRegistered ${ALL_COMMANDS.length} guild command(s): ${names(
+      ALL_COMMANDS,
+    )}.`,
   );
 
   if (clearGlobal) {
@@ -166,5 +189,5 @@ function putGlobal(
 
 if (import.meta.main) {
   const code = await main();
-  if (code > 0) Deno.exit(code);
+  if (code > 0) process.exit(code);
 }

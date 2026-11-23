@@ -19,8 +19,8 @@ import {
  * `apps/web` must never import this package. That is the entire reason the
  * worker exposes /internal/ts/* over HTTP (ARCHITECTURE §2): the connection is
  * stateful and single, so it lives in one process and the website asks it
- * questions. This package therefore carries no package.json, only a deno.json,
- * which makes it unresolvable from Astro's bundler by construction (ADR 0006).
+ * questions. `apps/web` does not list this package as a dependency, so it is
+ * unresolvable from Astro's bundler by construction (ADR 0006); keep it that way.
  *
  * None of this is covered by tests. There is no dockerised TeamSpeak and there
  * will not be one (ARCHITECTURE §9), so the transport is first exercised against
@@ -241,13 +241,15 @@ export async function connectTeamspeak(
     let available = "(could not list the virtual servers either)";
     try {
       const servers = await teamspeak.serverList();
-      available = servers.length === 0
-        ? "(this TeamSpeak instance has no virtual servers at all)"
-        : servers
-          .map((s) =>
-            `sid=${s.id} port=${s.port} status=${s.status} name=${s.name}`
-          )
-          .join("\n  ");
+      available =
+        servers.length === 0
+          ? "(this TeamSpeak instance has no virtual servers at all)"
+          : servers
+              .map(
+                (s) =>
+                  `sid=${s.id} port=${s.port} status=${s.status} name=${s.name}`,
+              )
+              .join("\n  ");
     } catch {
       /* keep the original failure; the list is a bonus, not the point */
     }

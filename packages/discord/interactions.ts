@@ -160,8 +160,7 @@ function hexToBytes(hex: string): Uint8Array | null {
 /**
  * Does this request genuinely come from Discord?
  *
- * Ed25519 over `timestamp + rawBody`, native on Deno (crypto.subtle, no flags,
- * verified against 2.9.2). The raw body BYTES matter: re-serialising parsed JSON
+ * Ed25519 over `timestamp + rawBody`, native in Node (crypto.subtle, no flags). The raw body BYTES matter: re-serialising parsed JSON
  * would not be byte-identical and would fail to verify (IMPLEMENTATION §8).
  *
  * **This never throws.** A malformed header, non-hex input, a wrong key length,
@@ -246,8 +245,8 @@ const COMMAND_OPTION_SUB_COMMAND = 1;
 export function subcommandOf(
   data: InteractionData | undefined,
 ): CommandOptionPayload | null {
-  const sub = data?.options?.find((option) =>
-    option.type === COMMAND_OPTION_SUB_COMMAND
+  const sub = data?.options?.find(
+    (option) => option.type === COMMAND_OPTION_SUB_COMMAND,
   );
   return sub ?? null;
 }
@@ -271,9 +270,9 @@ export function optionValue(
 }
 
 /** The values a string select submitted. Empty when there are none. */
-export function selectedValues(
-  interaction: { data?: { values?: string[] } },
-): string[] {
+export function selectedValues(interaction: {
+  data?: { values?: string[] };
+}): string[] {
   return interaction.data?.values ?? [];
 }
 

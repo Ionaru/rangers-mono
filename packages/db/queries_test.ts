@@ -1,9 +1,5 @@
-import {
-  assert,
-  assertEquals,
-  assertFalse,
-  assertStringIncludes,
-} from "@std/assert";
+import assert from "node:assert/strict";
+import { test } from "node:test";
 import { and, eq, isNull, lt, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -37,32 +33,32 @@ function drizzleWrapped(pgCode: string): Error {
   });
 }
 
-Deno.test("a unique violation is recognised through Drizzle 1.0's wrapper", () => {
-  assert(isUniqueViolation(drizzleWrapped("23505")));
+test("a unique violation is recognised through Drizzle 1.0's wrapper", () => {
+  assert.ok(isUniqueViolation(drizzleWrapped("23505")));
 });
 
-Deno.test("a unique violation is still recognised when it is not wrapped", () => {
+test("a unique violation is still recognised when it is not wrapped", () => {
   // Belt and braces: the driver may hand it over bare, and 0.45 used to.
-  assert(
+  assert.ok(
     isUniqueViolation(Object.assign(new Error("dupe"), { code: "23505" })),
   );
 });
 
-Deno.test("some other database error is not mistaken for a unique violation", () => {
+test("some other database error is not mistaken for a unique violation", () => {
   // 23503 is a foreign-key violation, and swallowing it as "already linked"
   // would hide a real bug behind a friendly message.
-  assertFalse(isUniqueViolation(drizzleWrapped("23503")));
-  assertFalse(isUniqueViolation(new Error("connection refused")));
-  assertFalse(isUniqueViolation(null));
-  assertFalse(isUniqueViolation(undefined));
-  assertFalse(isUniqueViolation("23505"));
+  assert.strictEqual(isUniqueViolation(drizzleWrapped("23503")), false);
+  assert.strictEqual(isUniqueViolation(new Error("connection refused")), false);
+  assert.strictEqual(isUniqueViolation(null), false);
+  assert.strictEqual(isUniqueViolation(undefined), false);
+  assert.strictEqual(isUniqueViolation("23505"), false);
 });
 
-Deno.test("a cause chain that loops does not hang", () => {
+test("a cause chain that loops does not hang", () => {
   const looped = new Error("a") as Error & { cause?: unknown };
   looped.cause = looped;
   // Guards against the obvious naive `while (e.cause)` walk.
-  assertFalse(isUniqueViolation(looped));
+  assert.strictEqual(isUniqueViolation(looped), false);
 });
 
 /**
@@ -83,7 +79,7 @@ Deno.test("a cause chain that loops does not hang", () => {
  */
 const renderDb = drizzle({ client: postgres("postgres://u:p@127.0.0.1:1/x") });
 
-Deno.test("closing dangling spans reads the op's own window end", () => {
+test("closing dangling spans reads the op's own window end", () => {
   const { sql: rendered } = renderDb
     .update(attendanceSession)
     .set({ leftAt: sql`${operation.attendanceEnd}` })
@@ -101,37 +97,54 @@ Deno.test("closing dangling spans reads the op's own window end", () => {
   // left_at takes the OP's attendance_end, not `now()` and not a bound
   // parameter: that is what stops a worker that woke up on Sunday crediting
   // everybody until Sunday.
-  assertStringIncludes(
-    rendered,
-    `set "left_at" = "operation"."attendance_end"`,
+  assert.ok(
+    rendered.includes(`set "left_at" = "operation"."attendance_end"`),
+    `expected ${JSON.stringify(rendered)} to include ${JSON.stringify(`set "left_at" = "operation"."attendance_end"`)}`,
   );
-  assertStringIncludes(rendered, `from "operation"`);
-  assertStringIncludes(rendered, `"attendance_session"."left_at" is null`);
+  assert.ok(
+    rendered.includes(`from "operation"`),
+    `expected ${JSON.stringify(rendered)} to include ${JSON.stringify(`from "operation"`)}`,
+  );
+  assert.ok(
+    rendered.includes(`"attendance_session"."left_at" is null`),
+    `expected ${JSON.stringify(rendered)} to include ${JSON.stringify(`"attendance_session"."left_at" is null`)}`,
+  );
 });
 
-Deno.test("the RSVP upsert conflicts on the op-and-person unique index", () => {
+test("the RSVP upsert conflicts on the op-and-person unique index", () => {
   const now = new Date();
   const { sql: rendered } = renderDb
     .insert(operationRsvp)
-    .values([{
-      operationId: "op",
-      discordId: "d1",
-      username: "u",
-      firstSeenAt: now,
-      lastSeenAt: now,
-    }])
+    .values([
+      {
+        operationId: "op",
+        discordId: "d1",
+        username: "u",
+        firstSeenAt: now,
+        lastSeenAt: now,
+      },
+    ])
     .onConflictDoUpdate({
       target: [operationRsvp.operationId, operationRsvp.discordId],
       set: { lastSeenAt: now, username: sql`excluded.username` },
     })
     .toSQL();
 
-  assertStringIncludes(rendered, `on conflict ("operation_id","discord_id")`);
+  assert.ok(
+    rendered.includes(`on conflict ("operation_id","discord_id")`),
+    `expected ${JSON.stringify(rendered)} to include ${JSON.stringify(`on conflict ("operation_id","discord_id")`)}`,
+  );
   // first_seen_at is NOT in the update set: a re-read must not reset when we
   // first saw somebody on the list.
-  assertStringIncludes(rendered, `do update set`);
-  assertEquals(rendered.includes(`do update set "first_seen_at"`), false);
-  assertEquals(
+  assert.ok(
+    rendered.includes(`do update set`),
+    `expected ${JSON.stringify(rendered)} to include ${JSON.stringify(`do update set`)}`,
+  );
+  assert.deepStrictEqual(
+    rendered.includes(`do update set "first_seen_at"`),
+    false,
+  );
+  assert.deepStrictEqual(
     rendered.slice(rendered.indexOf("do update set")).includes("first_seen_at"),
     false,
   );

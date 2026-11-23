@@ -294,8 +294,8 @@ export function planWeeklyOp(
   // event whose start is already past, so the window has to close when the op does.
   const beforeOp = now.getTime() < attendanceStart.getTime();
   const withinWindow = now.getTime() >= prepareAt.getTime() && beforeOp;
-  const withinAnnounceWindow = now.getTime() >= announceAt.getTime() &&
-    beforeOp;
+  const withinAnnounceWindow =
+    now.getTime() >= announceAt.getTime() && beforeOp;
 
   return {
     saturdayDate: isoDate(saturday.year, saturday.month, saturday.day),

@@ -1,3 +1,4 @@
+import { createInterface } from "node:readline/promises";
 import { getTeamspeakConfig, loadAll, type TeamspeakConfig } from "@7r/config";
 import {
   type Assignable,
@@ -15,8 +16,8 @@ import {
 /**
  * Phase 4's seed: apply the git-tracked Assignable mapping to the database.
  *
- *   deno task assignables:seed            # prints the plan, writes nothing
- *   deno task assignables:seed -- --apply # asks for confirmation, then writes
+ *   pnpm assignables:seed            # prints the plan, writes nothing
+ *   pnpm assignables:seed --apply    # asks for confirmation, then writes
  *
  * Sgids are resolved LIVE, by TeamSpeak group name, against `servergrouplist`,
  * and never taken from the config or the legacy dump: the dump's numbers come
@@ -35,8 +36,29 @@ import {
  * `sync:preview`. Idempotent by `discordRoleId`; re-run it freely.
  */
 
+/**
+ * Ask a yes/no question at the terminal. A headless run (stdin is not a TTY:
+ * `echo |`, CI) answers "no" without reading, so nothing is ever written
+ * unattended.
+ */
+async function confirm(question: string): Promise<boolean> {
+  if (!process.stdin.isTTY) return false;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question(`${question} [y/N] `);
+    return /^y(es)?$/i.test(answer.trim());
+  } catch (error) {
+    // Ctrl-D or Ctrl-C at the prompt closes the interface and rejects the
+    // question with an AbortError; that is a "no", as Deno's confirm() took EOF.
+    if (error instanceof Error && error.name === "AbortError") return false;
+    throw error;
+  } finally {
+    rl.close();
+  }
+}
+
 async function main(): Promise<number> {
-  const apply = Deno.args.includes("--apply");
+  const apply = process.argv.slice(2).includes("--apply");
 
   const [ts] = loadAll<[TeamspeakConfig]>([getTeamspeakConfig]);
   const db = getDb();
@@ -80,19 +102,21 @@ async function main(): Promise<number> {
 
   console.log("proposed assignable mapping (sgids resolved live, by name):\n");
   console.log(
-    `  ${"kind".padEnd(6)} ${"name".padEnd(20)} ${"discord role".padEnd(20)} ${
-      "ts group".padEnd(20)
-    } sgid`,
+    `  ${"kind".padEnd(6)} ${"name".padEnd(20)} ${"discord role".padEnd(20)} ${"ts group".padEnd(
+      20,
+    )} sgid`,
   );
   for (const { entry, tsSgid } of resolved) {
     const existing = currentByRoleId.get(entry.discordRoleId);
     const changed = existing !== undefined && existing.tsSgid !== tsSgid;
     console.log(
-      `  ${entry.kind.padEnd(6)} ${entry.name.padEnd(20)} ${
-        entry.discordRoleId.padEnd(20)
-      } ${(entry.tsGroupName ?? "(none)").padEnd(20)} ${
+      `  ${entry.kind.padEnd(6)} ${entry.name.padEnd(20)} ${entry.discordRoleId.padEnd(
+        20,
+      )} ${(entry.tsGroupName ?? "(none)").padEnd(20)} ${
         tsSgid === null
-          ? (entry.tsGroupName === null ? "-" : "NO MATCH")
+          ? entry.tsGroupName === null
+            ? "-"
+            : "NO MATCH"
           : tsSgid
       }${changed ? `   (db has ${existing.tsSgid ?? "null"})` : ""}`,
     );
@@ -127,7 +151,7 @@ async function main(): Promise<number> {
   // needs a TTY; a headless run (echo | or CI) answers "no" and writes nothing,
   // which is the right default for a tool whose output the docs say a human
   // reviews.
-  const confirmed = confirm(
+  const confirmed = await confirm(
     `\nWrite these ${resolved.length} assignable rows?`,
   );
   if (!confirmed) {
@@ -147,17 +171,17 @@ async function main(): Promise<number> {
 
   console.log(
     `\nSeeded ${resolved.length} assignable(s) (${current.length} existed before).` +
-      `\nNext: deno task sync:preview, and review the diff before flipping SYNC_DRY_RUN.`,
+      `\nNext: pnpm sync:preview, and review the diff before flipping SYNC_DRY_RUN.`,
   );
   return 0;
 }
 
 if (import.meta.main) {
-  let code = 1;
+  let code: number;
   try {
     code = await main();
   } finally {
     await closeDb();
   }
-  if (code > 0) Deno.exit(code);
+  if (code > 0) process.exit(code);
 }

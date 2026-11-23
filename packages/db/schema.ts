@@ -131,31 +131,38 @@ export const operation = pgTable("operation", {
    */
   rsvpRefreshedAt: tstz("rsvp_refreshed_at"),
   name: text("name"),
-  source: text("source").$type<OperationSource>().notNull().default(
-    "auto_weekly",
-  ),
+  source: text("source")
+    .$type<OperationSource>()
+    .notNull()
+    .default("auto_weekly"),
 });
 
 /** One continuous presence span in the Operations channel, reconstructed from samples. */
-export const attendanceSession = pgTable("attendance_session", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  operationId: uuid("operation_id").notNull().references(() => operation.id, {
-    onDelete: "cascade",
-  }),
-  /** null = guest: a TeamSpeak identity that resolves to no member (yet). */
-  memberId: uuid("member_id").references(() => member.id, {
-    onDelete: "set null",
-  }),
-  tsUid: text("ts_uid").notNull(),
-  tsNickname: text("ts_nickname"),
-  joinedAt: tstz("joined_at").notNull(),
-  leftAt: tstz("left_at"),
-}, (t) => [
-  index("attendance_session_operation_idx").on(t.operationId),
-  // Guest sessions backfill to a member the moment they link TeamSpeak, which
-  // is a lookup by bare ts_uid across every op ever recorded.
-  index("attendance_session_ts_uid_idx").on(t.tsUid),
-]);
+export const attendanceSession = pgTable(
+  "attendance_session",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    operationId: uuid("operation_id")
+      .notNull()
+      .references(() => operation.id, {
+        onDelete: "cascade",
+      }),
+    /** null = guest: a TeamSpeak identity that resolves to no member (yet). */
+    memberId: uuid("member_id").references(() => member.id, {
+      onDelete: "set null",
+    }),
+    tsUid: text("ts_uid").notNull(),
+    tsNickname: text("ts_nickname"),
+    joinedAt: tstz("joined_at").notNull(),
+    leftAt: tstz("left_at"),
+  },
+  (t) => [
+    index("attendance_session_operation_idx").on(t.operationId),
+    // Guest sessions backfill to a member the moment they link TeamSpeak, which
+    // is a lookup by bare ts_uid across every op ever recorded.
+    index("attendance_session_ts_uid_idx").on(t.tsUid),
+  ],
+);
 
 /**
  * One Discord account that was on the op event's "Interested" list while the op
@@ -175,53 +182,65 @@ export const attendanceSession = pgTable("attendance_session", {
  * member who RSVP'd on Wednesday and honestly withdrew on Saturday afternoon is
  * not a no-show, and capturing earlier would brand them one.
  */
-export const operationRsvp = pgTable("operation_rsvp", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  operationId: uuid("operation_id").notNull().references(() => operation.id, {
-    onDelete: "cascade",
-  }),
-  /** The Discord user snowflake, as a string. Joined to `member.discord_id` on read. */
-  discordId: text("discord_id").notNull(),
-  /** Display-name snapshot, for a responder who resolves to no member. */
-  username: text("username"),
-  firstSeenAt: tstz("first_seen_at").notNull(),
-  /**
-   * The last refresh that still saw them on the list. Together with
-   * `first_seen_at` this is what shows somebody who signed up mid-op, and what
-   * would show a withdrawal if one ever needs reading.
-   */
-  lastSeenAt: tstz("last_seen_at").notNull(),
-}, (t) => [
-  index("operation_rsvp_operation_idx").on(t.operationId),
-  // The refresh is an upsert on this key: one row per person per op, however
-  // many times the list is re-read.
-  uniqueIndex("operation_rsvp_operation_discord_idx").on(
-    t.operationId,
-    t.discordId,
-  ),
-]);
+export const operationRsvp = pgTable(
+  "operation_rsvp",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    operationId: uuid("operation_id")
+      .notNull()
+      .references(() => operation.id, {
+        onDelete: "cascade",
+      }),
+    /** The Discord user snowflake, as a string. Joined to `member.discord_id` on read. */
+    discordId: text("discord_id").notNull(),
+    /** Display-name snapshot, for a responder who resolves to no member. */
+    username: text("username"),
+    firstSeenAt: tstz("first_seen_at").notNull(),
+    /**
+     * The last refresh that still saw them on the list. Together with
+     * `first_seen_at` this is what shows somebody who signed up mid-op, and what
+     * would show a withdrawal if one ever needs reading.
+     */
+    lastSeenAt: tstz("last_seen_at").notNull(),
+  },
+  (t) => [
+    index("operation_rsvp_operation_idx").on(t.operationId),
+    // The refresh is an upsert on this key: one row per person per op, however
+    // many times the list is re-read.
+    uniqueIndex("operation_rsvp_operation_discord_idx").on(
+      t.operationId,
+      t.discordId,
+    ),
+  ],
+);
 
 /** A one-time TeamSpeak possession challenge. Steam uses OpenID and needs none. */
-export const linkCode = pgTable("link_code", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  code: text("code").notNull(),
-  memberId: uuid("member_id").notNull().references(() => member.id, {
-    onDelete: "cascade",
-  }),
-  /** The client the member picked from the list, and the one the bot pokes. */
-  targetTsUid: text("target_ts_uid").notNull(),
-  expiresAt: tstz("expires_at").notNull(),
-  consumedAt: tstz("consumed_at"),
-  /**
-   * Wrong guesses against this code. Not in IMPLEMENTATION §3's sketch, which
-   * says it is "illustrative, not final", and added because without it §4's
-   * "picking the wrong person fails safe" is only true against an attacker who
-   * does not retry. The code goes to the client you picked, so guessing it is
-   * the only way to claim someone else's TeamSpeak identity; a cap of a handful
-   * of attempts is what makes that a dead end rather than a slow one.
-   */
-  attempts: integer("attempts").notNull().default(0),
-}, (t) => [index("link_code_code_idx").on(t.code)]);
+export const linkCode = pgTable(
+  "link_code",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code").notNull(),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => member.id, {
+        onDelete: "cascade",
+      }),
+    /** The client the member picked from the list, and the one the bot pokes. */
+    targetTsUid: text("target_ts_uid").notNull(),
+    expiresAt: tstz("expires_at").notNull(),
+    consumedAt: tstz("consumed_at"),
+    /**
+     * Wrong guesses against this code. Not in IMPLEMENTATION §3's sketch, which
+     * says it is "illustrative, not final", and added because without it §4's
+     * "picking the wrong person fails safe" is only true against an attacker who
+     * does not retry. The code goes to the client you picked, so guessing it is
+     * the only way to claim someone else's TeamSpeak identity; a cap of a handful
+     * of attempts is what makes that a dead end rather than a slow one.
+     */
+    attempts: integer("attempts").notNull().default(0),
+  },
+  (t) => [index("link_code_code_idx").on(t.code)],
+);
 
 export type Member = typeof member.$inferSelect;
 export type NewMember = typeof member.$inferInsert;

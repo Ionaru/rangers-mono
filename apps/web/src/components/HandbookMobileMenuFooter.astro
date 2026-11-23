@@ -12,40 +12,43 @@ const nav = [
   { label: "About", href: "/about" },
 ];
 ---
+
 <div class="hb-mobile-nav">
-  {nav.map((i) => <a href={i.href}>{i.label}</a>)}
+  {nav.map((i) => (
+    <a href={i.href}>{i.label}</a>
+  ))}
   <form method="post" action="/signin/discord">
     <button type="submit">Sign in</button>
   </form>
 </div>
 
 <style>
-.hb-mobile-nav {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  border-top: 1px solid var(--line);
-  margin-top: 1rem;
-  padding-top: 1rem;
-}
-.hb-mobile-nav a,
-.hb-mobile-nav button {
-  font: 600 0.8rem/1 var(--mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-decoration: none;
-  background: none;
-  border: 0;
-  padding: 0.7rem 0;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-}
-.hb-mobile-nav a:hover,
-.hb-mobile-nav button:hover {
-  color: var(--text);
-}
+  .hb-mobile-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    border-top: 1px solid var(--line);
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+  .hb-mobile-nav a,
+  .hb-mobile-nav button {
+    font: 600 0.8rem/1 var(--mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    background: none;
+    border: 0;
+    padding: 0.7rem 0;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .hb-mobile-nav a:hover,
+  .hb-mobile-nav button:hover {
+    color: var(--text);
+  }
 </style>

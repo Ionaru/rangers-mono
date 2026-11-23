@@ -28,7 +28,7 @@ Because Discord is the source of truth for roles (ADR 0002), we import **identit
 
    **The 83 grants in `user_badges_badge` are STALE and must not be used.** An earlier version of this document said to backfill them, and it was wrong in a way that would have been invisible: the legacy table is years out of date, and the *current* record of who has earned which badge is the **live TeamSpeak server groups**. Badges are the one Assignable that never existed as a Discord role, so TeamSpeak is the only place the truth was ever kept.
 
-   So Phase 0 runs the arrow backwards, exactly once: **TeamSpeak -> Discord**. `deno task badges:backfill` reads the live badge groups by name, resolves each holder's TeamSpeak uid to a Member through the identity links imported above, creates the 8 Discord roles, and grants them. Dry-run by default; `--apply` to write. It prints the new role ids in the shape the badge table below wants. After it, Discord is authoritative for badges like everything else and the sync only ever writes TeamSpeak.
+   So Phase 0 runs the arrow backwards, exactly once: **TeamSpeak -> Discord**. `pnpm badges:backfill` reads the live badge groups by name, resolves each holder's TeamSpeak uid to a Member through the identity links imported above, creates the 8 Discord roles, and grants them. Dry-run by default; `--apply` to write. It prints the new role ids in the shape the badge table below wants. After it, Discord is authoritative for badges like everything else and the sync only ever writes TeamSpeak.
 
    New roles are created at the **bottom** of the Discord role list, which is what puts them below `7R_Bot` and therefore assignable at all (hierarchy is not bypassed by any permission).
 
@@ -68,7 +68,7 @@ Steam is a plain profile field: it proves account ownership via Steam OpenID and
 
 **Badges** (kind=`badge`, additive, **discordRoleId MISSING, create in Phase 0 and fill in**). A Badge is a **training qualification** a member earned. Medic and the two aviation badges are qualifications, not staff roles.
 
-Discord role ids created by `deno task badges:backfill` on 2026-07-15 (the role is named with a 🎖️ prefix in Discord; the canonical name here and on TeamSpeak stays plain).
+Discord role ids created by `pnpm badges:backfill` on 2026-07-15 (the role is named with a 🎖️ prefix in Discord; the canonical name here and on TeamSpeak stays plain).
 
 | name | discordRoleId | legacy sgid | TS group name |
 |---|---|---|---|
@@ -109,6 +109,6 @@ The `Rotary Aviation` (69) and `Fixed-Wing Aviation` (70) TS groups also appear 
 2. **Phase 2:** import `member` (all 150) with their TeamSpeak link (99 of them), marked `tsLinkMethod='legacy_import'` and flagged for re-verification. Optionally seed the 23 Steam ids.
 3. **Phase 4, step 1:** resolve sgids. Pull a live `servergrouplist`, build `name -> current sgid`, print the mapping to the terminal, confirm, log any name with no live match.
 4. **Phase 4, step 2:** seed `assignable` (5 ranks, 3 roles, 8 badges) from the git-tracked config with the resolved sgids.
-5. **Phase 4, step 3:** verify. Run `deno task sync:preview` (the dry-run) and confirm the preview matches expectations before enabling live sync. The blast-radius guard stays on afterwards.
+5. **Phase 4, step 3:** verify. Run `pnpm sync:preview` (the dry-run) and confirm the preview matches expectations before enabling live sync. The blast-radius guard stays on afterwards.
 
 Keep the script idempotent (upsert by natural key: `member.discordId`, `assignable.discordRoleId`) so it can be re-run after the badge Discord roles are filled in, or after a sgid mapping is corrected.

@@ -117,7 +117,7 @@ async function closeSpansAcrossGap(
     // a row whose `left_at` precedes its `joined_at`.
     await Promise.all(
       open.map((span) =>
-        closeAttendanceSessions(deps.db, [span.id], span.joinedAt)
+        closeAttendanceSessions(deps.db, [span.id], span.joinedAt),
       ),
     );
     log.warn("closed spans left by a pass that never recorded its sample", {
@@ -171,9 +171,10 @@ async function refreshRsvps(
     return null;
   }
 
-  const dueAt = op.rsvpRefreshedAt === null
-    ? 0
-    : op.rsvpRefreshedAt.getTime() + deps.rsvpRefreshSeconds * 1_000;
+  const dueAt =
+    op.rsvpRefreshedAt === null
+      ? 0
+      : op.rsvpRefreshedAt.getTime() + deps.rsvpRefreshSeconds * 1_000;
   if (now.getTime() < dueAt) return null;
 
   try {
@@ -274,9 +275,10 @@ export async function runAttendancePass(
    * it unconditionally would be ~120 full reads of the member table per op to
    * resolve nothing.
    */
-  const members = diff.opened.length > 0
-    ? await membersByTsUid(deps.db)
-    : new Map<string, { id: string }>();
+  const members =
+    diff.opened.length > 0
+      ? await membersByTsUid(deps.db)
+      : new Map<string, { id: string }>();
 
   /**
    * Concurrent, not sequential: `applySample` partitions the tick's identities
@@ -295,7 +297,11 @@ export async function runAttendancePass(
         joinedAt: span.joinedAt,
       })),
     ),
-    closeAttendanceSessions(deps.db, diff.closed.map((span) => span.id), now),
+    closeAttendanceSessions(
+      deps.db,
+      diff.closed.map((span) => span.id),
+      now,
+    ),
     renameAttendanceSessions(
       deps.db,
       diff.renamed.map((span) => ({
@@ -342,7 +348,7 @@ export async function runAttendancePass(
  * the same switch would buy nothing and cost the failure ADR 0007 warns about:
  * shipped, never flipped, and nobody notices for two years, which is precisely
  * how the legacy recorder died in July 2024. The wrong-channel risk is real and
- * is answered by `deno task attendance:preview` instead, which is a check run
+ * is answered by `pnpm attendance:preview` instead, which is a check run
  * before the first Saturday rather than a switch somebody has to remember.
  */
 export function startAttendanceLoop(

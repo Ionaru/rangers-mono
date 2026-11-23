@@ -1,0 +1,40 @@
+{
+  "name": "rangers-mono",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.23.0",
+  "scripts": {
+    "check": "tsc -p tsconfig.json && pnpm -C apps/web run check",
+    "test": "node --test \"packages/**/*{_,.}test.ts\" \"apps/worker/**/*{_,.}test.ts\" \"apps/web/src/**/*.test.ts\" \"apps/web/scripts/**/*.test.ts\"",
+    "lint": "eslint .",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check .",
+    "db:generate": "pnpm -C packages/db run generate",
+    "migrate": "pnpm -C packages/db run migrate",
+    "import:legacy": "pnpm -C packages/db run import:legacy",
+    "env:check": "pnpm -C packages/config run check:env",
+    "phase0:check": "pnpm -C packages/discord run check:phase0",
+    "commands:register": "pnpm -C packages/discord run commands:register",
+    "web:dev": "pnpm -C apps/web run dev",
+    "web:build": "pnpm -C apps/web run build",
+    "web:check": "pnpm -C apps/web run check",
+    "web:preview": "pnpm -C apps/web run preview",
+    "worker:dev": "pnpm -C apps/worker run dev",
+    "ts:check": "pnpm -C apps/worker run ts:check",
+    "badges:backfill": "pnpm -C apps/worker run badges:backfill",
+    "assignables:seed": "pnpm -C apps/worker run assignables:seed",
+    "sync:preview": "pnpm -C apps/worker run sync:preview",
+    "op:preview": "pnpm -C apps/worker run op:preview",
+    "attendance:preview": "pnpm -C apps/worker run attendance:preview"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
+    "eslint": "10.15.0",
+    "eslint-plugin-astro": "3.2.1",
+    "prettier": "3.10.1",
+    "prettier-plugin-astro": "1.1.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0"
+  }
+}

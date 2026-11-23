@@ -28,7 +28,7 @@ import {
 import { opScheduleFrom } from "./weekly-event.ts";
 
 /**
- * `deno task attendance:preview`: prove the sampler is pointed at the right
+ * `pnpm attendance:preview`: prove the sampler is pointed at the right
  * channel, before a Saturday proves it is not.
  *
  * This is the sibling of `sync:preview` and `op:preview`, and it exists because
@@ -84,9 +84,10 @@ async function main(): Promise<number> {
 
     console.log(`  op date         ${plan.saturdayDate}`);
     console.log(
-      `  window          ${isoInZone(plan.attendanceStart, tz)} -> ${
-        isoInZone(plan.attendanceEnd, tz)
-      }  (${tz})`,
+      `  window          ${isoInZone(plan.attendanceStart, tz)} -> ${isoInZone(
+        plan.attendanceEnd,
+        tz,
+      )}  (${tz})`,
     );
     console.log(
       `  right now       ${
@@ -105,9 +106,7 @@ async function main(): Promise<number> {
     const channel = await getChannel(teamspeak, cid);
     console.log(`\n  channel id      ${cid}`);
     if (channel === null) {
-      console.log(
-        `  channel name    *** NO CHANNEL WITH THIS ID ***`,
-      );
+      console.log(`  channel name    *** NO CHANNEL WITH THIS ID ***`);
     } else {
       console.log(`  channel name    ${channel.name}`);
     }
@@ -168,7 +167,7 @@ async function main(): Promise<number> {
       console.log(
         `  last sampled    ${
           lastOp.lastSampleAt?.toISOString() ??
-            "NEVER: the sampler has not recorded a single sample for it"
+          "NEVER: the sampler has not recorded a single sample for it"
         }`,
       );
     }
@@ -219,11 +218,11 @@ async function main(): Promise<number> {
 }
 
 if (import.meta.main) {
-  let code = 1;
+  let code: number;
   try {
     code = await main();
   } finally {
     await closeDb();
   }
-  if (code > 0) Deno.exit(code);
+  if (code > 0) process.exit(code);
 }

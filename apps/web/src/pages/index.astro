@@ -13,33 +13,33 @@ const pillars = [
   {
     kicker: "Reference",
     title: "The Handbook",
-    body:
-      "Techniques, tactics and procedures, from your first mission to combined arms, aviation and armour. Read it before you deploy.",
+    body: "Techniques, tactics and procedures, from your first mission to combined arms, aviation and armour. Read it before you deploy.",
     href: "/handbook/",
     go: "Open the handbook",
   },
   {
     kicker: "Tool",
     title: "Briefing Generator",
-    body:
-      "Write a mission briefing and export it straight to Arma 3 SQF. The same tool our mission makers use.",
+    body: "Write a mission briefing and export it straight to Arma 3 SQF. The same tool our mission makers use.",
     href: "/briefing-generator",
     go: "Build a briefing",
   },
   {
     kicker: "The unit",
     title: "About the 7th",
-    body:
-      "How the unit is structured, how an operation runs, and what we ask of you. Start here if you're thinking of joining.",
+    body: "How the unit is structured, how an operation runs, and what we ask of you. Start here if you're thinking of joining.",
     href: "/about",
     go: "About the unit",
   },
 ];
 ---
+
 <PublicLayout title="Home" current="home" member={member}>
   <section class="hero">
-    <div class="hero__bg"
-      style="background-image:url(/brand/background.webp)"></div>
+    <div
+      class="hero__bg"
+      style="background-image:url(/brand/background.webp)"
+    ></div>
     <div class="hero__scrim"></div>
     <div class="wrap">
       <div class="hero__inner">
@@ -59,8 +59,12 @@ const pillars = [
           lightly.
         </p>
         <div class="hero__actions">
-          <a class="btn btn--primary" href="/about">How to join</a>
-          <a class="btn btn--ghost" href="/handbook/">Read the handbook</a>
+          <a class="btn btn--primary" href="/about">
+            How to join
+          </a>
+          <a class="btn btn--ghost" href="/handbook/">
+            Read the handbook
+          </a>
         </div>
         <div class="hero__meta">
           <span>Saturdays · 20:00 CET/CEST</span>
@@ -77,11 +81,11 @@ const pillars = [
         <p class="eyebrow">Who we are</p>
         <h2 class="h-section">A unit, not a pickup server</h2>
         <p>
-          The 7th Ranger Group is an international Arma 3 milsim community, based
-          in Europe with members from all over. We're not a drop-in server:
-          we're a standing unit built on planning, communication and adapted
-          military tactics, running one operation a week. You'll know your team,
-          your callsign and your job.
+          The 7th Ranger Group is an international Arma 3 milsim community,
+          based in Europe with members from all over. We're not a drop-in
+          server: we're a standing unit built on planning, communication and
+          adapted military tactics, running one operation a week. You'll know
+          your team, your callsign and your job.
         </p>
       </div>
       <dl class="facts">
@@ -95,7 +99,10 @@ const pillars = [
         </div>
         <div class="fact">
           <dt>Progression</dt>
-          <dd>Skills and qualifications you earn at your own pace, mentored the whole way.</dd>
+          <dd>
+            Skills and qualifications you earn at your own pace, mentored the
+            whole way.
+          </dd>
         </div>
       </dl>
     </div>
@@ -110,7 +117,8 @@ const pillars = [
           loading="lazy"
           allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerpolicy="strict-origin-when-cross-origin"
-          allowfullscreen></iframe>
+          allowfullscreen
+        ></iframe>
       </div>
       <div class="take__text">
         <p class="eyebrow">Our take on milsim</p>
@@ -136,25 +144,25 @@ const pillars = [
         <h2 class="h-section">Everything you need before you deploy</h2>
       </div>
       <div class="pillars">
-        {
-          pillars.map((p) => (
-            <a class="pillar" href={p.href}>
-              <span class="pillar__no">{p.kicker}</span>
-              <h3>{p.title}</h3>
-              <p>{p.body}</p>
-              <span class="pillar__go">
-                {p.go} <span class="sq" aria-hidden="true" />
-              </span>
-            </a>
-          ))
-        }
+        {pillars.map((p) => (
+          <a class="pillar" href={p.href}>
+            <span class="pillar__no">{p.kicker}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+            <span class="pillar__go">
+              {p.go} <span class="sq" aria-hidden="true" />
+            </span>
+          </a>
+        ))}
       </div>
     </div>
   </section>
 
   <section class="enlist">
-    <div class="enlist__bg"
-      style="background-image:url(/brand/group.webp)"></div>
+    <div
+      class="enlist__bg"
+      style="background-image:url(/brand/group.webp)"
+    ></div>
     <div class="enlist__scrim"></div>
     <div class="wrap">
       <div class="enlist__inner">
@@ -173,7 +181,9 @@ const pillars = [
           >
             Join our Discord
           </a>
-          <a class="btn btn--ghost" href="/about">How it works</a>
+          <a class="btn btn--ghost" href="/about">
+            How it works
+          </a>
         </div>
       </div>
     </div>

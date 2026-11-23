@@ -5,6 +5,9 @@
   "exports": {
     ".": "./mod.ts"
   },
+  "scripts": {
+    "check:env": "node env-check.ts"
+  },
   "dependencies": {
     "@7r/domain": "workspace:*",
     "@7r/logging": "workspace:*",

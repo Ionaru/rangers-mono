@@ -41,7 +41,9 @@ export function makeAlerter(
     const content = [
       `**worker**: ${summary}`,
       detail ? "```" + String(detail).slice(0, 1500) + "```" : "",
-    ].filter(Boolean).join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     // Deliberately not awaited: an alert must never be on the critical path of
     // the thing it is reporting on. Failures are swallowed, because the only

@@ -5,7 +5,7 @@ import { QueryProtocol, TeamSpeak } from "ts3-nodejs-library";
 /**
  * TeamSpeak preflight. Read-only, and it asks the server rather than asking you.
  *
- *   deno task ts:check
+ *   pnpm ts:check
  *
  * The worker treats a failed TeamSpeak connect at boot as fatal, so a wrong
  * `TS_VIRTUALSERVER_ID` or a bad query login does not merely break the link flow:
@@ -56,9 +56,10 @@ async function main() {
     } else {
       console.log("virtual servers on this instance:\n");
       for (const server of servers) {
-        const chosen = String(server.id) === String(ts.TS_VIRTUALSERVER_ID)
-          ? "  <-- TS_VIRTUALSERVER_ID points here"
-          : "";
+        const chosen =
+          String(server.id) === String(ts.TS_VIRTUALSERVER_ID)
+            ? "  <-- TS_VIRTUALSERVER_ID points here"
+            : "";
         console.log(
           `  sid=${server.id}  port=${server.port}  status=${server.status}  clients=${server.clientsonline}  "${server.name}"${chosen}`,
         );
@@ -80,9 +81,9 @@ async function main() {
           "delete a virtual server and create another and the new one takes the next number.",
         );
         console.log(
-          `\nSet TS_VIRTUALSERVER_ID to one of: ${
-            servers.map((s) => s.id).join(", ")
-          }`,
+          `\nSet TS_VIRTUALSERVER_ID to one of: ${servers
+            .map((s) => s.id)
+            .join(", ")}`,
         );
       } else if (match.status !== "online") {
         console.log(
@@ -123,7 +124,7 @@ if (import.meta.main) {
     console.error(
       "\nIf the SSH connection itself was refused: check TS_QUERY_HOST, that the query port is the SSH one (10022, never 10011), that ServerQuery over SSH is enabled on the server, and that this box's IP is allowlisted rather than flood-banned.",
     );
-    Deno.exit(1);
+    process.exit(1);
   }
-  Deno.exit(0);
+  process.exit(0);
 }

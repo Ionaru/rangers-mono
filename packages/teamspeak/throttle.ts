@@ -141,7 +141,10 @@ export function createCommandThrottle(
       // Swallow here and here only: `result` is handed to the caller, who owns
       // the rejection. Without this the tail would reject too, poisoning every
       // command behind it and surfacing as an unhandled rejection besides.
-      tail = result.then(() => {}, () => {});
+      tail = result.then(
+        () => {},
+        () => {},
+      );
       return result;
     },
     charge,

@@ -7,9 +7,9 @@ import { defineConfig } from "drizzle-kit";
  * Two things this file must not do:
  * - resolve its paths against anything but the working directory. drizzle-kit
  *   reads `schema` and `out` relative to process.cwd(), not to this file, so
- *   the `generate` task is defined in this package's deno.json and invoked with
- *   `deno task --cwd packages/db generate`. Run it from the repo root and it
- *   writes the migrations to the repo root.
+ *   the `generate` script is defined in this package's package.json and invoked
+ *   with `pnpm db:generate` (which runs it in packages/db). Run drizzle-kit from
+ *   the repo root and it writes the migrations to the repo root.
  * - import @7r/config. Generating a migration needs no database, and a
  *   fail-loud config would make every schema tweak require a full production
  *   environment.
@@ -25,5 +25,5 @@ export default defineConfig({
   // Relative on purpose: 1.0's snapshot validator reads `./${path}`, so an
   // absolute path here becomes `./absolute/path` and nothing is found.
   out: "./drizzle",
-  dbCredentials: { url: Deno.env.get("DATABASE_URL") ?? "" },
+  dbCredentials: { url: process.env.DATABASE_URL ?? "" },
 });

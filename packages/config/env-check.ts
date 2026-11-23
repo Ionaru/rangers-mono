@@ -1,9 +1,10 @@
+import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import * as schemas from "./schemas.ts";
 import { keyForSecretFile, SECRET_FILE_SUFFIX } from "./load.ts";
 
 /**
- * `deno task env:check`: a read-only config doctor.
+ * `pnpm env:check`: a read-only config doctor.
  *
  * Since config moved to per-key GitHub Environment variables and secrets (ADR
  * 0018), the box `.env` is generated at deploy and nobody hand-maintains it. This
@@ -55,9 +56,9 @@ export function collectSchemaKeys(
         key,
         existing
           ? {
-            required: existing.required || spec.required,
-            default: existing.default ?? spec.default,
-          }
+              required: existing.required || spec.required,
+              default: existing.default ?? spec.default,
+            }
           : spec,
       );
     }
@@ -135,9 +136,8 @@ export function diffEnv(
   const unknown: string[] = [];
   for (const key of present) {
     if (known.has(key)) continue;
-    if (
-      key.endsWith(SECRET_FILE_SUFFIX) && known.has(keyForSecretFile(key))
-    ) continue;
+    if (key.endsWith(SECRET_FILE_SUFFIX) && known.has(keyForSecretFile(key)))
+      continue;
     unknown.push(key);
   }
 
@@ -162,11 +162,11 @@ function fileArg(args: string[]): string {
 }
 
 async function main(): Promise<number> {
-  const path = fileArg(Deno.args);
+  const path = fileArg(process.argv.slice(2));
 
   let text: string;
   try {
-    text = await Deno.readTextFile(path);
+    text = await readFile(path, "utf8");
   } catch (cause) {
     console.error(
       `env:check: cannot read ${path} (${
@@ -219,5 +219,5 @@ async function main(): Promise<number> {
 
 if (import.meta.main) {
   const code = await main();
-  if (code > 0) Deno.exit(code);
+  if (code > 0) process.exit(code);
 }

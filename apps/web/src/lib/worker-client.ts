@@ -34,10 +34,7 @@ export interface OnlineClient {
   current: boolean;
 }
 
-async function callWorker<T>(
-  path: string,
-  init: RequestInit = {},
-): Promise<T> {
+async function callWorker<T>(path: string, init: RequestInit = {}): Promise<T> {
   const { WORKER_INTERNAL_URL, WORKER_INTERNAL_TOKEN } =
     getWorkerClientConfig();
 
@@ -68,7 +65,7 @@ async function callWorker<T>(
     );
   }
 
-  return await response.json() as T;
+  return (await response.json()) as T;
 }
 
 /**

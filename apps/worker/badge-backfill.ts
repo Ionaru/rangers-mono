@@ -30,8 +30,8 @@ import {
 /**
  * Phase 0's badge backfill, sourced from TeamSpeak.
  *
- *   deno task badges:backfill            # prints the plan, writes nothing
- *   deno task badges:backfill -- --apply # does it
+ *   pnpm badges:backfill            # prints the plan, writes nothing
+ *   pnpm badges:backfill --apply    # does it
  *
  * **Why TeamSpeak and not the legacy database.** MIGRATION.md says to backfill
  * the 83 grants in `user_badges_badge`. That was wrong, and it is the kind of
@@ -75,7 +75,7 @@ interface Grant {
 }
 
 async function main(): Promise<number> {
-  const apply = Deno.args.includes("--apply");
+  const apply = process.argv.slice(2).includes("--apply");
 
   const [discord, ts] = loadAll<[DiscordConfig, TeamspeakConfig]>([
     getDiscordConfig,
@@ -223,9 +223,10 @@ async function main(): Promise<number> {
     const linked = await listLinkedMembers(db);
     const guess = (nickname: string): string => {
       const needle = nickname.trim().toLowerCase();
-      const hit = linked.find((m: LinkedMemberLite) =>
-        m.displayName.trim().toLowerCase() === needle ||
-        (m.tsNickname ?? "").trim().toLowerCase() === needle
+      const hit = linked.find(
+        (m: LinkedMemberLite) =>
+          m.displayName.trim().toLowerCase() === needle ||
+          (m.tsNickname ?? "").trim().toLowerCase() === needle,
       );
       return hit
         ? `  <- looks like member "${hit.displayName}", linked under a DIFFERENT identity`
@@ -355,11 +356,11 @@ async function main(): Promise<number> {
 }
 
 if (import.meta.main) {
-  let failed = 0;
+  let failed: number;
   try {
-    failed = await main() ?? 0;
+    failed = (await main()) ?? 0;
   } finally {
     await closeDb();
   }
-  if (failed > 0) Deno.exit(1);
+  if (failed > 0) process.exit(1);
 }

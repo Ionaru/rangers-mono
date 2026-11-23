@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2023",
+    "types": ["node"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "packages/**/*.ts",
+    "apps/worker/**/*.ts",
+    "apps/web/src/**/*.test.ts",
+    "apps/web/scripts/**/*.ts"
+  ],
+  "exclude": ["**/node_modules", "packages/db/drizzle"]
+}

@@ -120,9 +120,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return gated ? context.redirect("/", 302) : next();
   }
 
-  const { findMemberForAuthUser, getDb, upsertMemberOnLogin } = await import(
-    "@7r/db"
-  );
+  const { findMemberForAuthUser, getDb, upsertMemberOnLogin } =
+    await import("@7r/db");
   const db = getDb();
 
   /**
@@ -218,7 +217,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       "the Discord guild check failed, so the login could not be completed. " +
         "This is usually a Phase 0 step: a bad DISCORD_BOT_TOKEN, the bot not " +
         "being in the guild, or the GUILD_MEMBERS privileged intent. Run " +
-        "`deno task phase0:check` to find out which.",
+        "`pnpm phase0:check` to find out which.",
       { discordId: resolved.discordId, error: String(cause) },
     );
 

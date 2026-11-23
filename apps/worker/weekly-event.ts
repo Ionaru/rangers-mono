@@ -1,4 +1,5 @@
-import { extname, join } from "@std/path";
+import { readdir, readFile } from "node:fs/promises";
+import { extname, join } from "node:path";
 import type { OpsConfig } from "@7r/config";
 import type { Db } from "@7r/db";
 import {
@@ -296,7 +297,9 @@ export async function runWeeklyEventPass(
   // @everyone in the same breath. The announcement still goes out; `prepared_at`
   // stays null, because it records that they were asked and they were not.
   if (
-    deps.prepChannelId && op.preparedAt === null && !plan.withinAnnounceWindow
+    deps.prepChannelId &&
+    op.preparedAt === null &&
+    !plan.withinAnnounceWindow
   ) {
     if (await alreadyPosted(deps, deps.prepChannelId, eventUrl)) {
       log.info("mission-maker ping already present; not re-posting", {
@@ -410,9 +413,9 @@ async function createEvent(
       event = await create(undefined);
       deps.alert(
         "weekly event: cover image rejected, event created without it",
-        `Image "${cover.filename}" was refused (too large, or not PNG/JPG/GIF). ${
-          String(error)
-        }`,
+        `Image "${cover.filename}" was refused (too large, or not PNG/JPG/GIF). ${String(
+          error,
+        )}`,
       );
     } else {
       throw error;
@@ -439,9 +442,10 @@ async function findExistingEvent(
   start: Date,
 ): Promise<string | null> {
   const events = await listGuildScheduledEvents(deps.discord, deps.guildId);
-  const match = events.find((e) =>
-    e.name === title &&
-    new Date(e.scheduled_start_time).getTime() === start.getTime()
+  const match = events.find(
+    (e) =>
+      e.name === title &&
+      new Date(e.scheduled_start_time).getTime() === start.getTime(),
   );
   return match?.id ?? null;
 }
@@ -472,10 +476,10 @@ async function alreadyPosted(
     );
     return recent.some((m) => m.content.includes(eventUrl));
   } catch (error) {
-    log.warn(
-      "could not read channel history before posting; posting anyway",
-      { channel: channelId, error: String(error) },
-    );
+    log.warn("could not read channel history before posting; posting anyway", {
+      channel: channelId,
+      error: String(error),
+    });
     return false;
   }
 }
@@ -536,7 +540,7 @@ function buildPrepContent(
   return [
     mention,
     `Saturday's op event is up. Set the mission and location on it before it goes ` +
-    `out to the rest of the unit ${discordTimestamp(announceAt)}.`,
+      `out to the rest of the unit ${discordTimestamp(announceAt)}.`,
     eventUrl,
   ].join("\n\n");
 }
@@ -567,7 +571,7 @@ async function pickWittyMessage(
 ): Promise<string | undefined> {
   if (!deps.textFile) return undefined;
   try {
-    const messages = splitMessages(await Deno.readTextFile(deps.textFile));
+    const messages = splitMessages(await readFile(deps.textFile, "utf8"));
     return pickRandom(messages, Math.random);
   } catch (error) {
     // Best-effort: a missing or unreadable file just means no witty message, not a
@@ -589,8 +593,8 @@ async function chooseImage(
     // Keep the content type from the same call that decided the file is an image,
     // so the pick carries its own type and nothing has to assert it back later.
     const candidates: ChosenImage[] = [];
-    for await (const entry of Deno.readDir(deps.imageDir)) {
-      if (!entry.isFile) continue;
+    for (const entry of await readdir(deps.imageDir, { withFileTypes: true })) {
+      if (!entry.isFile()) continue;
       const contentType = contentTypeOf(entry.name);
       if (!contentType) continue;
       candidates.push({
@@ -616,7 +620,7 @@ async function pickImage(
   const chosen = await chooseImage(deps);
   if (!chosen) return undefined;
   try {
-    const bytes = await Deno.readFile(chosen.path);
+    const bytes = await readFile(chosen.path);
     return {
       filename: chosen.filename,
       contentType: chosen.contentType,
@@ -665,7 +669,8 @@ export function startWeeklyEventLoop(
       const result = await runWeeklyEventPass(deps, { apply: !opts.dryRun });
 
       if (
-        result.outcome === "dry_run" && result.saturdayDate !== dryRunLoggedDate
+        result.outcome === "dry_run" &&
+        result.saturdayDate !== dryRunLoggedDate
       ) {
         dryRunLoggedDate = result.saturdayDate;
         const preview = await describeWeeklyEvent(deps, new Date());

@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import assert from "node:assert/strict";
+import { test } from "node:test";
 import { buildSteamLoginUrl, verifySteamCallback } from "./steam.ts";
 
 const STEAM_ID = "76561198009917136";
@@ -31,58 +32,73 @@ function steamSays(valid: boolean, status = 200): typeof fetch {
     );
 }
 
-Deno.test("the login URL asks Steam to tell us who they are", () => {
+test("the login URL asks Steam to tell us who they are", () => {
   const url = buildSteamLoginUrl({
     realm: "https://7th-ranger.com",
     returnTo: "https://7th-ranger.com/link/steam/callback",
   });
 
-  assertStringIncludes(url, "https://steamcommunity.com/openid/login?");
-  assertStringIncludes(url, "openid.mode=checkid_setup");
+  assert.ok(
+    url.includes("https://steamcommunity.com/openid/login?"),
+    `expected ${JSON.stringify(url)} to include ${JSON.stringify("https://steamcommunity.com/openid/login?")}`,
+  );
+  assert.ok(
+    url.includes("openid.mode=checkid_setup"),
+    `expected ${JSON.stringify(url)} to include ${JSON.stringify("openid.mode=checkid_setup")}`,
+  );
   // identifier_select for both: we do not know the SteamID64 yet, which is the point.
-  assertStringIncludes(
-    url,
-    "openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
+  assert.ok(
+    url.includes(
+      "openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
+    ),
+    `expected ${JSON.stringify(url)} to include ${JSON.stringify("openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select")}`,
   );
-  assertStringIncludes(
-    url,
-    "openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
+  assert.ok(
+    url.includes(
+      "openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
+    ),
+    `expected ${JSON.stringify(url)} to include ${JSON.stringify("openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select")}`,
   );
-  assertStringIncludes(
-    url,
-    "openid.return_to=https%3A%2F%2F7th-ranger.com%2Flink%2Fsteam%2Fcallback",
+  assert.ok(
+    url.includes(
+      "openid.return_to=https%3A%2F%2F7th-ranger.com%2Flink%2Fsteam%2Fcallback",
+    ),
+    `expected ${JSON.stringify(url)} to include ${JSON.stringify("openid.return_to=https%3A%2F%2F7th-ranger.com%2Flink%2Fsteam%2Fcallback")}`,
   );
-  assertStringIncludes(url, "openid.realm=https%3A%2F%2F7th-ranger.com");
+  assert.ok(
+    url.includes("openid.realm=https%3A%2F%2F7th-ranger.com"),
+    `expected ${JSON.stringify(url)} to include ${JSON.stringify("openid.realm=https%3A%2F%2F7th-ranger.com")}`,
+  );
 });
 
-Deno.test("a Steam-validated callback yields the SteamID64", async () => {
+test("a Steam-validated callback yields the SteamID64", async () => {
   const result = await verifySteamCallback(callbackParams(), steamSays(true));
-  assertEquals(result, { ok: true, steamId: STEAM_ID });
+  assert.deepStrictEqual(result, { ok: true, steamId: STEAM_ID });
 });
 
-Deno.test("is_valid:false is refused", async () => {
+test("is_valid:false is refused", async () => {
   // The whole point of check_authentication: without this, anyone can link any
   // Steam account by editing the query string.
   const result = await verifySteamCallback(callbackParams(), steamSays(false));
-  assertEquals(result.ok, false);
+  assert.deepStrictEqual(result.ok, false);
 });
 
-Deno.test("a Steam outage is refused, not waved through", async () => {
+test("a Steam outage is refused, not waved through", async () => {
   const result = await verifySteamCallback(
     callbackParams(),
     steamSays(true, 503),
   );
-  assertEquals(result.ok, false);
+  assert.deepStrictEqual(result.ok, false);
 });
 
-Deno.test("an unparseable response is refused", async () => {
+test("an unparseable response is refused", async () => {
   const garbage: typeof fetch = () =>
     Promise.resolve(new Response("<html>go away</html>", { status: 200 }));
   const result = await verifySteamCallback(callbackParams(), garbage);
-  assertEquals(result.ok, false);
+  assert.deepStrictEqual(result.ok, false);
 });
 
-Deno.test("a claimed_id that is not a Steam identity URL never reaches Steam", async () => {
+test("a claimed_id that is not a Steam identity URL never reaches Steam", async () => {
   let called = false;
   const spy: typeof fetch = () => {
     called = true;
@@ -109,21 +125,25 @@ Deno.test("a claimed_id that is not a Steam identity URL never reaches Steam", a
       callbackParams({ "openid.claimed_id": claimedId }),
       spy,
     );
-    assertEquals(result.ok, false, `should have refused ${claimedId}`);
+    assert.deepStrictEqual(
+      result.ok,
+      false,
+      `should have refused ${claimedId}`,
+    );
   }
 
   // Not one of them was worth asking Steam about.
-  assert(!called, "a malformed claimed_id must not be sent to Steam");
+  assert.ok(!called, "a malformed claimed_id must not be sent to Steam");
 });
 
-Deno.test("a callback with no claimed_id is refused", async () => {
+test("a callback with no claimed_id is refused", async () => {
   const params = callbackParams();
   params.delete("openid.claimed_id");
   const result = await verifySteamCallback(params, steamSays(true));
-  assertEquals(result.ok, false);
+  assert.deepStrictEqual(result.ok, false);
 });
 
-Deno.test("the assertion is echoed back verbatim, with only the mode changed", async () => {
+test("the assertion is echoed back verbatim, with only the mode changed", async () => {
   let sent: URLSearchParams | undefined;
   const capture: typeof fetch = (_url, init) => {
     sent = new URLSearchParams(init?.body as URLSearchParams);
@@ -132,13 +152,19 @@ Deno.test("the assertion is echoed back verbatim, with only the mode changed", a
 
   await verifySteamCallback(callbackParams(), capture);
 
-  assert(sent);
+  assert.ok(sent);
   // Steam signed these fields. Drop or reorder one and it says is_valid:false.
-  assertEquals(sent.get("openid.mode"), "check_authentication");
-  assertEquals(sent.get("openid.sig"), "aG9uZXN0bHktYS1zaWduYXR1cmU=");
-  assertEquals(
+  assert.deepStrictEqual(sent.get("openid.mode"), "check_authentication");
+  assert.deepStrictEqual(
+    sent.get("openid.sig"),
+    "aG9uZXN0bHktYS1zaWduYXR1cmU=",
+  );
+  assert.deepStrictEqual(
     sent.get("openid.signed"),
     "signed,op_endpoint,claimed_id,identity,return_to,response_nonce,assoc_handle",
   );
-  assertEquals(sent.get("openid.response_nonce"), "2026-07-11T20:00:00Zabcdef");
+  assert.deepStrictEqual(
+    sent.get("openid.response_nonce"),
+    "2026-07-11T20:00:00Zabcdef",
+  );
 });

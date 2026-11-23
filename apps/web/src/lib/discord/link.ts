@@ -64,8 +64,10 @@ function identify(
   const discordId = interactionUserId(interaction);
   if (!discordId) return null;
 
-  const username = interaction.member?.user?.username ??
-    interaction.user?.username ?? "member";
+  const username =
+    interaction.member?.user?.username ??
+    interaction.user?.username ??
+    "member";
   const displayName = interaction.member
     ? displayNameOf(interaction.member, username)
     : (interaction.user?.global_name ?? username);
@@ -360,15 +362,13 @@ export function linkCode(interaction: Interaction): Response {
     let tsNickname: string | null = null;
     try {
       const online = await fetchOnlineClients(member.id);
-      tsNickname = online.find((c) =>
-        c.uid === challenge.targetTsUid
-      )?.nickname ??
-        null;
+      tsNickname =
+        online.find((c) => c.uid === challenge.targetTsUid)?.nickname ?? null;
     } catch {
       // Deliberately swallowed.
     }
 
-    let backfilledSessions = 0;
+    let backfilledSessions: number;
     try {
       ({ backfilledSessions } = await completeTeamspeakLink(db, {
         memberId: member.id,
@@ -402,11 +402,12 @@ export function linkCode(interaction: Interaction): Response {
      * channel for weeks before linking has just been credited for all of it, and
      * that is the most convincing possible argument for linking.
      */
-    const adopted = backfilledSessions === 0
-      ? ""
-      : ` ${backfilledSessions} past ` +
-        `attendance session${backfilledSessions === 1 ? "" : "s"} ` +
-        `${backfilledSessions === 1 ? "was" : "were"} credited to you.`;
+    const adopted =
+      backfilledSessions === 0
+        ? ""
+        : ` ${backfilledSessions} past ` +
+          `attendance session${backfilledSessions === 1 ? "" : "s"} ` +
+          `${backfilledSessions === 1 ? "was" : "were"} credited to you.`;
 
     await editOriginal(
       interaction,

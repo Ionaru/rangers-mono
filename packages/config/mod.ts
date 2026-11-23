@@ -37,7 +37,7 @@ export const getCoreConfig = memoize(() => loadConfig(coreSchema));
 export const getWebConfig = memoize(() => loadConfig(webSchema));
 
 export const getWorkerServerConfig = memoize(() =>
-  loadConfig(workerServerSchema)
+  loadConfig(workerServerSchema),
 );
 
 /**
@@ -62,7 +62,7 @@ export const getOpsConfig = memoize(() => loadConfig(opsSchema));
  * channel to render a page.
  */
 export const getAttendanceCreditConfig = memoize(() =>
-  loadConfig(attendanceCreditSchema)
+  loadConfig(attendanceCreditSchema),
 );
 
 /** Phase 2. Steam OpenID is stateless, so this is one URL and nothing else. */
@@ -70,7 +70,7 @@ export const getSteamConfig = memoize(() => loadConfig(steamSchema));
 
 /** Phase 2. How `web` reaches the worker: the only coupling beyond the database. */
 export const getWorkerClientConfig = memoize(() =>
-  loadConfig(workerClientSchema)
+  loadConfig(workerClientSchema),
 );
 
 /** Phase 2 (the poke-link flow) and Phase 4 (the reconcile). Worker only. */
@@ -83,7 +83,7 @@ export const getTeamspeakConfig = memoize(() => loadConfig(teamspeakSchema));
  * whoever sets up linking invent a channel id to get past a fail-loud boot.
  */
 export const getAttendanceChannelConfig = memoize(() =>
-  loadConfig(attendanceChannelSchema)
+  loadConfig(attendanceChannelSchema),
 );
 
 /** The worker posts its own errors here, so a failure is visible without log-diving. */

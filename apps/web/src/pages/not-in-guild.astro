@@ -10,21 +10,24 @@ import Base from "../layouts/Base.astro";
  * else (ADR 0002).
  */
 ---
-<Base title="Not a member">
-<h1>You are not in the 7R Discord</h1>
 
-<div class="panel">
-  <p>
+<Base title="Not a member">
+  <h1>You are not in the 7R Discord</h1>
+
+  <div class="panel">
+    <p>
       This site is for members of the 7th Ranger Group. Your Discord account is
       not in our server, so there is nothing here for you yet.
     </p>
-  <p class="muted">
-      If you have just joined, or you think this is wrong, ask in Discord. If you
-      would like to join the unit, our recruitment information is on the main
-      site.
+    <p class="muted">
+      If you have just joined, or you think this is wrong, ask in Discord. If
+      you would like to join the unit, our recruitment information is on the
+      main site.
     </p>
-  <form method="post" action="/signout">
-    <button type="submit" class="secondary">Sign out</button>
-  </form>
-</div>
+    <form method="post" action="/signout">
+      <button type="submit" class="secondary">
+        Sign out
+      </button>
+    </form>
+  </div>
 </Base>

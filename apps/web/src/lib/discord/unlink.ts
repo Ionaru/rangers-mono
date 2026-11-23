@@ -49,7 +49,8 @@ export function unlinkCommand(interaction: Interaction): Response {
     await editOriginal(
       interaction,
       messageEdit({
-        content: "TeamSpeak unlinked. Your groups come off at the next sync. " +
+        content:
+          "TeamSpeak unlinked. Your groups come off at the next sync. " +
           "Run /link to link again.",
       }),
     );

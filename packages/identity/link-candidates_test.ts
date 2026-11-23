@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import assert from "node:assert/strict";
+import { test } from "node:test";
 import { pickableClients } from "./link-candidates.ts";
 
 /**
@@ -25,33 +26,33 @@ function client(
   };
 }
 
-Deno.test("an unlinked client is offered to anyone", () => {
+test("an unlinked client is offered to anyone", () => {
   const online = [client({ clid: "10", uid: "unlinked=" })];
   const picked = pickableClients({ online, links: [], memberId: alice });
-  assertEquals(picked, [
+  assert.deepStrictEqual(picked, [
     { clid: "10", uid: "unlinked=", nickname: "Someone", current: false },
   ]);
 });
 
-Deno.test("another member's identity is never offered", () => {
+test("another member's identity is never offered", () => {
   const online = [client({ clid: "10", uid: "bobs-uid=" })];
   const links = [{ memberId: bob, tsUid: "bobs-uid=" }];
   const picked = pickableClients({ online, links, memberId: alice });
-  assertEquals(picked, []);
+  assert.deepStrictEqual(picked, []);
 });
 
-Deno.test("your own current identity IS offered, and marked current", () => {
+test("your own current identity IS offered, and marked current", () => {
   const online = [
     client({ clid: "10", uid: "alices-uid=", nickname: "Alice" }),
   ];
   const links = [{ memberId: alice, tsUid: "alices-uid=" }];
   const picked = pickableClients({ online, links, memberId: alice });
-  assertEquals(picked, [
+  assert.deepStrictEqual(picked, [
     { clid: "10", uid: "alices-uid=", nickname: "Alice", current: true },
   ]);
 });
 
-Deno.test("a mixed list keeps mine (marked) and strangers' out", () => {
+test("a mixed list keeps mine (marked) and strangers' out", () => {
   const online = [
     client({ clid: "10", uid: "alices-uid=", nickname: "Alice" }),
     client({ clid: "11", uid: "bobs-uid=", nickname: "Bob" }),
@@ -62,13 +63,13 @@ Deno.test("a mixed list keeps mine (marked) and strangers' out", () => {
     { memberId: bob, tsUid: "bobs-uid=" },
   ];
   const picked = pickableClients({ online, links, memberId: alice });
-  assertEquals(picked, [
+  assert.deepStrictEqual(picked, [
     { clid: "10", uid: "alices-uid=", nickname: "Alice", current: true },
     { clid: "12", uid: "fresh-uid=", nickname: "New", current: false },
   ]);
 });
 
-Deno.test("without a memberId every linked identity is hidden (the fail-safe)", () => {
+test("without a memberId every linked identity is hidden (the fail-safe)", () => {
   // A request that does not say who is asking may claim nothing that is already
   // linked. No caller omits the member id since the web link pages went (ADR
   // 0017); this pins the direction a malformed one fails in, which is the whole
@@ -79,13 +80,13 @@ Deno.test("without a memberId every linked identity is hidden (the fail-safe)", 
   ];
   const links = [{ memberId: alice, tsUid: "alices-uid=" }];
   const picked = pickableClients({ online, links });
-  assertEquals(picked, [
+  assert.deepStrictEqual(picked, [
     { clid: "11", uid: "fresh-uid=", nickname: "Someone", current: false },
   ]);
 });
 
-Deno.test("an empty online list stays empty", () => {
-  assertEquals(
+test("an empty online list stays empty", () => {
+  assert.deepStrictEqual(
     pickableClients({
       online: [],
       links: [{ memberId: alice, tsUid: "x=" }],
@@ -95,11 +96,14 @@ Deno.test("an empty online list stays empty", () => {
   );
 });
 
-Deno.test("a member linked to an identity that is not online gets an empty list, not a crash", () => {
+test("a member linked to an identity that is not online gets an empty list, not a crash", () => {
   const online = [client({ clid: "10", uid: "bobs-uid=" })];
   const links = [
     { memberId: alice, tsUid: "alice-offline=" },
     { memberId: bob, tsUid: "bobs-uid=" },
   ];
-  assertEquals(pickableClients({ online, links, memberId: alice }), []);
+  assert.deepStrictEqual(
+    pickableClients({ online, links, memberId: alice }),
+    [],
+  );
 });

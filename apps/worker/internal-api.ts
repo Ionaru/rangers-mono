@@ -99,10 +99,7 @@ export function createInternalApiHandler(
       // unreachable" and somebody needs to know why.
       log.error("internal api failed", { pathname, error: String(cause) });
       alert(`internal api ${pathname} failed`, cause);
-      return Response.json(
-        { error: "teamspeak_unavailable" },
-        { status: 502 },
-      );
+      return Response.json({ error: "teamspeak_unavailable" }, { status: 502 });
     }
 
     return new Response("not found", { status: 404 });
@@ -149,9 +146,10 @@ async function handlePoke(
   request: Request,
   teamspeak: TeamspeakConnection,
 ): Promise<Response> {
-  const body = await request.json().catch(() => null) as
-    | { clid?: unknown; message?: unknown }
-    | null;
+  const body = (await request.json().catch(() => null)) as {
+    clid?: unknown;
+    message?: unknown;
+  } | null;
 
   const clid = typeof body?.clid === "string" ? body.clid : null;
   const message = typeof body?.message === "string" ? body.message : null;
