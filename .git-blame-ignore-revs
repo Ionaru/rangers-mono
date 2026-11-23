@@ -1,0 +1,5 @@
+# Mechanical reformats. GitHub skips these in blame; locally:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Reformat with Prettier (the move from deno fmt)
+ecbfbd3296cd630887e0a60a650deb0c879fd819
