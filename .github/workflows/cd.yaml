@@ -14,16 +14,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      # Installs pnpm (packageManager) and Node (.node-version) in one step, then
+      # the workspace. require-lockfile makes that `pnpm install --frozen-lockfile`,
+      # which fails if pnpm-lock.yaml is missing or stale. Without it, committing
+      # the lockfile is decoration.
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .node-version
-          cache: pnpm
+          cache: true
+          require-lockfile: true
 
       # The Node and pnpm versions are pinned in several places: .node-version and
-      # the packageManager field of the root package.json (which the setup steps
-      # above read), and both Dockerfiles, the only other homes of the two numbers.
+      # the packageManager field of the root package.json (which the setup step
+      # above reads), and both Dockerfiles, the only other homes of the two numbers.
       # One number, several homes, so it decays quietly unless something checks.
       # This is that something: the images must build and run on the same Node and
       # pnpm that CI tests with.
@@ -55,11 +58,6 @@ jobs:
             done < <(grep -oE 'pnpm@[^[:space:]]+' "$dockerfile" | grep -vxF "pnpm@${pnpm_version}" || true)
           done
           exit $fail
-
-      # Installs strictly from pnpm-lock.yaml and fails if it is stale. Without this,
-      # committing the lockfile is decoration.
-      - name: Install (frozen lockfile)
-        run: pnpm install --frozen-lockfile
 
       - name: Format
         run: pnpm fmt:check
@@ -181,12 +179,14 @@ jobs:
       # already has the repo; this checkout is only for the runner-side gate.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      # Restores the pnpm store but never saves it: this job installs one
+      # package's dependencies, so a store saved here would be a partial copy.
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           node-version-file: .node-version
-          cache: pnpm
+          cache: true
+          save-cache: false
+          install: false
 
       # The env:check gate needs only @7r/config and what it depends on, not the
       # whole workspace.
