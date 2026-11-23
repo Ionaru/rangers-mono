@@ -7,105 +7,87 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  DENO_VERSION: 2.9.2
-
 jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: denoland/setup-deno@v2
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          deno-version: ${{ env.DENO_VERSION }}
+          node-version-file: .node-version
+          cache: pnpm
 
-      # The Deno version is pinned in three places: this workflow, .dvmrc, and
-      # both Dockerfiles. One number, several homes, so it decays quietly unless
-      # something checks. This is that something. The pin is load-bearing twice
-      # over: ssh2 leans on node:crypto for a cipher Deno has broken before, and
-      # the workspace symlinking this layout depends on only landed in Deno 2.9.
-      - name: Deno version pin is consistent
+      # The Node and pnpm versions are pinned in several places: .node-version and
+      # the packageManager field of the root package.json (which the setup steps
+      # above read), and both Dockerfiles, the only other homes of the two numbers.
+      # One number, several homes, so it decays quietly unless something checks.
+      # This is that something: the images must build and run on the same Node and
+      # pnpm that CI tests with.
+      - name: Node and pnpm version pins are consistent
         run: |
           set -euo pipefail
           fail=0
+          node_version=$(tr -d '[:space:]' < .node-version)
+          pnpm_version=$(node -p "require('./package.json').packageManager")
+          pnpm_version=${pnpm_version#pnpm@}
           check() {
-            if ! grep -q "$2" "$1"; then
-              echo "::error file=$1::expected Deno ${DENO_VERSION} (looked for '$2')"
+            if ! grep -qF -- "$2" "$1"; then
+              echo "::error file=$1::expected Node ${node_version} and pnpm ${pnpm_version} (looked for '$2')"
               fail=1
             fi
           }
-          check .dvmrc "^${DENO_VERSION}$"
-          check apps/web/Dockerfile "denoland/deno:${DENO_VERSION}"
-          check apps/worker/Dockerfile "denoland/deno:${DENO_VERSION}"
-          exit $fail
-
-      # apps/web/deno.prod.json is the web runtime image's manifest (it is copied
-      # in as ./deno.json). It sits outside the Deno workspace and outside
-      # deno.lock, so it hand-repeats the drizzle/postgres/zod pins and nothing
-      # else can catch it drifting: `deno ci` never sees it, and `deno cache`
-      # fails on a missing specifier, not a stale version. Bump drizzle in
-      # packages/db and, without this, production silently keeps the old one.
-      #
-      # Compares version strings literally, so every manifest must pin exactly
-      # ("0.45.2", never "^0.45.2"). That is already the house style, and a range
-      # here would defeat the point: the runtime image resolves at build time.
-      - name: Runtime dependency pins are consistent
-        run: |
-          set -euo pipefail
-          fail=0
-          check() {
-            local name=$1 manifest=$2 want got
-            want=$(jq -r --arg n "$name" '.dependencies[$n]' "$manifest")
-            got=$(jq -r --arg n "$name" '
-              .imports | to_entries[]
-              | select(.key == $n or .key == ($n + "/"))
-              | .value | capture("@(?<v>[0-9][^/]*)").v
-            ' apps/web/deno.prod.json | sort -u)
-            if [ "$got" != "$want" ]; then
-              echo "::error file=apps/web/deno.prod.json::${name} resolves to '${got}' here but ${manifest} pins '${want}'"
+          for dockerfile in apps/web/Dockerfile apps/worker/Dockerfile; do
+            check "$dockerfile" "node:${node_version}-"
+            check "$dockerfile" "pnpm@${pnpm_version}"
+            # Every stage, not just one: a multi-stage file drifts one FROM at a
+            # time, and the stage left behind still contains the right string.
+            while IFS= read -r line; do
+              echo "::error file=${dockerfile}::stage not on Node ${node_version}: ${line}"
               fail=1
-            fi
-          }
-          check drizzle-orm      packages/db/package.json
-          check postgres         packages/db/package.json
-          check zod              packages/config/package.json
-          check better-auth      apps/web/package.json
-          check @logtape/logtape packages/logging/package.json
+            done < <(grep -E '^FROM node:' "$dockerfile" | grep -vF "node:${node_version}-" || true)
+            while IFS= read -r pin; do
+              echo "::error file=${dockerfile}::expected pnpm@${pnpm_version}, found ${pin}"
+              fail=1
+            done < <(grep -oE 'pnpm@[^[:space:]]+' "$dockerfile" | grep -vxF "pnpm@${pnpm_version}" || true)
+          done
           exit $fail
 
-      # Installs strictly from deno.lock and fails if it is stale. Without this,
+      # Installs strictly from pnpm-lock.yaml and fails if it is stale. Without this,
       # committing the lockfile is decoration.
       - name: Install (frozen lockfile)
-        run: deno ci
+        run: pnpm install --frozen-lockfile
 
       - name: Format
-        run: deno task fmt:check
+        run: pnpm fmt:check
 
       - name: Lint
-        run: deno task lint
+        run: pnpm lint
 
       - name: Typecheck
-        run: deno task check
+        run: pnpm check
 
-      # The two pure functions this suite exists for (the TeamSpeak group
-      # reconcile, the sample-to-session reconstruction) arrive in Phases 3 and
-      # 5. For now: the config parser and the domain rules.
+      # Unit tests over the pure functions (the TeamSpeak group reconcile, the
+      # sample-to-session reconstruction, the config parser, the domain rules).
+      # There is no live test environment, so this is the suite that guards them.
       - name: Test
-        run: deno task test
+        run: pnpm test
 
       # The generated SQL is committed. If someone edits schema.ts and forgets to
       # regenerate, the schema and the migration drift apart silently, and the
       # first symptom is a production query failing on a column that never got
-      # created.
+      # created. Checks `git status`, not `git diff`: a new migration is a new
+      # untracked folder, which `git diff` does not report.
       - name: Migrations match the schema
         run: |
           set -euo pipefail
-          deno task db:generate
-          if ! git diff --exit-code --quiet packages/db/drizzle; then
-            echo "::error::schema.ts changed but packages/db/drizzle was not regenerated. Run: deno task db:generate"
-            git diff --stat packages/db/drizzle
+          pnpm db:generate
+          if [ -n "$(git status --porcelain -- packages/db/drizzle)" ]; then
+            echo "::error::schema.ts changed but packages/db/drizzle was not regenerated. Run: pnpm db:generate"
+            git status --porcelain -- packages/db/drizzle
             exit 1
           fi
 
@@ -116,7 +98,7 @@ jobs:
       sha_short: ${{ steps.sha.outputs.sha_short }}
       repo: ${{ steps.repo.outputs.repo }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: sha
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
@@ -148,20 +130,20 @@ jobs:
       matrix:
         service: [web, worker]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log in to GHCR
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v4
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: apps/${{ matrix.service }}/Dockerfile
@@ -194,14 +176,22 @@ jobs:
       group: deploy
       cancel-in-progress: false
     steps:
-      # Checkout + Deno so the assembled .env can be validated on the runner, before
+      # Checkout + Node and pnpm so the assembled .env can be validated on the runner, before
       # anything on the box is touched (the env:check gate below). The box itself
       # already has the repo; this checkout is only for the runner-side gate.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: denoland/setup-deno@v2
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          deno-version: ${{ env.DENO_VERSION }}
+          node-version-file: .node-version
+          cache: pnpm
+
+      # The env:check gate needs only @7r/config and what it depends on, not the
+      # whole workspace.
+      - name: Install (config package only)
+        run: pnpm install --frozen-lockfile --filter @7r/config...
 
       # Build the box's .env from the Environment's variables (non-secret) and
       # secrets (credentials). The operational secrets (DEPLOY_*, GITHUB_TOKEN) are
@@ -238,7 +228,7 @@ jobs:
       # missing a required key (a forgotten variable/secret). Otherwise the deploy
       # would stop the app, migrate, and only then crash-loop the worker on
       # fail-loud config. Prints key names only, never values.
-      # Absolute path: the task cd's into packages/config, so a relative --file
+      # Absolute path: the script runs in packages/config, so a relative --file
       # would resolve there, not against the runner's workspace where env.out lives.
       # On the box DATABASE_URL is supplied by the mounted ./secrets/ via
       # DATABASE_URL_FILE, not from .env, so add that marker for the check (env:check
@@ -248,7 +238,7 @@ jobs:
           set -euo pipefail
           cp env.out env.check
           echo 'DATABASE_URL_FILE=/run/secrets/database_url' >> env.check
-          deno task env:check -- --file "$GITHUB_WORKSPACE/env.check"
+          pnpm env:check --file "$GITHUB_WORKSPACE/env.check"
 
       # The box is Windows with Docker Desktop, so the remote shell is
       # PowerShell (hence $env: rather than export). The known hazard, recorded
@@ -280,7 +270,7 @@ jobs:
       # that works on both. This used to be wrong here in the way that matters
       # most: a failed migration was swallowed, `up` ran anyway, and the deploy
       # went green with the new code live against the old schema.
-      - uses: appleboy/ssh-action@v1.2.5
+      - uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           command_timeout: 30m
           host: ${{ secrets.DEPLOY_HOST }}
