@@ -28,6 +28,11 @@ export default defineConfig({
   // and is called by every mutating route, so this layer is both redundant and
   // wrong for this proxy topology.
   security: { checkOrigin: false },
+  // The Node adapter registers a filesystem session driver by default (the
+  // "Enabling sessions with filesystem storage" build line), and astro 7.0's
+  // config schema has no way to switch it off. It stays inert: Better Auth
+  // owns sessions (its own table and signed cookie) and nothing calls
+  // Astro.session, so the driver never writes anything.
   integrations: [
     starlight({
       title: "7R Handbook",
