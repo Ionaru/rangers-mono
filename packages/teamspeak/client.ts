@@ -241,13 +241,15 @@ export async function connectTeamspeak(
     let available = "(could not list the virtual servers either)";
     try {
       const servers = await teamspeak.serverList();
-      available = servers.length === 0
-        ? "(this TeamSpeak instance has no virtual servers at all)"
-        : servers
-          .map((s) =>
-            `sid=${s.id} port=${s.port} status=${s.status} name=${s.name}`
-          )
-          .join("\n  ");
+      available =
+        servers.length === 0
+          ? "(this TeamSpeak instance has no virtual servers at all)"
+          : servers
+              .map(
+                (s) =>
+                  `sid=${s.id} port=${s.port} status=${s.status} name=${s.name}`,
+              )
+              .join("\n  ");
     } catch {
       /* keep the original failure; the list is a bonus, not the point */
     }

@@ -65,7 +65,10 @@ test("a full page is followed by another, cursored on the highest id", async () 
     // The cursor is the last id of page one, compared as a BigInt rather than
     // as a Number, which snowflakes overflow.
     const expected = String(900000000000000000n + 99n);
-    assert.deepStrictEqual(stub.calls[1].url.includes(`after=${expected}`), true);
+    assert.deepStrictEqual(
+      stub.calls[1].url.includes(`after=${expected}`),
+      true,
+    );
     // `before` is never sent: Discord honours only `before` when both are given.
     assert.deepStrictEqual(stub.calls[1].url.includes("before="), false);
   } finally {
@@ -74,11 +77,13 @@ test("a full page is followed by another, cursored on the highest id", async () 
 });
 
 test("global_name is preferred as the display name, and may be absent", async () => {
-  const stub = stubFetch([ok([
-    { user: { id: "1", username: "handle", global_name: "Display Name" } },
-    { user: { id: "2", username: "legacy" } },
-    { user: { id: "3", username: "cleared", global_name: null } },
-  ])]);
+  const stub = stubFetch([
+    ok([
+      { user: { id: "1", username: "handle", global_name: "Display Name" } },
+      { user: { id: "2", username: "legacy" } },
+      { user: { id: "3", username: "cleared", global_name: null } },
+    ]),
+  ]);
   try {
     const users = await listGuildScheduledEventUsers(OPTIONS, "guild", "event");
     assert.deepStrictEqual(users, [

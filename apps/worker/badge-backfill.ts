@@ -223,9 +223,10 @@ async function main(): Promise<number> {
     const linked = await listLinkedMembers(db);
     const guess = (nickname: string): string => {
       const needle = nickname.trim().toLowerCase();
-      const hit = linked.find((m: LinkedMemberLite) =>
-        m.displayName.trim().toLowerCase() === needle ||
-        (m.tsNickname ?? "").trim().toLowerCase() === needle
+      const hit = linked.find(
+        (m: LinkedMemberLite) =>
+          m.displayName.trim().toLowerCase() === needle ||
+          (m.tsNickname ?? "").trim().toLowerCase() === needle,
       );
       return hit
         ? `  <- looks like member "${hit.displayName}", linked under a DIFFERENT identity`
@@ -357,7 +358,7 @@ async function main(): Promise<number> {
 if (import.meta.main) {
   let failed: number;
   try {
-    failed = await main() ?? 0;
+    failed = (await main()) ?? 0;
   } finally {
     await closeDb();
   }

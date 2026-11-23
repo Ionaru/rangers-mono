@@ -56,9 +56,9 @@ export function collectSchemaKeys(
         key,
         existing
           ? {
-            required: existing.required || spec.required,
-            default: existing.default ?? spec.default,
-          }
+              required: existing.required || spec.required,
+              default: existing.default ?? spec.default,
+            }
           : spec,
       );
     }
@@ -136,9 +136,8 @@ export function diffEnv(
   const unknown: string[] = [];
   for (const key of present) {
     if (known.has(key)) continue;
-    if (
-      key.endsWith(SECRET_FILE_SUFFIX) && known.has(keyForSecretFile(key))
-    ) continue;
+    if (key.endsWith(SECRET_FILE_SUFFIX) && known.has(keyForSecretFile(key)))
+      continue;
     unknown.push(key);
   }
 

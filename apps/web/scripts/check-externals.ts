@@ -26,7 +26,11 @@ const SIDE_EFFECT = /\bimport\s*(["'])([^"'\n]+)\1/g;
 const DYNAMIC = /\bimport\s*\(\s*(["'])([^"'\n]+)\1\s*\)/g;
 
 function isBare(specifier: string): boolean {
-  if (specifier === "" || specifier.startsWith(".") || specifier.startsWith("/")) {
+  if (
+    specifier === "" ||
+    specifier.startsWith(".") ||
+    specifier.startsWith("/")
+  ) {
     return false;
   }
   if (/^(?:data|https?|file|node):/.test(specifier)) return false;
@@ -44,7 +48,8 @@ export function bareSpecifiers(source: string): string[] {
   found.sort((a, b) => a.index - b.index);
   const result: string[] = [];
   for (const { specifier } of found) {
-    if (isBare(specifier) && !result.includes(specifier)) result.push(specifier);
+    if (isBare(specifier) && !result.includes(specifier))
+      result.push(specifier);
   }
   return result;
 }
@@ -90,7 +95,9 @@ if (import.meta.main) {
       for (const specifier of missing) console.log(`missing: ${specifier}`);
       process.exit(1);
     }
-    console.log(`${(await externals(dir)).length} externals checked, none missing`);
+    console.log(
+      `${(await externals(dir)).length} externals checked, none missing`,
+    );
   } catch (error) {
     console.error(
       `check-externals: cannot scan ${dir}: ${error instanceof Error ? error.message : String(error)}`,

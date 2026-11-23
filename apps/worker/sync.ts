@@ -152,9 +152,10 @@ export async function runSyncPass(
   // ---------------------------------------------- the mapping (DB, once)
 
   const assignables = await listAssignables(db);
-  const mappingEntries: [string, MappedAssignable][] = assignables.map((
-    a,
-  ) => [a.discordRoleId, { kind: a.kind, name: a.name, tsSgid: a.tsSgid }]);
+  const mappingEntries: [string, MappedAssignable][] = assignables.map((a) => [
+    a.discordRoleId,
+    { kind: a.kind, name: a.name, tsSgid: a.tsSgid },
+  ]);
   let mapping: AssignableMapping = new Map(mappingEntries);
 
   if (mapping.size === 0) {
@@ -213,9 +214,7 @@ export async function runSyncPass(
     // never fall out of lock-step on the same predicate.
     const deadSgids = new Set(deadEntries.map(([, a]) => a.tsSgid!));
     mapping = new Map(
-      mappingEntries.map((
-        [roleId, a],
-      ) => [
+      mappingEntries.map(([roleId, a]) => [
         roleId,
         a.tsSgid !== null && deadSgids.has(a.tsSgid)
           ? { ...a, tsSgid: null }
@@ -262,9 +261,7 @@ export async function runSyncPass(
   const excludeFromPass = (sgids: ReadonlySet<number>) => {
     for (const sgid of sgids) holdersBySgid.delete(sgid);
     mapping = new Map(
-      [...mapping].map((
-        [roleId, a],
-      ) => [
+      [...mapping].map(([roleId, a]) => [
         roleId,
         a.tsSgid !== null && sgids.has(a.tsSgid) ? { ...a, tsSgid: null } : a,
       ]),
@@ -340,9 +337,9 @@ export async function runSyncPass(
     // fault on one group pages once per episode rather than every tick.
     alert(
       "sync: some TeamSpeak groups could not be read",
-      `Left out of the reconcile for this pass (nobody gains or loses them):\n${
-        unreadableGroups.join("\n")
-      }`,
+      `Left out of the reconcile for this pass (nobody gains or loses them):\n${unreadableGroups.join(
+        "\n",
+      )}`,
     );
   }
 
@@ -393,7 +390,7 @@ export async function runSyncPass(
   // ops for them: `null`, which is what "we do not know" means to the reconcile,
   // rather than the `[]` the gather optimistically gave them.
   const inputs: MemberSyncInput[] = gathered.inputs.map((input) =>
-    probeFailed.has(input.memberId) ? { ...input, currentSgids: null } : input
+    probeFailed.has(input.memberId) ? { ...input, currentSgids: null } : input,
   );
   const cldbidByMemberId = gathered.cldbidByMemberId;
 
@@ -482,9 +479,9 @@ export async function runSyncPass(
       `A single pass would remove owned groups from ${plan.removalMemberCount} ` +
         `member(s) (SYNC_MAX_REMOVALS=${plan.maxRemovals}); nothing was applied. ` +
         `This is definitionally a bug: a bad mapping, an empty-ish Discord poll, ` +
-        `or TeamSpeak returning garbage.\nMembers losing groups: ${
-          strippees.join(", ")
-        }`,
+        `or TeamSpeak returning garbage.\nMembers losing groups: ${strippees.join(
+          ", ",
+        )}`,
     );
     return { ...base, outcome: "halted", appliedAdds: 0, appliedRemoves: 0 };
   }
@@ -607,8 +604,10 @@ export async function runSyncPass(
  * guild gate is failing for every new sign-in on the same token.
  */
 function isPermanent(error: unknown): boolean {
-  return error instanceof DiscordApiError &&
-    (error.status === 401 || error.status === 403);
+  return (
+    error instanceof DiscordApiError &&
+    (error.status === 401 || error.status === 403)
+  );
 }
 
 /**
@@ -698,9 +697,12 @@ export function startSyncLoop(
       if (!pagedLastPass.has(summary)) deps.alert(summary, detail);
     };
     try {
-      const result = await runSyncPass({ ...deps, alert: dedupedAlert }, {
-        apply: !opts.dryRun,
-      });
+      const result = await runSyncPass(
+        { ...deps, alert: dedupedAlert },
+        {
+          apply: !opts.dryRun,
+        },
+      );
       failureScore = Math.max(0, failureScore - 1);
       if (pagedFailure && failureScore === 0) {
         /**

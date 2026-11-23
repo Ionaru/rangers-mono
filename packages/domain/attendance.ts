@@ -374,14 +374,14 @@ export function compareRsvpToTurnout(
   );
 
   return {
-    respondedAndCame: rsvps.filter((r) =>
-      r.memberId !== null && cameMemberIds.has(r.memberId)
+    respondedAndCame: rsvps.filter(
+      (r) => r.memberId !== null && cameMemberIds.has(r.memberId),
     ),
-    respondedAndDidNot: rsvps.filter((r) =>
-      r.memberId === null || !cameMemberIds.has(r.memberId)
+    respondedAndDidNot: rsvps.filter(
+      (r) => r.memberId === null || !cameMemberIds.has(r.memberId),
     ),
-    cameWithoutResponding: attendees.filter((a) =>
-      a.memberId === null || !respondedMemberIds.has(a.memberId)
+    cameWithoutResponding: attendees.filter(
+      (a) => a.memberId === null || !respondedMemberIds.has(a.memberId),
     ),
   };
 }
@@ -441,8 +441,9 @@ export function rollUpMemberActivity(
     }
   }
 
-  return [...byMember.values()].sort((a, b) =>
-    b.creditedOps - a.creditedOps ||
-    (b.lastAttended ?? "").localeCompare(a.lastAttended ?? "")
+  return [...byMember.values()].sort(
+    (a, b) =>
+      b.creditedOps - a.creditedOps ||
+      (b.lastAttended ?? "").localeCompare(a.lastAttended ?? ""),
   );
 }

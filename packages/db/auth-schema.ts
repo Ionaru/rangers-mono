@@ -64,18 +64,24 @@ export const authUser = pgTable("auth_user", {
 });
 
 /** Better Auth's session table. It owns this, and its signed cookie carries `token`. */
-export const authSession = pgTable("auth_session", {
-  id: text("id").primaryKey(),
-  expiresAt: tstz("expires_at").notNull(),
-  token: text("token").notNull().unique(),
-  createdAt: tstz("created_at").notNull().defaultNow(),
-  updatedAt: tstz("updated_at").notNull().defaultNow(),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  userId: text("user_id").notNull().references(() => authUser.id, {
-    onDelete: "cascade",
-  }),
-}, (t) => [index("auth_session_user_id_idx").on(t.userId)]);
+export const authSession = pgTable(
+  "auth_session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: tstz("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: tstz("created_at").notNull().defaultNow(),
+    updatedAt: tstz("updated_at").notNull().defaultNow(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUser.id, {
+        onDelete: "cascade",
+      }),
+  },
+  (t) => [index("auth_session_user_id_idx").on(t.userId)],
+);
 
 /**
  * The link between a login and an external provider. This is the load-bearing
@@ -84,38 +90,48 @@ export const authSession = pgTable("auth_session", {
  * how a session becomes a Member, and it is why nothing needed to be bolted onto
  * `authUser`.
  */
-export const authAccount = pgTable("auth_account", {
-  id: text("id").primaryKey(),
-  accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
-  userId: text("user_id").notNull().references(() => authUser.id, {
-    onDelete: "cascade",
-  }),
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
-  idToken: text("id_token"),
-  accessTokenExpiresAt: tstz("access_token_expires_at"),
-  refreshTokenExpiresAt: tstz("refresh_token_expires_at"),
-  scope: text("scope"),
-  /** Better Auth's column for password auth, which we do not use. Always null. */
-  password: text("password"),
-  createdAt: tstz("created_at").notNull().defaultNow(),
-  updatedAt: tstz("updated_at").notNull().defaultNow(),
-}, (t) => [
-  index("auth_account_user_id_idx").on(t.userId),
-  // Every authenticated request resolves the member by (providerId, accountId).
-  index("auth_account_provider_account_idx").on(t.providerId, t.accountId),
-]);
+export const authAccount = pgTable(
+  "auth_account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUser.id, {
+        onDelete: "cascade",
+      }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: tstz("access_token_expires_at"),
+    refreshTokenExpiresAt: tstz("refresh_token_expires_at"),
+    scope: text("scope"),
+    /** Better Auth's column for password auth, which we do not use. Always null. */
+    password: text("password"),
+    createdAt: tstz("created_at").notNull().defaultNow(),
+    updatedAt: tstz("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("auth_account_user_id_idx").on(t.userId),
+    // Every authenticated request resolves the member by (providerId, accountId).
+    index("auth_account_provider_account_idx").on(t.providerId, t.accountId),
+  ],
+);
 
 /** Better Auth's generic verification-token table. Unused by a pure OAuth setup, but it expects it to exist. */
-export const authVerification = pgTable("auth_verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: tstz("expires_at").notNull(),
-  createdAt: tstz("created_at").notNull().defaultNow(),
-  updatedAt: tstz("updated_at").notNull().defaultNow(),
-}, (t) => [index("auth_verification_identifier_idx").on(t.identifier)]);
+export const authVerification = pgTable(
+  "auth_verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: tstz("expires_at").notNull(),
+    createdAt: tstz("created_at").notNull().defaultNow(),
+    updatedAt: tstz("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("auth_verification_identifier_idx").on(t.identifier)],
+);
 
 /**
  * What `drizzleAdapter(db, { schema })` is handed.

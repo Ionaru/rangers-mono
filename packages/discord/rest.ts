@@ -122,8 +122,10 @@ const jittered = (ms: number) => Math.round(ms * (0.5 + Math.random() * 0.5));
  * thrown at the caller unchanged.
  */
 function isRetriableThrow(error: unknown): boolean {
-  return error instanceof TypeError ||
-    (error instanceof DOMException && error.name === "TimeoutError");
+  return (
+    error instanceof TypeError ||
+    (error instanceof DOMException && error.name === "TimeoutError")
+  );
 }
 
 /**
@@ -167,11 +169,13 @@ export async function discordFetch(
   }
 
   const method = (init.method ?? "GET").toUpperCase();
-  const replayable = IDEMPOTENT_METHODS.has(method) &&
+  const replayable =
+    IDEMPOTENT_METHODS.has(method) &&
     // A stream body cannot be sent twice, and the second attempt would fail as
     // "body already consumed", which looks nothing like the transport error
     // that caused it.
-    (init.body === undefined || init.body === null ||
+    (init.body === undefined ||
+      init.body === null ||
       typeof init.body === "string");
 
   let rateLimited = 0;
@@ -201,7 +205,8 @@ export async function discordFetch(
       if (init.signal?.aborted) throw error;
       transientTries++;
       if (
-        !replayable || !isRetriableThrow(error) ||
+        !replayable ||
+        !isRetriableThrow(error) ||
         transientTries >= policy.transientAttempts
       ) {
         throw error;
@@ -222,7 +227,7 @@ export async function discordFetch(
       }
       // `retry_after` is seconds, and a float. Read the body rather than the
       // header: the header is per-bucket, the body is what Discord wants us to do.
-      const body = await response.json().catch(() => ({})) as {
+      const body = (await response.json().catch(() => ({}))) as {
         retry_after?: number;
       };
       await sleep(Math.ceil((body.retry_after ?? 1) * 1000) + 100);
@@ -260,7 +265,7 @@ export async function discordJson<T>(
     );
   }
   try {
-    return await response.json() as T;
+    return (await response.json()) as T;
   } catch (cause) {
     /**
      * A 2xx whose body is not the JSON it claims to be: a Cloudflare

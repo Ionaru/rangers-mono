@@ -125,10 +125,7 @@ export async function loadAttendanceOverview(
 
   // The roster needs nothing from the ops, so it does not wait behind them.
   const [operations, roster]: [Operation[], RosterMember[]] = await Promise.all(
-    [
-      listRecentOperations(db, limit),
-      listRosterMembers(db),
-    ],
+    [listRecentOperations(db, limit), listRosterMembers(db)],
   );
   const ids = operations.map((op) => op.id);
 

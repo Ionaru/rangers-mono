@@ -24,11 +24,11 @@ export const RANKS = [
   "Recruit",
   "Reserve",
 ] as const;
-export type Rank = typeof RANKS[number];
+export type Rank = (typeof RANKS)[number];
 
 /** Staff functions a Member is appointed to. Additive. Not qualifications. */
 export const ROLES = ["Recruiter", "Instructor", "Mission maker"] as const;
-export type Role = typeof ROLES[number];
+export type Role = (typeof ROLES)[number];
 
 /** Training qualifications a Member has earned. Additive. */
 export const BADGES = [
@@ -41,7 +41,7 @@ export const BADGES = [
   "Rotary Aviation",
   "Fixed-Wing Aviation",
 ] as const;
-export type Badge = typeof BADGES[number];
+export type Badge = (typeof BADGES)[number];
 
 /**
  * The emoji every badge role wears in Discord, so the eight of them stand out as
@@ -75,8 +75,8 @@ export function badgeDisplayName(badge: Badge): string {
  * is only for the two Phase 0 tools that read Discord role names directly.
  */
 export function badgeFromDisplayName(roleName: string): Badge | undefined {
-  return BADGES.find((badge) =>
-    roleName === badge || roleName === badgeDisplayName(badge)
+  return BADGES.find(
+    (badge) => roleName === badge || roleName === badgeDisplayName(badge),
   );
 }
 

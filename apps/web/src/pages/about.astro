@@ -36,6 +36,7 @@ const joinSteps = [
   ["Your first op", "Slot into a buddy team and deploy."],
 ];
 ---
+
 <PublicLayout
   title="About"
   current="about"
@@ -70,17 +71,15 @@ const joinSteps = [
         </p>
       </div>
       <ol class="steps">
-        {
-          opFlow.map(([t, d], i) => (
-            <li class="step">
-              <span class="step__n">{String(i + 1).padStart(2, "0")}</span>
-              <div>
-                <h3>{t}</h3>
-                <p>{d}</p>
-              </div>
-            </li>
-          ))
-        }
+        {opFlow.map(([t, d], i) => (
+          <li class="step">
+            <span class="step__n">{String(i + 1).padStart(2, "0")}</span>
+            <div>
+              <h3>{t}</h3>
+              <p>{d}</p>
+            </div>
+          </li>
+        ))}
       </ol>
     </div>
   </section>
@@ -128,8 +127,8 @@ const joinSteps = [
         <p class="eyebrow">Kit</p>
         <h2 class="h-section">What you'll run</h2>
         <p>
-          We keep the barrier to entry low: a curated modset, a dedicated server,
-          and tools built in-house so ops run smoothly.
+          We keep the barrier to entry low: a curated modset, a dedicated
+          server, and tools built in-house so ops run smoothly.
         </p>
       </div>
       <dl class="facts">
@@ -166,10 +165,9 @@ const joinSteps = [
         <p>
           No milsim experience needed. Most of us started with none. You'll need
           to be 18 or over, own Arma 3, and bring a working microphone and the
-          readiness to play as part of a team. We ask for roughly one operation a
-          week and a willingness to
-          improve; recruits finish a short Infantry Qualification Course to become
-          full members. We teach the rest.
+          readiness to play as part of a team. We ask for roughly one operation
+          a week and a willingness to improve; recruits finish a short Infantry
+          Qualification Course to become full members. We teach the rest.
         </p>
         <div class="hero__actions">
           <a
@@ -185,72 +183,70 @@ const joinSteps = [
         </div>
       </div>
       <ol class="steps">
-        {
-          joinSteps.map(([t, d], i) => (
-            <li class="step">
-              <span class="step__n">{String(i + 1).padStart(2, "0")}</span>
-              <div>
-                <h3>{t}</h3>
-                <p>{d}</p>
-              </div>
-            </li>
-          ))
-        }
+        {joinSteps.map(([t, d], i) => (
+          <li class="step">
+            <span class="step__n">{String(i + 1).padStart(2, "0")}</span>
+            <div>
+              <h3>{t}</h3>
+              <p>{d}</p>
+            </div>
+          </li>
+        ))}
       </ol>
     </div>
   </section>
 </PublicLayout>
 
 <style>
-.page-head .lede {
-  margin-top: 1.2rem;
-}
-.two-col {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: clamp(2rem, 5vw, 4rem);
-  align-items: start;
-}
-.two-col .section__head {
-  margin-bottom: 0;
-  position: sticky;
-  top: 5.5rem;
-}
-.steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--line);
-}
-.step {
-  display: grid;
-  grid-template-columns: 2.6rem 1fr;
-  gap: 1.1rem;
-  padding: 1.4rem 0;
-  border-bottom: 1px solid var(--line);
-}
-.step__n {
-  font: 600 0.85rem/1.4 var(--mono);
-  color: var(--accent-2);
-  letter-spacing: 0.05em;
-}
-.step h3 {
-  font-size: 1.15rem;
-  margin: 0 0 0.35rem;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.step p {
-  margin: 0;
-  color: var(--muted);
-}
-@media (max-width: 46rem) {
+  .page-head .lede {
+    margin-top: 1.2rem;
+  }
   .two-col {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
   }
   .two-col .section__head {
-    position: static;
+    margin-bottom: 0;
+    position: sticky;
+    top: 5.5rem;
   }
-}
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 1.1rem;
+    padding: 1.4rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .step__n {
+    font: 600 0.85rem/1.4 var(--mono);
+    color: var(--accent-2);
+    letter-spacing: 0.05em;
+  }
+  .step h3 {
+    font-size: 1.15rem;
+    margin: 0 0 0.35rem;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .step p {
+    margin: 0;
+    color: var(--muted);
+  }
+  @media (max-width: 46rem) {
+    .two-col {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .two-col .section__head {
+      position: static;
+    }
+  }
 </style>

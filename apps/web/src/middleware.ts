@@ -120,9 +120,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return gated ? context.redirect("/", 302) : next();
   }
 
-  const { findMemberForAuthUser, getDb, upsertMemberOnLogin } = await import(
-    "@7r/db"
-  );
+  const { findMemberForAuthUser, getDb, upsertMemberOnLogin } =
+    await import("@7r/db");
   const db = getDb();
 
   /**

@@ -13,7 +13,13 @@ test("Reserve sorts last among ranks", () => {
   const sorted = [...Object.entries(RANK_SORT_ORDER)]
     .sort((a, b) => a[1] - b[1])
     .map(([name]) => name);
-  assert.deepStrictEqual(sorted, ["Officer", "NCO", "Member", "Recruit", "Reserve"]);
+  assert.deepStrictEqual(sorted, [
+    "Officer",
+    "NCO",
+    "Member",
+    "Recruit",
+    "Reserve",
+  ]);
 });
 
 test("ranksOf ignores roles and badges", () => {

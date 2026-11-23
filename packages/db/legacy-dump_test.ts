@@ -22,7 +22,10 @@ function throws<E extends Error>(
     threw = true;
   }
   assert.ok(threw, "expected the function to throw");
-  assert.ok(caught instanceof cls, `expected ${cls.name}, got ${String(caught)}`);
+  assert.ok(
+    caught instanceof cls,
+    `expected ${cls.name}, got ${String(caught)}`,
+  );
   if (msg !== undefined) {
     assert.ok(
       (caught as Error).message.includes(msg),

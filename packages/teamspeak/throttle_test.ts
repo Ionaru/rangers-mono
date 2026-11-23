@@ -17,7 +17,10 @@ function throws<E extends Error>(
     threw = true;
   }
   assert.ok(threw, "expected the function to throw");
-  assert.ok(caught instanceof cls, `expected ${cls.name}, got ${String(caught)}`);
+  assert.ok(
+    caught instanceof cls,
+    `expected ${cls.name}, got ${String(caught)}`,
+  );
   if (msg !== undefined) {
     assert.ok(
       (caught as Error).message.includes(msg),
@@ -42,7 +45,10 @@ async function rejects<E extends Error>(
     rejected = true;
   }
   assert.ok(rejected, "expected the promise to reject");
-  assert.ok(caught instanceof cls, `expected ${cls.name}, got ${String(caught)}`);
+  assert.ok(
+    caught instanceof cls,
+    `expected ${cls.name}, got ${String(caught)}`,
+  );
   if (msg !== undefined) {
     assert.ok(
       (caught as Error).message.includes(msg),
@@ -133,10 +139,11 @@ test("commands are serialized: the next one waits for the previous to settle", a
   const throttle = throttleOn(clock);
 
   let releaseFirst!: (value: string) => void;
-  const first = throttle.run(() =>
-    new Promise<string>((resolve) => {
-      releaseFirst = resolve;
-    })
+  const first = throttle.run(
+    () =>
+      new Promise<string>((resolve) => {
+        releaseFirst = resolve;
+      }),
   );
 
   let secondStarted = false;

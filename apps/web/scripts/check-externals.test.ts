@@ -10,7 +10,9 @@ test("bareSpecifiers: default import", () => {
 });
 
 test("bareSpecifiers: named imports, single quotes", () => {
-  assert.deepEqual(bareSpecifiers(`import {a, b} from 'postgres';`), ["postgres"]);
+  assert.deepEqual(bareSpecifiers(`import {a, b} from 'postgres';`), [
+    "postgres",
+  ]);
 });
 
 test("bareSpecifiers: named imports spread over several lines", () => {
@@ -23,7 +25,9 @@ test("bareSpecifiers: namespace import", () => {
 });
 
 test("bareSpecifiers: side-effect import", () => {
-  assert.deepEqual(bareSpecifiers(`import "some-polyfill";`), ["some-polyfill"]);
+  assert.deepEqual(bareSpecifiers(`import "some-polyfill";`), [
+    "some-polyfill",
+  ]);
 });
 
 test("bareSpecifiers: export * from", () => {
@@ -133,8 +137,14 @@ test("missingExternals: walks subdirectories and .js files, sorted and distinct"
   try {
     await mkdir(join(dir, "a", "b"), { recursive: true });
     await writeFile(join(dir, "z.mjs"), `import "@7r-nonexistent/zeta";\n`);
-    await writeFile(join(dir, "a", "b", "deep.js"), `import "@7r-nonexistent/alpha";\nimport "@7r-nonexistent/zeta";\n`);
-    await writeFile(join(dir, "a", "ignored.txt"), `import "@7r-nonexistent/ignored";\n`);
+    await writeFile(
+      join(dir, "a", "b", "deep.js"),
+      `import "@7r-nonexistent/alpha";\nimport "@7r-nonexistent/zeta";\n`,
+    );
+    await writeFile(
+      join(dir, "a", "ignored.txt"),
+      `import "@7r-nonexistent/ignored";\n`,
+    );
     assert.deepEqual(await missingExternals(dir), [
       "@7r-nonexistent/alpha",
       "@7r-nonexistent/zeta",
@@ -147,7 +157,10 @@ test("missingExternals: walks subdirectories and .js files, sorted and distinct"
 test("missingExternals: nothing missing returns an empty list", async () => {
   const dir = await mkdtemp(join(tmpdir(), "check-externals-"));
   try {
-    await writeFile(join(dir, "entry.mjs"), `import "zod";\nimport "node:fs";\n`);
+    await writeFile(
+      join(dir, "entry.mjs"),
+      `import "zod";\nimport "node:fs";\n`,
+    );
     assert.deepEqual(await missingExternals(dir), []);
   } finally {
     await rm(dir, { recursive: true, force: true });

@@ -48,15 +48,21 @@ test("the login URL asks Steam to tell us who they are", () => {
   );
   // identifier_select for both: we do not know the SteamID64 yet, which is the point.
   assert.ok(
-    url.includes("openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select"),
+    url.includes(
+      "openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
+    ),
     `expected ${JSON.stringify(url)} to include ${JSON.stringify("openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select")}`,
   );
   assert.ok(
-    url.includes("openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select"),
+    url.includes(
+      "openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
+    ),
     `expected ${JSON.stringify(url)} to include ${JSON.stringify("openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select")}`,
   );
   assert.ok(
-    url.includes("openid.return_to=https%3A%2F%2F7th-ranger.com%2Flink%2Fsteam%2Fcallback"),
+    url.includes(
+      "openid.return_to=https%3A%2F%2F7th-ranger.com%2Flink%2Fsteam%2Fcallback",
+    ),
     `expected ${JSON.stringify(url)} to include ${JSON.stringify("openid.return_to=https%3A%2F%2F7th-ranger.com%2Flink%2Fsteam%2Fcallback")}`,
   );
   assert.ok(
@@ -119,7 +125,11 @@ test("a claimed_id that is not a Steam identity URL never reaches Steam", async 
       callbackParams({ "openid.claimed_id": claimedId }),
       spy,
     );
-    assert.deepStrictEqual(result.ok, false, `should have refused ${claimedId}`);
+    assert.deepStrictEqual(
+      result.ok,
+      false,
+      `should have refused ${claimedId}`,
+    );
   }
 
   // Not one of them was worth asking Steam about.
@@ -145,10 +155,16 @@ test("the assertion is echoed back verbatim, with only the mode changed", async 
   assert.ok(sent);
   // Steam signed these fields. Drop or reorder one and it says is_valid:false.
   assert.deepStrictEqual(sent.get("openid.mode"), "check_authentication");
-  assert.deepStrictEqual(sent.get("openid.sig"), "aG9uZXN0bHktYS1zaWduYXR1cmU=");
+  assert.deepStrictEqual(
+    sent.get("openid.sig"),
+    "aG9uZXN0bHktYS1zaWduYXR1cmU=",
+  );
   assert.deepStrictEqual(
     sent.get("openid.signed"),
     "signed,op_endpoint,claimed_id,identity,return_to,response_nonce,assoc_handle",
   );
-  assert.deepStrictEqual(sent.get("openid.response_nonce"), "2026-07-11T20:00:00Zabcdef");
+  assert.deepStrictEqual(
+    sent.get("openid.response_nonce"),
+    "2026-07-11T20:00:00Zabcdef",
+  );
 });

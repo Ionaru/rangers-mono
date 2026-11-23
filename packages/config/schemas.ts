@@ -13,20 +13,25 @@ import { LOG_LEVELS } from "@7r/logging";
 
 /** Env vars arrive as strings, so every non-string field converts explicitly. */
 const int = () =>
-  z.string()
-    .regex(/^\d+$/, "must be a whole number")
-    .transform(Number);
+  z.string().regex(/^\d+$/, "must be a whole number").transform(Number);
 
 const bool = () =>
-  z.enum(["true", "false"], { message: 'must be "true" or "false"' })
+  z
+    .enum(["true", "false"], { message: 'must be "true" or "false"' })
     .transform((v) => v === "true");
 
 const time = () =>
   z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "must be a HH:MM time");
 
 const csv = () =>
-  z.string()
-    .transform((v) => v.split(",").map((s) => s.trim()).filter(Boolean))
+  z
+    .string()
+    .transform((v) =>
+      v
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    )
     .pipe(z.array(z.string()).min(1, "must list at least one id"));
 
 /**
@@ -36,10 +41,9 @@ const csv = () =>
  * fill variables with junk to get past it.
  */
 export const databaseSchema = z.object({
-  DATABASE_URL: z.string().regex(
-    /^postgres(ql)?:\/\//,
-    "must be a postgres:// connection string",
-  ),
+  DATABASE_URL: z
+    .string()
+    .regex(/^postgres(ql)?:\/\//, "must be a postgres:// connection string"),
 });
 export type DatabaseConfig = z.infer<typeof databaseSchema>;
 
@@ -209,9 +213,7 @@ export const opsSchema = attendanceCreditSchema.extend({
    * The weekday the event is created and announced, ahead of the Saturday op.
    * 0 = Sunday .. 6 = Saturday; default 3 = Wednesday.
    */
-  OP_ANNOUNCE_WEEKDAY: int()
-    .pipe(z.number().int().min(0).max(6))
-    .default(3),
+  OP_ANNOUNCE_WEEKDAY: int().pipe(z.number().int().min(0).max(6)).default(3),
   /** The local time on that weekday to fire (18:00). */
   OP_ANNOUNCE_TIME: time().default("18:00"),
   /**
@@ -237,9 +239,7 @@ export const opsSchema = attendanceCreditSchema.extend({
    * ping posted, at the same local time (1 = the day before). Only read when
    * OP_PREP_CHANNEL_ID is set.
    */
-  OP_PREP_LEAD_DAYS: int()
-    .pipe(z.number().int().min(0).max(6))
-    .default(1),
+  OP_PREP_LEAD_DAYS: int().pipe(z.number().int().min(0).max(6)).default(1),
   /**
    * Optional path to a UTF-8 file of witty announcement messages, blank-line
    * separated (a message may span multiple lines), one picked at random. Unset (or

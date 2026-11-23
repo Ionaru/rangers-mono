@@ -94,7 +94,7 @@ function create() {
 }
 
 export function getAuth(): ReturnType<typeof create> {
-  return cached ??= create();
+  return (cached ??= create());
 }
 
 /**

@@ -24,9 +24,18 @@ test("collectSchemaKeys classifies required/default/optional and merges", () => 
   };
 
   const known = collectSchemaKeys(fake);
-  assert.deepStrictEqual(known.get("REQUIRED"), { required: true, default: undefined });
-  assert.deepStrictEqual(known.get("DEFAULTED"), { required: false, default: "x" });
-  assert.deepStrictEqual(known.get("OPT"), { required: false, default: undefined });
+  assert.deepStrictEqual(known.get("REQUIRED"), {
+    required: true,
+    default: undefined,
+  });
+  assert.deepStrictEqual(known.get("DEFAULTED"), {
+    required: false,
+    default: "x",
+  });
+  assert.deepStrictEqual(known.get("OPT"), {
+    required: false,
+    default: undefined,
+  });
   assert.deepStrictEqual(known.get("EXTRA"), { required: false, default: 5 });
   assert.deepStrictEqual(known.has("notASchema"), false);
 });
@@ -44,10 +53,12 @@ test("parseEnvKeys: only non-blank keys, skipping comments and blanks", () => {
     "NOEQ", // no '=' -> skipped
   ].join("\n");
 
-  assert.deepStrictEqual(
-    [...parseEnvKeys(text)].sort(),
-    ["DQ", "FOO", "QUOTED", "SPACED"],
-  );
+  assert.deepStrictEqual([...parseEnvKeys(text)].sort(), [
+    "DQ",
+    "FOO",
+    "QUOTED",
+    "SPACED",
+  ]);
 });
 
 test("diffEnv: missing-required, missing-optional, unknown, and X_FILE satisfaction", () => {
@@ -76,8 +87,14 @@ test("collectSchemaKeys reads the real schemas (zod introspection smoke test)", 
   assert.deepStrictEqual(known.get("DATABASE_URL")?.required, true);
 
   // Defaulted keys carry their default.
-  assert.deepStrictEqual(known.get("LOG_LEVEL"), { required: false, default: "info" });
-  assert.deepStrictEqual(known.get("SYNC_DRY_RUN"), { required: false, default: true });
+  assert.deepStrictEqual(known.get("LOG_LEVEL"), {
+    required: false,
+    default: "info",
+  });
+  assert.deepStrictEqual(known.get("SYNC_DRY_RUN"), {
+    required: false,
+    default: true,
+  });
   assert.deepStrictEqual(known.get("OP_EVENT_DRY_RUN"), {
     required: false,
     default: true,
@@ -95,7 +112,10 @@ test("collectSchemaKeys reads the real schemas (zod introspection smoke test)", 
     required: false,
     default: undefined,
   });
-  assert.deepStrictEqual(known.get("OP_PREP_LEAD_DAYS"), { required: false, default: 1 });
+  assert.deepStrictEqual(known.get("OP_PREP_LEAD_DAYS"), {
+    required: false,
+    default: 1,
+  });
 });
 
 test("no config key ends in _FILE (the suffix is reserved for secret files)", () => {
@@ -105,7 +125,7 @@ test("no config key ends in _FILE (the suffix is reserved for secret files)", ()
   // wherever the file is not mounted. This bit production once (OP_ANNOUNCE_TEXT_FILE
   // crashed the web container, which has no assets mount); never again.
   const offenders = [...collectSchemaKeys(schemas).keys()].filter((key) =>
-    key.endsWith("_FILE")
+    key.endsWith("_FILE"),
   );
   assert.deepStrictEqual(offenders, []);
 });

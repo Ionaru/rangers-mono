@@ -17,13 +17,11 @@ import { discordJson } from "./rest.ts";
  * timeout handling the endpoint already has: a PATCH is idempotent, so a
  * transient 5xx is safely replayed.
  */
-export async function editOriginalInteractionResponse(
-  input: {
-    applicationId: string;
-    interactionToken: string;
-    body: { content?: string; components?: unknown[] };
-  },
-): Promise<void> {
+export async function editOriginalInteractionResponse(input: {
+  applicationId: string;
+  interactionToken: string;
+  body: { content?: string; components?: unknown[] };
+}): Promise<void> {
   await discordJson(
     { botToken: null },
     `/webhooks/${input.applicationId}/${input.interactionToken}/messages/@original`,

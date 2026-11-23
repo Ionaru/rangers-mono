@@ -102,5 +102,8 @@ test("a member linked to an identity that is not online gets an empty list, not 
     { memberId: alice, tsUid: "alice-offline=" },
     { memberId: bob, tsUid: "bobs-uid=" },
   ];
-  assert.deepStrictEqual(pickableClients({ online, links, memberId: alice }), []);
+  assert.deepStrictEqual(
+    pickableClients({ online, links, memberId: alice }),
+    [],
+  );
 });

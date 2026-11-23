@@ -105,9 +105,9 @@ export function createGuildScheduledEvent(
 
   if (event.image) {
     // Discord "image data": a base64 data URI (reference#image-data).
-    body.image = `data:${event.image.contentType};base64,${
-      bytesToBase64(event.image.bytes)
-    }`;
+    body.image = `data:${event.image.contentType};base64,${bytesToBase64(
+      event.image.bytes,
+    )}`;
   }
 
   return discordJson<ScheduledEvent>(
@@ -205,8 +205,8 @@ export async function listGuildScheduledEventUsers(
   let after: string | null = null;
 
   while (true) {
-    const query = `limit=${EVENT_USERS_PAGE}` +
-      (after === null ? "" : `&after=${after}`);
+    const query =
+      `limit=${EVENT_USERS_PAGE}` + (after === null ? "" : `&after=${after}`);
     const page: ScheduledEventUser[] = await discordJson<ScheduledEventUser[]>(
       options,
       `/guilds/${guildId}/scheduled-events/${eventId}/users?${query}`,

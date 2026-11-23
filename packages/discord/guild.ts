@@ -73,7 +73,7 @@ export async function getGuildMember(
     );
   }
 
-  return await response.json() as GuildMember;
+  return (await response.json()) as GuildMember;
 }
 
 /**
@@ -84,8 +84,10 @@ export function displayNameOf(
   guildMember: GuildMember,
   fallback: string,
 ): string {
-  return guildMember.nick ??
+  return (
+    guildMember.nick ??
     guildMember.user?.global_name ??
     guildMember.user?.username ??
-    fallback;
+    fallback
+  );
 }

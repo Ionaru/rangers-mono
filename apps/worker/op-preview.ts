@@ -65,9 +65,10 @@ async function main(): Promise<void> {
   console.log(`  title           ${title}`);
   console.log(`  location        ${EVENT_LOCATION}`);
   console.log(
-    `  event window    ${isoInZone(plan.attendanceStart, tz)} -> ${
-      isoInZone(plan.eventEnd, tz)
-    }  (${tz})`,
+    `  event window    ${isoInZone(plan.attendanceStart, tz)} -> ${isoInZone(
+      plan.eventEnd,
+      tz,
+    )}  (${tz})`,
   );
   console.log(
     `  prep at         ${isoInZone(plan.prepareAt, tz)}  (${tz})${
@@ -76,9 +77,7 @@ async function main(): Promise<void> {
         : "  (no OP_PREP_CHANNEL_ID: no prep step, same moment as the announcement)"
     }`,
   );
-  console.log(
-    `  announce at     ${isoInZone(plan.announceAt, tz)}  (${tz})`,
-  );
+  console.log(`  announce at     ${isoInZone(plan.announceAt, tz)}  (${tz})`);
   console.log(
     `  cover image     ${
       coverImageName ?? "(none - no image dir set, or no image chosen)"
@@ -114,12 +113,12 @@ async function main(): Promise<void> {
         : "\n  A live pass RIGHT NOW is between the prep and announce moments: it would " +
           "create the event and ping the mission makers, and hold the @everyone back."
       : "\n  A live pass right now is OUTSIDE the window and would do nothing yet; " +
-        "it acts from the prep moment above until the op starts.",
+          "it acts from the prep moment above until the op starts.",
   );
   console.log(
     ops.OP_EVENT_DRY_RUN
       ? "\n  OP_EVENT_DRY_RUN=true: the worker is only logging, not posting. " +
-        "Flip it to false to go live."
+          "Flip it to false to go live."
       : "\n  OP_EVENT_DRY_RUN=false: the worker is LIVE and will post for real.",
   );
 }

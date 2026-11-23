@@ -56,7 +56,9 @@ function resolveSecretFiles(source: EnvSource): EnvSource {
 
   for (const [key, value] of Object.entries(source)) {
     if (
-      !key.endsWith(SECRET_FILE_SUFFIX) || value === undefined || value === ""
+      !key.endsWith(SECRET_FILE_SUFFIX) ||
+      value === undefined ||
+      value === ""
     ) {
       continue;
     }
@@ -131,9 +133,9 @@ export function memoize<T>(load: () => T): () => T {
  *
  * Anything that is not a ConfigError is a real failure and is rethrown at once.
  */
-export function loadAll<T extends readonly unknown[]>(
-  loaders: { [K in keyof T]: () => T[K] },
-): T {
+export function loadAll<T extends readonly unknown[]>(loaders: {
+  [K in keyof T]: () => T[K];
+}): T {
   const values: unknown[] = [];
   const problems: string[] = [];
 

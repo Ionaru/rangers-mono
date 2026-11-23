@@ -112,12 +112,15 @@ test("no samples reconstructs no sessions", () => {
 });
 
 test("a join and a leave reconstruct one span", () => {
-  const spans = reconstructSessions([
-    sample("2026-07-11T18:00:00Z"),
-    sample("2026-07-11T18:01:30Z", "uid-a"),
-    sample("2026-07-11T18:03:00Z", "uid-a"),
-    sample("2026-07-11T18:04:30Z"),
-  ], WINDOW.end);
+  const spans = reconstructSessions(
+    [
+      sample("2026-07-11T18:00:00Z"),
+      sample("2026-07-11T18:01:30Z", "uid-a"),
+      sample("2026-07-11T18:03:00Z", "uid-a"),
+      sample("2026-07-11T18:04:30Z"),
+    ],
+    WINDOW.end,
+  );
 
   assert.deepStrictEqual(spans.length, 1);
   assert.deepStrictEqual(spans[0].tsUid, "uid-a");
@@ -126,10 +129,13 @@ test("a join and a leave reconstruct one span", () => {
 });
 
 test("present throughout is closed at the window end", () => {
-  const spans = reconstructSessions([
-    sample("2026-07-11T18:00:00Z", "uid-a"),
-    sample("2026-07-11T20:00:00Z", "uid-a"),
-  ], WINDOW.end);
+  const spans = reconstructSessions(
+    [
+      sample("2026-07-11T18:00:00Z", "uid-a"),
+      sample("2026-07-11T20:00:00Z", "uid-a"),
+    ],
+    WINDOW.end,
+  );
 
   assert.deepStrictEqual(spans.length, 1);
   assert.deepStrictEqual(spans[0].joinedAt, WINDOW.start);
@@ -139,12 +145,15 @@ test("present throughout is closed at the window end", () => {
 });
 
 test("a rejoin reconstructs two spans, not one", () => {
-  const spans = reconstructSessions([
-    sample("2026-07-11T18:00:00Z", "uid-a"),
-    sample("2026-07-11T18:30:00Z"),
-    sample("2026-07-11T19:00:00Z", "uid-a"),
-    sample("2026-07-11T19:30:00Z"),
-  ], WINDOW.end);
+  const spans = reconstructSessions(
+    [
+      sample("2026-07-11T18:00:00Z", "uid-a"),
+      sample("2026-07-11T18:30:00Z"),
+      sample("2026-07-11T19:00:00Z", "uid-a"),
+      sample("2026-07-11T19:30:00Z"),
+    ],
+    WINDOW.end,
+  );
 
   assert.deepStrictEqual(spans.length, 2);
   assert.deepStrictEqual(spans[0].leftAt, new Date("2026-07-11T18:30:00Z"));
@@ -154,16 +163,25 @@ test("a rejoin reconstructs two spans, not one", () => {
 });
 
 test("several identities are tracked independently", () => {
-  const spans = reconstructSessions([
-    sample("2026-07-11T18:00:00Z", "uid-a", "uid-b"),
-    sample("2026-07-11T19:00:00Z", "uid-b", "uid-c"),
-    sample("2026-07-11T20:00:00Z", "uid-c"),
-  ], WINDOW.end);
+  const spans = reconstructSessions(
+    [
+      sample("2026-07-11T18:00:00Z", "uid-a", "uid-b"),
+      sample("2026-07-11T19:00:00Z", "uid-b", "uid-c"),
+      sample("2026-07-11T20:00:00Z", "uid-c"),
+    ],
+    WINDOW.end,
+  );
 
   const byUid = new Map(spans.map((s) => [s.tsUid, s]));
   assert.deepStrictEqual(spans.length, 3);
-  assert.deepStrictEqual(byUid.get("uid-a")!.leftAt, new Date("2026-07-11T19:00:00Z"));
-  assert.deepStrictEqual(byUid.get("uid-b")!.leftAt, new Date("2026-07-11T20:00:00Z"));
+  assert.deepStrictEqual(
+    byUid.get("uid-a")!.leftAt,
+    new Date("2026-07-11T19:00:00Z"),
+  );
+  assert.deepStrictEqual(
+    byUid.get("uid-b")!.leftAt,
+    new Date("2026-07-11T20:00:00Z"),
+  );
   assert.deepStrictEqual(byUid.get("uid-c")!.leftAt, WINDOW.end);
 });
 
@@ -183,20 +201,29 @@ test("a rename keeps the span and reports the new nickname", () => {
   assert.deepStrictEqual(second.renamed.length, 1);
   assert.deepStrictEqual(second.renamed[0].tsUid, "uid-a");
   assert.deepStrictEqual(second.renamed[0].tsNickname, "Alice [AFK]");
-  assert.deepStrictEqual(second.renamed[0].joinedAt, new Date("2026-07-11T18:00:00Z"));
+  assert.deepStrictEqual(
+    second.renamed[0].joinedAt,
+    new Date("2026-07-11T18:00:00Z"),
+  );
   // The span survives: a rename is not a leave and a rejoin.
   assert.deepStrictEqual(second.open.length, 1);
-  assert.deepStrictEqual(second.open[0].joinedAt, new Date("2026-07-11T18:00:00Z"));
+  assert.deepStrictEqual(
+    second.open[0].joinedAt,
+    new Date("2026-07-11T18:00:00Z"),
+  );
   assert.deepStrictEqual(second.open[0].tsNickname, "Alice [AFK]");
 });
 
 test("an identity connected twice counts once", () => {
   // Same person, two clients, both in the channel. One span, not two, or their
   // minutes double.
-  const spans = reconstructSessions([
-    sample("2026-07-11T18:00:00Z", "uid-a/Desktop", "uid-a/Laptop"),
-    sample("2026-07-11T19:00:00Z", "uid-a/Desktop"),
-  ], WINDOW.end);
+  const spans = reconstructSessions(
+    [
+      sample("2026-07-11T18:00:00Z", "uid-a/Desktop", "uid-a/Laptop"),
+      sample("2026-07-11T19:00:00Z", "uid-a/Desktop"),
+    ],
+    WINDOW.end,
+  );
 
   assert.deepStrictEqual(spans.length, 1);
   assert.deepStrictEqual(creditedMinutes(spans, WINDOW), 180);
@@ -247,10 +274,13 @@ test("an op with no rows summarises to zeroes", () => {
 });
 
 test("a member's spans are summed into one attendee", () => {
-  const summary = summariseOperation([
-    row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T18:40:00Z"),
-    row("m1", "uid-a", "2026-07-11T19:10:00Z", "2026-07-11T19:35:00Z"),
-  ], WINDOW);
+  const summary = summariseOperation(
+    [
+      row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T18:40:00Z"),
+      row("m1", "uid-a", "2026-07-11T19:10:00Z", "2026-07-11T19:35:00Z"),
+    ],
+    WINDOW,
+  );
 
   assert.deepStrictEqual(summary.attendees.length, 1);
   assert.deepStrictEqual(summary.attendees[0].minutes, 65);
@@ -261,10 +291,13 @@ test("a member's spans are summed into one attendee", () => {
 test("a member who re-linked is grouped by member, not by identity", () => {
   // Two TeamSpeak identities, one person. 40 + 30 = 70, over the threshold;
   // grouped per-identity they would be 40 and 30 and neither would be credited.
-  const summary = summariseOperation([
-    row("m1", "uid-old", "2026-07-11T18:00:00Z", "2026-07-11T18:40:00Z"),
-    row("m1", "uid-new", "2026-07-11T19:00:00Z", "2026-07-11T19:30:00Z"),
-  ], WINDOW);
+  const summary = summariseOperation(
+    [
+      row("m1", "uid-old", "2026-07-11T18:00:00Z", "2026-07-11T18:40:00Z"),
+      row("m1", "uid-new", "2026-07-11T19:00:00Z", "2026-07-11T19:30:00Z"),
+    ],
+    WINDOW,
+  );
 
   assert.deepStrictEqual(summary.attendees.length, 1);
   assert.deepStrictEqual(summary.attendees[0].minutes, 70);
@@ -272,11 +305,14 @@ test("a member who re-linked is grouped by member, not by identity", () => {
 });
 
 test("guests stay separate per identity and are counted", () => {
-  const summary = summariseOperation([
-    row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
-    row(null, "uid-g1", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
-    row(null, "uid-g2", "2026-07-11T18:00:00Z", "2026-07-11T18:20:00Z"),
-  ], WINDOW);
+  const summary = summariseOperation(
+    [
+      row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
+      row(null, "uid-g1", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
+      row(null, "uid-g2", "2026-07-11T18:00:00Z", "2026-07-11T18:20:00Z"),
+    ],
+    WINDOW,
+  );
 
   assert.deepStrictEqual(summary.present, 3);
   assert.deepStrictEqual(summary.guests, 2);
@@ -285,9 +321,10 @@ test("guests stay separate per identity and are counted", () => {
 });
 
 test("presence under the threshold is present but not credited", () => {
-  const summary = summariseOperation([
-    row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T18:30:00Z"),
-  ], WINDOW);
+  const summary = summariseOperation(
+    [row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T18:30:00Z")],
+    WINDOW,
+  );
 
   assert.deepStrictEqual(summary.present, 1);
   assert.deepStrictEqual(summary.credited, 0);
@@ -297,9 +334,10 @@ test("presence under the threshold is present but not credited", () => {
 test("summarising clamps to the window", () => {
   // Arrived an hour early and stayed an hour late; only the 180 in-window
   // minutes count.
-  const summary = summariseOperation([
-    row("m1", "uid-a", "2026-07-11T17:00:00Z", "2026-07-11T22:00:00Z"),
-  ], WINDOW);
+  const summary = summariseOperation(
+    [row("m1", "uid-a", "2026-07-11T17:00:00Z", "2026-07-11T22:00:00Z")],
+    WINDOW,
+  );
 
   assert.deepStrictEqual(summary.attendees[0].minutes, 180);
 });
@@ -313,18 +351,30 @@ test("the credit threshold is honoured when summarising", () => {
 });
 
 test("the RSVP comparison splits into its three buckets", () => {
-  const attendees = summariseOperation([
-    row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
-    row("m3", "uid-c", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
-  ], WINDOW).attendees;
+  const attendees = summariseOperation(
+    [
+      row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
+      row("m3", "uid-c", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
+    ],
+    WINDOW,
+  ).attendees;
 
-  const comparison = compareRsvpToTurnout([
-    { discordId: "d1", memberId: "m1", name: "Came as promised" },
-    { discordId: "d2", memberId: "m2", name: "Said yes, no-showed" },
-  ], attendees);
+  const comparison = compareRsvpToTurnout(
+    [
+      { discordId: "d1", memberId: "m1", name: "Came as promised" },
+      { discordId: "d2", memberId: "m2", name: "Said yes, no-showed" },
+    ],
+    attendees,
+  );
 
-  assert.deepStrictEqual(comparison.respondedAndCame.map((r) => r.memberId), ["m1"]);
-  assert.deepStrictEqual(comparison.respondedAndDidNot.map((r) => r.memberId), ["m2"]);
+  assert.deepStrictEqual(
+    comparison.respondedAndCame.map((r) => r.memberId),
+    ["m1"],
+  );
+  assert.deepStrictEqual(
+    comparison.respondedAndDidNot.map((r) => r.memberId),
+    ["m2"],
+  );
   assert.deepStrictEqual(
     comparison.cameWithoutResponding.map((a) => a.memberId),
     ["m3"],
@@ -332,39 +382,53 @@ test("the RSVP comparison splits into its three buckets", () => {
 });
 
 test("a responder who is not a member cannot be matched", () => {
-  const attendees = summariseOperation([
-    row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
-  ], WINDOW).attendees;
+  const attendees = summariseOperation(
+    [row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z")],
+    WINDOW,
+  ).attendees;
 
-  const comparison = compareRsvpToTurnout([
-    { discordId: "d9", memberId: null, name: "Never logged in" },
-  ], attendees);
+  const comparison = compareRsvpToTurnout(
+    [{ discordId: "d9", memberId: null, name: "Never logged in" }],
+    attendees,
+  );
 
   assert.deepStrictEqual(comparison.respondedAndCame, []);
-  assert.deepStrictEqual(comparison.respondedAndDidNot.map((r) => r.discordId), ["d9"]);
+  assert.deepStrictEqual(
+    comparison.respondedAndDidNot.map((r) => r.discordId),
+    ["d9"],
+  );
 });
 
 test("a guest always counts as having turned up without responding", () => {
-  const attendees = summariseOperation([
-    row(null, "uid-g", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z"),
-  ], WINDOW).attendees;
+  const attendees = summariseOperation(
+    [row(null, "uid-g", "2026-07-11T18:00:00Z", "2026-07-11T21:00:00Z")],
+    WINDOW,
+  ).attendees;
 
   const comparison = compareRsvpToTurnout([], attendees);
-  assert.deepStrictEqual(comparison.cameWithoutResponding.map((a) => a.tsUid), ["uid-g"]);
+  assert.deepStrictEqual(
+    comparison.cameWithoutResponding.map((a) => a.tsUid),
+    ["uid-g"],
+  );
 });
 
 test("turning up at all counts, even under the credit threshold", () => {
   // 20 minutes: not credited, but they did answer their RSVP.
-  const attendees = summariseOperation([
-    row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T18:20:00Z"),
-  ], WINDOW).attendees;
+  const attendees = summariseOperation(
+    [row("m1", "uid-a", "2026-07-11T18:00:00Z", "2026-07-11T18:20:00Z")],
+    WINDOW,
+  ).attendees;
 
-  const comparison = compareRsvpToTurnout([
-    { discordId: "d1", memberId: "m1", name: "Dropped in" },
-  ], attendees);
+  const comparison = compareRsvpToTurnout(
+    [{ discordId: "d1", memberId: "m1", name: "Dropped in" }],
+    attendees,
+  );
 
   assert.strictEqual(attendees[0].credited, false);
-  assert.deepStrictEqual(comparison.respondedAndCame.map((r) => r.memberId), ["m1"]);
+  assert.deepStrictEqual(
+    comparison.respondedAndCame.map((r) => r.memberId),
+    ["m1"],
+  );
   assert.deepStrictEqual(comparison.respondedAndDidNot, []);
 });
 
@@ -398,7 +462,10 @@ test("member activity totals credited and attended ops separately", () => {
   assert.deepStrictEqual(byMember.get("m2")!.attendedOps, 2);
   assert.deepStrictEqual(byMember.get("m2")!.lastAttended, "2026-07-11");
   // Sorted by credited ops, descending.
-  assert.deepStrictEqual(activity.map((a) => a.memberId), ["m1", "m2"]);
+  assert.deepStrictEqual(
+    activity.map((a) => a.memberId),
+    ["m1", "m2"],
+  );
 });
 
 test("member activity ignores guests", () => {

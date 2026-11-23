@@ -50,11 +50,14 @@ test("utcToZonedParts reads summer wall clock (CEST = UTC+2)", () => {
 
 test("utcToZonedParts reads winter wall clock (CET = UTC+1)", () => {
   const p = utcToZonedParts(new Date("2026-01-24T19:00:00Z"), TZ);
-  assert.deepStrictEqual({ h: p.hour, mi: p.minute, wd: p.weekday }, {
-    h: 20,
-    mi: 0,
-    wd: 6,
-  });
+  assert.deepStrictEqual(
+    { h: p.hour, mi: p.minute, wd: p.weekday },
+    {
+      h: 20,
+      mi: 0,
+      wd: 6,
+    },
+  );
 });
 
 test("zonedWallClockToUtc inverts, in both seasons", () => {
@@ -99,7 +102,10 @@ test("planWeeklyOp computes the summer op's instants DST-correct", () => {
   // Thursday of the op week, well inside the window.
   const plan = planWeeklyOp(new Date("2026-07-23T07:00:00Z"), CONFIG);
   assert.deepStrictEqual(plan.saturdayDate, "2026-07-25");
-  assert.deepStrictEqual(plan.attendanceStart, new Date("2026-07-25T18:00:00Z"));
+  assert.deepStrictEqual(
+    plan.attendanceStart,
+    new Date("2026-07-25T18:00:00Z"),
+  );
   assert.deepStrictEqual(plan.attendanceEnd, new Date("2026-07-25T21:00:00Z"));
   assert.deepStrictEqual(plan.eventEnd, new Date("2026-07-25T21:30:00Z"));
   assert.deepStrictEqual(plan.prepareAt, new Date("2026-07-21T16:00:00Z"));
@@ -112,7 +118,10 @@ test("planWeeklyOp computes the winter op's instants DST-correct", () => {
   // Thursday 2026-01-22 09:00 local = 08:00Z.
   const plan = planWeeklyOp(new Date("2026-01-22T08:00:00Z"), CONFIG);
   assert.deepStrictEqual(plan.saturdayDate, "2026-01-24");
-  assert.deepStrictEqual(plan.attendanceStart, new Date("2026-01-24T19:00:00Z"));
+  assert.deepStrictEqual(
+    plan.attendanceStart,
+    new Date("2026-01-24T19:00:00Z"),
+  );
   assert.deepStrictEqual(plan.attendanceEnd, new Date("2026-01-24T22:00:00Z"));
   assert.deepStrictEqual(plan.eventEnd, new Date("2026-01-24T22:30:00Z"));
   assert.deepStrictEqual(plan.prepareAt, new Date("2026-01-20T17:00:00Z"));
@@ -184,7 +193,10 @@ test("planWeeklyOp: the lead is a calendar day at the same wall clock, not 24 ho
   assert.deepStrictEqual(plan.saturdayDate, "2026-04-04");
   assert.deepStrictEqual(plan.prepareAt, new Date("2026-03-28T17:00:00Z"));
   assert.deepStrictEqual(plan.announceAt, new Date("2026-03-29T16:00:00Z"));
-  assert.deepStrictEqual(plan.attendanceStart, new Date("2026-04-04T18:00:00Z"));
+  assert.deepStrictEqual(
+    plan.attendanceStart,
+    new Date("2026-04-04T18:00:00Z"),
+  );
 });
 
 test("planWeeklyOp: Saturday before the op starts still opens (late catch-up)", () => {
@@ -236,14 +248,26 @@ test("opTitle labels the winter op CET", () => {
 // ---------------------------------------------------------------- pickRandom
 
 test("pickRandom returns undefined for an empty list", () => {
-  assert.deepStrictEqual(pickRandom([], () => 0), undefined);
+  assert.deepStrictEqual(
+    pickRandom([], () => 0),
+    undefined,
+  );
 });
 
 test("pickRandom indexes by the injected rng", () => {
   const items = ["a", "b", "c"];
-  assert.deepStrictEqual(pickRandom(items, () => 0), "a");
-  assert.deepStrictEqual(pickRandom(items, () => 0.5), "b");
-  assert.deepStrictEqual(pickRandom(items, () => 0.99), "c");
+  assert.deepStrictEqual(
+    pickRandom(items, () => 0),
+    "a",
+  );
+  assert.deepStrictEqual(
+    pickRandom(items, () => 0.5),
+    "b",
+  );
+  assert.deepStrictEqual(
+    pickRandom(items, () => 0.99),
+    "c",
+  );
 });
 
 // ---------------------------------------------------------------- splitMessages
@@ -257,7 +281,10 @@ test("splitMessages splits on blank lines and keeps single lines intact", () => 
 
 test("splitMessages keeps line breaks WITHIN a message", () => {
   const text = "line one\nline two\n\nsecond message";
-  assert.deepStrictEqual(splitMessages(text), ["line one\nline two", "second message"]);
+  assert.deepStrictEqual(splitMessages(text), [
+    "line one\nline two",
+    "second message",
+  ]);
 });
 
 test("splitMessages collapses runs of blank lines and trims", () => {

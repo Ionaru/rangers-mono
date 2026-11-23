@@ -122,9 +122,10 @@ async function handle(
       log.error("request handler failed", {
         method: req.method,
         url: req.url,
-        error: error instanceof Error
-          ? (error.stack ?? error.message)
-          : String(error),
+        error:
+          error instanceof Error
+            ? (error.stack ?? error.message)
+            : String(error),
       });
       response = new Response("internal error", { status: 500 });
     }

@@ -127,24 +127,29 @@ export function configureLogging(options: LoggingOptions = {}): void {
   const shape = options.shape ?? "json";
   const lowestLevel = LEVELS[options.level ?? "info"];
 
-  const sinks: Record<string, Sink> = shape === "off" ? {} : {
-    out: getConsoleSink(
-      shape === "json" ? { formatter: getJsonLinesFormatter() } : {
-        levelMap: { ...ALL_TO_STDERR },
-        formatter: getTextFormatter({
-          timestamp: "time",
-          // The properties are the point of a structured log line, and the
-          // stock text formatter drops them: it renders only the message.
-          format: ({ level, category, message, record }) =>
-            Object.keys(record.properties).length === 0
-              ? `${level} ${category}: ${message}`
-              : `${level} ${category}: ${message} ${
-                JSON.stringify(record.properties)
-              }`,
-        }),
-      },
-    ),
-  };
+  const sinks: Record<string, Sink> =
+    shape === "off"
+      ? {}
+      : {
+          out: getConsoleSink(
+            shape === "json"
+              ? { formatter: getJsonLinesFormatter() }
+              : {
+                  levelMap: { ...ALL_TO_STDERR },
+                  formatter: getTextFormatter({
+                    timestamp: "time",
+                    // The properties are the point of a structured log line, and the
+                    // stock text formatter drops them: it renders only the message.
+                    format: ({ level, category, message, record }) =>
+                      Object.keys(record.properties).length === 0
+                        ? `${level} ${category}: ${message}`
+                        : `${level} ${category}: ${message} ${JSON.stringify(
+                            record.properties,
+                          )}`,
+                  }),
+                },
+          ),
+        };
 
   const sinkIds = Object.keys(sinks);
 

@@ -18,7 +18,10 @@ async function rejects<E extends Error>(
     rejected = true;
   }
   assert.ok(rejected, "expected the promise to reject");
-  assert.ok(caught instanceof cls, `expected ${cls.name}, got ${String(caught)}`);
+  assert.ok(
+    caught instanceof cls,
+    `expected ${cls.name}, got ${String(caught)}`,
+  );
   if (msg !== undefined) {
     assert.ok(
       (caught as Error).message.includes(msg),
@@ -48,7 +51,9 @@ const OPTIONS = {
 test("a healthy request is made once and returned untouched", async () => {
   const stub = stubFetch([ok({ id: "1" })]);
   try {
-    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1"), { id: "1" });
+    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1"), {
+      id: "1",
+    });
     assert.deepStrictEqual(stub.calls.length, 1);
     assert.deepStrictEqual(
       new Headers(stub.calls[0].init.headers).get("Authorization"),
@@ -62,7 +67,9 @@ test("a healthy request is made once and returned untouched", async () => {
 test("a 500 on a GET is retried, and the recovery is what the caller sees", async () => {
   const stub = stubFetch([status(500), status(500), ok({ id: "1" })]);
   try {
-    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1/members"), { id: "1" });
+    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1/members"), {
+      id: "1",
+    });
     assert.deepStrictEqual(stub.calls.length, 3);
   } finally {
     stub.restore();
@@ -72,7 +79,9 @@ test("a 500 on a GET is retried, and the recovery is what the caller sees", asyn
 test("a Cloudflare 522 is retried: it never reached Discord at all", async () => {
   const stub = stubFetch([status(522, "<!DOCTYPE html>"), ok({ id: "1" })]);
   try {
-    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1/members"), { id: "1" });
+    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1/members"), {
+      id: "1",
+    });
     assert.deepStrictEqual(stub.calls.length, 2);
   } finally {
     stub.restore();
@@ -132,7 +141,9 @@ test("a dropped connection on a GET is retried", async () => {
     ok({ id: "1" }),
   ]);
   try {
-    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1/members"), { id: "1" });
+    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1/members"), {
+      id: "1",
+    });
     assert.deepStrictEqual(stub.calls.length, 2);
   } finally {
     stub.restore();
@@ -142,10 +153,7 @@ test("a dropped connection on a GET is retried", async () => {
 test("a dropped connection that never recovers is thrown, not swallowed", async () => {
   const stub = stubFetch([new TypeError("error sending request")]);
   try {
-    await rejects(
-      () => discordJson(OPTIONS, "/guilds/1/members"),
-      TypeError,
-    );
+    await rejects(() => discordJson(OPTIONS, "/guilds/1/members"), TypeError);
     assert.deepStrictEqual(stub.calls.length, 3);
   } finally {
     stub.restore();
@@ -158,7 +166,9 @@ test("a 429 is honoured and the request is repeated", async () => {
     ok({ id: "1" }),
   ]);
   try {
-    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1/members"), { id: "1" });
+    assert.deepStrictEqual(await discordJson(OPTIONS, "/guilds/1/members"), {
+      id: "1",
+    });
     assert.deepStrictEqual(stub.calls.length, 2);
   } finally {
     stub.restore();

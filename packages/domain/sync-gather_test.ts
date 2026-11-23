@@ -109,10 +109,12 @@ test("a member who holds nothing and should hold nothing costs no lookup", () =>
   );
 
   assert.deepStrictEqual(result.needsProbe, []);
-  assert.deepStrictEqual(result.notLookedUp, [{
-    displayName: "Test Member",
-    tsUid: "uid-1",
-  }]);
+  assert.deepStrictEqual(result.notLookedUp, [
+    {
+      displayName: "Test Member",
+      tsUid: "uid-1",
+    },
+  ]);
   assert.deepStrictEqual(result.inputs[0].currentSgids, []);
 });
 
@@ -154,7 +156,9 @@ test("a group the pass could not read is simply absent, and is not read as empty
   // is neither desired nor current, so the pass plans nothing for it either way.
   const withoutOfficer: AssignableMapping = new Map(
     entries.map(([roleId, a]) =>
-      a.tsSgid === OFFICER_SGID ? [roleId, { ...a, tsSgid: null }] : [roleId, a]
+      a.tsSgid === OFFICER_SGID
+        ? [roleId, { ...a, tsSgid: null }]
+        : [roleId, a],
     ),
   );
 
@@ -192,7 +196,10 @@ test("uids are matched byte for byte, and a real match still joins alongside a n
   );
 
   assert.deepStrictEqual(result.inputs[0].currentSgids, []);
-  assert.deepStrictEqual(result.needsProbe.map((p) => p.memberId), ["m-1"]);
+  assert.deepStrictEqual(
+    result.needsProbe.map((p) => p.memberId),
+    ["m-1"],
+  );
   assert.deepStrictEqual(result.inputs[1].currentSgids, [OFFICER_SGID]);
   assert.deepStrictEqual(result.cldbidByMemberId.get("m-2"), "43");
 });
@@ -307,7 +314,10 @@ test("an empty ts_uid is unreadable, not empty-handed", () => {
 
   assert.deepStrictEqual(result.inputs[0].currentSgids, null);
   assert.deepStrictEqual(result.needsProbe, []);
-  assert.deepStrictEqual(result.unresolved[0].reason, "member has an empty ts_uid");
+  assert.deepStrictEqual(
+    result.unresolved[0].reason,
+    "member has an empty ts_uid",
+  );
 });
 
 test("the gather composes with the plan: a converged member is a no-op", () => {

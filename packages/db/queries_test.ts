@@ -115,13 +115,15 @@ test("the RSVP upsert conflicts on the op-and-person unique index", () => {
   const now = new Date();
   const { sql: rendered } = renderDb
     .insert(operationRsvp)
-    .values([{
-      operationId: "op",
-      discordId: "d1",
-      username: "u",
-      firstSeenAt: now,
-      lastSeenAt: now,
-    }])
+    .values([
+      {
+        operationId: "op",
+        discordId: "d1",
+        username: "u",
+        firstSeenAt: now,
+        lastSeenAt: now,
+      },
+    ])
     .onConflictDoUpdate({
       target: [operationRsvp.operationId, operationRsvp.discordId],
       set: { lastSeenAt: now, username: sql`excluded.username` },
@@ -138,7 +140,10 @@ test("the RSVP upsert conflicts on the op-and-person unique index", () => {
     rendered.includes(`do update set`),
     `expected ${JSON.stringify(rendered)} to include ${JSON.stringify(`do update set`)}`,
   );
-  assert.deepStrictEqual(rendered.includes(`do update set "first_seen_at"`), false);
+  assert.deepStrictEqual(
+    rendered.includes(`do update set "first_seen_at"`),
+    false,
+  );
   assert.deepStrictEqual(
     rendered.slice(rendered.indexOf("do update set")).includes("first_seen_at"),
     false,

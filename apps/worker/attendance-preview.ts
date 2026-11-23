@@ -84,9 +84,10 @@ async function main(): Promise<number> {
 
     console.log(`  op date         ${plan.saturdayDate}`);
     console.log(
-      `  window          ${isoInZone(plan.attendanceStart, tz)} -> ${
-        isoInZone(plan.attendanceEnd, tz)
-      }  (${tz})`,
+      `  window          ${isoInZone(plan.attendanceStart, tz)} -> ${isoInZone(
+        plan.attendanceEnd,
+        tz,
+      )}  (${tz})`,
     );
     console.log(
       `  right now       ${
@@ -105,9 +106,7 @@ async function main(): Promise<number> {
     const channel = await getChannel(teamspeak, cid);
     console.log(`\n  channel id      ${cid}`);
     if (channel === null) {
-      console.log(
-        `  channel name    *** NO CHANNEL WITH THIS ID ***`,
-      );
+      console.log(`  channel name    *** NO CHANNEL WITH THIS ID ***`);
     } else {
       console.log(`  channel name    ${channel.name}`);
     }
@@ -168,7 +167,7 @@ async function main(): Promise<number> {
       console.log(
         `  last sampled    ${
           lastOp.lastSampleAt?.toISOString() ??
-            "NEVER: the sampler has not recorded a single sample for it"
+          "NEVER: the sampler has not recorded a single sample for it"
         }`,
       );
     }

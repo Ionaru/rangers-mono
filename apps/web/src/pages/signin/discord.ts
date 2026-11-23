@@ -26,7 +26,7 @@ export const POST: APIRoute = async ({ request }) => {
     asResponse: true,
   });
 
-  const { url } = await response.json() as { url?: string };
+  const { url } = (await response.json()) as { url?: string };
 
   if (!url) {
     // Better Auth had nothing to redirect to, which means it never built an

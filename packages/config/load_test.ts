@@ -30,7 +30,10 @@ function throws<E extends Error>(
     threw = true;
   }
   assert.ok(threw, "expected the function to throw");
-  assert.ok(caught instanceof cls, `expected ${cls.name}, got ${String(caught)}`);
+  assert.ok(
+    caught instanceof cls,
+    `expected ${cls.name}, got ${String(caught)}`,
+  );
   if (msg !== undefined) {
     assert.ok(
       (caught as Error).message.includes(msg),
@@ -123,7 +126,10 @@ test("loadAll returns every value when the environment is complete", () => {
     () => loadConfig(steamSchema, { STEAM_REALM: "https://7th-ranger.com" }),
   ]);
 
-  assert.deepStrictEqual(database.DATABASE_URL, "postgres://7r:pw@localhost:5432/7r");
+  assert.deepStrictEqual(
+    database.DATABASE_URL,
+    "postgres://7r:pw@localhost:5432/7r",
+  );
   assert.deepStrictEqual(steam.STEAM_REALM, "https://7th-ranger.com");
 });
 
@@ -132,9 +138,11 @@ test("loadAll rethrows anything that is not a config problem", () => {
   // bug, and swallowing it into a list of missing variables would hide it.
   throws(
     () =>
-      loadAll([() => {
-        throw new TypeError("this is a bug, not a missing variable");
-      }]),
+      loadAll([
+        () => {
+          throw new TypeError("this is a bug, not a missing variable");
+        },
+      ]),
     TypeError,
   );
 });
@@ -208,7 +216,10 @@ test("a blank value reads as absent, not as an empty string", () => {
     loadConfig(coreSchema, { DATABASE_URL, LOG_LEVEL: "" }).LOG_LEVEL,
     "info",
   );
-  assert.deepStrictEqual(loadConfig(syncSchema, { SYNC_DRY_RUN: "" }).SYNC_DRY_RUN, true);
+  assert.deepStrictEqual(
+    loadConfig(syncSchema, { SYNC_DRY_RUN: "" }).SYNC_DRY_RUN,
+    true,
+  );
 });
 
 test("an unreadable secret file fails loud rather than silently missing", () => {

@@ -245,8 +245,8 @@ const COMMAND_OPTION_SUB_COMMAND = 1;
 export function subcommandOf(
   data: InteractionData | undefined,
 ): CommandOptionPayload | null {
-  const sub = data?.options?.find((option) =>
-    option.type === COMMAND_OPTION_SUB_COMMAND
+  const sub = data?.options?.find(
+    (option) => option.type === COMMAND_OPTION_SUB_COMMAND,
   );
   return sub ?? null;
 }
@@ -270,9 +270,9 @@ export function optionValue(
 }
 
 /** The values a string select submitted. Empty when there are none. */
-export function selectedValues(
-  interaction: { data?: { values?: string[] } },
-): string[] {
+export function selectedValues(interaction: {
+  data?: { values?: string[] };
+}): string[] {
   return interaction.data?.values ?? [];
 }
 

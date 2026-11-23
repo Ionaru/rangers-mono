@@ -40,10 +40,16 @@ test("generated codes are not all the same", () => {
 });
 
 test("the right code, typed as the member typed it, links", () => {
-  assert.deepStrictEqual(verifyLinkCode(challenge(), "ABC234", NOW), { ok: true });
+  assert.deepStrictEqual(verifyLinkCode(challenge(), "ABC234", NOW), {
+    ok: true,
+  });
   // They will paste spaces, type lowercase, and hyphenate it.
-  assert.deepStrictEqual(verifyLinkCode(challenge(), " abc234 ", NOW), { ok: true });
-  assert.deepStrictEqual(verifyLinkCode(challenge(), "ABC-234", NOW), { ok: true });
+  assert.deepStrictEqual(verifyLinkCode(challenge(), " abc234 ", NOW), {
+    ok: true,
+  });
+  assert.deepStrictEqual(verifyLinkCode(challenge(), "ABC-234", NOW), {
+    ok: true,
+  });
 });
 
 test("a wrong code is refused and counts against the attempt cap", () => {
@@ -53,11 +59,14 @@ test("a wrong code is refused and counts against the attempt cap", () => {
     attemptsLeft: MAX_ATTEMPTS - 1,
   });
 
-  assert.deepStrictEqual(verifyLinkCode(challenge({ attempts: 3 }), "ZZZZZZ", NOW), {
-    ok: false,
-    reason: "wrong_code",
-    attemptsLeft: 1,
-  });
+  assert.deepStrictEqual(
+    verifyLinkCode(challenge({ attempts: 3 }), "ZZZZZZ", NOW),
+    {
+      ok: false,
+      reason: "wrong_code",
+      attemptsLeft: 1,
+    },
+  );
 });
 
 test("the last wrong guess kills the challenge rather than inviting another", () => {
@@ -83,15 +92,20 @@ test("an expired challenge refuses even the correct code", () => {
     reason: "expired",
   });
   // Right up to the boundary it still works.
-  assert.deepStrictEqual(verifyLinkCode(challenge(), "ABC234", LATER), { ok: true });
+  assert.deepStrictEqual(verifyLinkCode(challenge(), "ABC234", LATER), {
+    ok: true,
+  });
 });
 
 test("expiry is exclusive at the boundary", () => {
   const expiresAt = new Date("2026-07-11T20:05:00Z");
-  assert.deepStrictEqual(verifyLinkCode(challenge({ expiresAt }), "ABC234", expiresAt), {
-    ok: false,
-    reason: "expired",
-  });
+  assert.deepStrictEqual(
+    verifyLinkCode(challenge({ expiresAt }), "ABC234", expiresAt),
+    {
+      ok: false,
+      reason: "expired",
+    },
+  );
 });
 
 test("a consumed challenge cannot be replayed", () => {
@@ -113,5 +127,8 @@ test("a dead challenge is not a free oracle for guessing", () => {
 
 test("normalising a code is idempotent", () => {
   assert.deepStrictEqual(normalizeLinkCode(" ab-c2 34 "), "ABC234");
-  assert.deepStrictEqual(normalizeLinkCode(normalizeLinkCode(" ab-c2 34 ")), "ABC234");
+  assert.deepStrictEqual(
+    normalizeLinkCode(normalizeLinkCode(" ab-c2 34 ")),
+    "ABC234",
+  );
 });

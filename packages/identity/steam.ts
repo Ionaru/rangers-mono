@@ -24,9 +24,10 @@ const OPENID_IDENTIFIER_SELECT =
  * who they are" mode: we do not know their SteamID64 yet, which is the entire
  * point of asking.
  */
-export function buildSteamLoginUrl(
-  options: { realm: string; returnTo: string },
-): string {
+export function buildSteamLoginUrl(options: {
+  realm: string;
+  returnTo: string;
+}): string {
   const params = new URLSearchParams({
     "openid.ns": OPENID_NS,
     "openid.mode": "checkid_setup",
@@ -53,8 +54,7 @@ const CLAIMED_ID_PATTERN =
   /^https:\/\/steamcommunity\.com\/openid\/id\/(\d{17})$/;
 
 export type SteamVerification =
-  | { ok: true; steamId: string }
-  | { ok: false; reason: string };
+  { ok: true; steamId: string } | { ok: false; reason: string };
 
 /**
  * Verify what Steam sent back, and extract the SteamID64.

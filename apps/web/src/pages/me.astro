@@ -39,8 +39,8 @@ const ERRORS: Record<string, string> = {
  * anybody to establish it. Say so, and invite them to fix it, rather than
  * quietly presenting it as verified.
  */
-const tsUnverified = member.tsLinkMethod === "legacy_import" ||
-  member.tsLinkMethod === "manual";
+const tsUnverified =
+  member.tsLinkMethod === "legacy_import" || member.tsLinkMethod === "manual";
 const steamUnverified = member.steamLinkMethod === "manual";
 
 /**
@@ -70,106 +70,108 @@ const [attendance, isAdmin] = await Promise.all([
   {error && ERRORS[error] && <p class="notice bad">{ERRORS[error]}</p>}
 
   <div class="panel">
-  <div class="row">
-    <div>
-      <h2>Discord</h2>
-      <p class="muted">
+    <div class="row">
+      <div>
+        <h2>Discord</h2>
+        <p class="muted">
           {member.displayName} &middot; <code>{member.discordId}</code>
         </p>
+      </div>
+      <span class="muted">how you sign in</span>
     </div>
-    <span class="muted">how you sign in</span>
   </div>
-</div>
 
   <div class="panel">
-  <div class="row">
-    <div>
+    <div class="row">
+      <div>
         <h2>TeamSpeak</h2>
-        {member.tsUid
-          ? (
-            <p class="muted">
-              {member.tsNickname ?? "(no nickname)"} &middot;{" "}
-              <code>{member.tsUid}</code>
-              {tsUnverified
-                ? (
-                  <>
-                    <br />
-                    <strong>Not verified.</strong>{" "}
-                    {member.tsLinkMethod === "legacy_import"
-                      ? "Carried over from the old site."
-                      : "Set by an admin."}{" "}
-                    Re-link to prove it is yours.
-                  </>
-                )
-                : <><br />Verified.</>}
-            </p>
-          )
-          : (
-            <p class="muted">
-              Not linked. This is what gives you your TeamSpeak groups, so it is
-              worth doing.
-            </p>
-          )}
-      </div>
-
-    <div>
-      <p class="muted">
-          {member.tsUid
-            ? (
+        {member.tsUid ? (
+          <p class="muted">
+            {member.tsNickname ?? "(no nickname)"} &middot;{" "}
+            <code>{member.tsUid}</code>
+            {tsUnverified ? (
               <>
-                Run <code>/link</code> in Discord to link it again, or{" "}
-                <code>/unlink</code> to remove it.
+                <br />
+                <strong>Not verified.</strong>{" "}
+                {member.tsLinkMethod === "legacy_import"
+                  ? "Carried over from the old site."
+                  : "Set by an admin."}{" "}
+                Re-link to prove it is yours.
               </>
-            )
-            : (
+            ) : (
               <>
-                Run <code>/link</code> in Discord. You need to be connected to
-                TeamSpeak at the time.
+                <br />
+                Verified.
               </>
             )}
-        </p>
-    </div>
-  </div>
-</div>
-
-  <div class="panel">
-  <div class="row">
-    <div>
-        <h2>Steam</h2>
-        {member.steamId
-          ? (
-            <p class="muted">
-              <code>{member.steamId}</code>
-              {steamUnverified
-                ? (
-                  <>
-                    <br />
-                    <strong>Not verified.</strong>{" "}
-                    Carried over from the old site. Re-link to prove it is yours.
-                  </>
-                )
-                : <><br />Verified.</>}
-            </p>
-          )
-          : (
-            <p class="muted">
-              Optional. It lets other members find you in Steam, and nothing else.
-            </p>
-          )}
+          </p>
+        ) : (
+          <p class="muted">
+            Not linked. This is what gives you your TeamSpeak groups, so it is
+            worth doing.
+          </p>
+        )}
       </div>
 
-    <div>
+      <div>
+        <p class="muted">
+          {member.tsUid ? (
+            <>
+              Run <code>/link</code> in Discord to link it again, or{" "}
+              <code>/unlink</code> to remove it.
+            </>
+          ) : (
+            <>
+              Run <code>/link</code> in Discord. You need to be connected to
+              TeamSpeak at the time.
+            </>
+          )}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <h2>Steam</h2>
+        {member.steamId ? (
+          <p class="muted">
+            <code>{member.steamId}</code>
+            {steamUnverified ? (
+              <>
+                <br />
+                <strong>Not verified.</strong> Carried over from the old site.
+                Re-link to prove it is yours.
+              </>
+            ) : (
+              <>
+                <br />
+                Verified.
+              </>
+            )}
+          </p>
+        ) : (
+          <p class="muted">
+            Optional. It lets other members find you in Steam, and nothing else.
+          </p>
+        )}
+      </div>
+
+      <div>
         <a class="button" href="/link/steam">
           {member.steamId ? "Re-link" : "Link Steam"}
         </a>
         {member.steamId && (
           <form class="inline" method="post" action="/unlink/steam">
-            <button type="submit" class="secondary">Unlink</button>
+            <button type="submit" class="secondary">
+              Unlink
+            </button>
           </form>
         )}
       </div>
+    </div>
   </div>
-</div>
 
   <div class="panel">
     <div class="row">
@@ -179,8 +181,8 @@ const [attendance, isAdmin] = await Promise.all([
           {attendance.consideredOps === 0
             ? "No ops recorded yet."
             : `The last ${attendance.consideredOps} ${
-              attendance.consideredOps === 1 ? "op" : "ops"
-            }.`}{" "}
+                attendance.consideredOps === 1 ? "op" : "ops"
+              }.`}{" "}
           You are credited for an op with at least {attendance.minMinutes}{" "}
           minutes in the Operations channel between 20:00 and 23:00. It is a
           statistic: nothing acts on it.
@@ -199,49 +201,54 @@ const [attendance, isAdmin] = await Promise.all([
     {!member.tsUid && (
       <p class="notice bad">
         You have not linked TeamSpeak, so nothing can be recorded against you.
-        Run <code>/link</code>{" "}
-        in Discord. Any evenings you already attended are credited to you
-        automatically the moment you do.
+        Run <code>/link</code> in Discord. Any evenings you already attended are
+        credited to you automatically the moment you do.
       </p>
     )}
 
-    {attendance.operations.length === 0
-      ? <p class="muted">No ops have been recorded yet.</p>
-      : (
-        <div class="scroll">
-          <table>
-            <thead>
+    {attendance.operations.length === 0 ? (
+      <p class="muted">No ops have been recorded yet.</p>
+    ) : (
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Op</th>
+              <th class="num">Minutes</th>
+              <th>Credited</th>
+              <th>Said you were coming</th>
+            </tr>
+          </thead>
+          <tbody>
+            {attendance.operations.map((op) => (
               <tr>
-                <th>Op</th>
-                <th class="num">Minutes</th>
-                <th>Credited</th>
-                <th>Said you were coming</th>
+                <td>
+                  {op.date}
+                  {!op.sampled && (
+                    <>
+                      {" "}
+                      <span
+                        class="guest"
+                        title="No samples were recorded for this op, so nobody's attendance was measured."
+                      >
+                        not sampled
+                      </span>
+                    </>
+                  )}
+                </td>
+                <td class="num">{Math.round(op.minutes)}</td>
+                <td class={op.credited ? "yes" : "no"}>
+                  {op.credited ? "yes" : "no"}
+                </td>
+                <td class={op.responded ? "yes" : "no"}>
+                  {op.responded ? "yes" : "no"}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {attendance.operations.map((op) => (
-                <tr>
-                  <td>
-                    {op.date}
-                    {!op.sampled && (
-                      <>
-                        {" "}<span class="guest" title="No samples were recorded for this op, so nobody's attendance was measured.">not sampled</span>
-                      </>
-                    )}
-                  </td>
-                  <td class="num">{Math.round(op.minutes)}</td>
-                  <td class={op.credited ? "yes" : "no"}>
-                    {op.credited ? "yes" : "no"}
-                  </td>
-                  <td class={op.responded ? "yes" : "no"}>
-                    {op.responded ? "yes" : "no"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
   </div>
 
   {isAdmin && (
@@ -251,6 +258,8 @@ const [attendance, isAdmin] = await Promise.all([
   )}
 
   <form method="post" action="/signout">
-  <button type="submit" class="secondary">Sign out</button>
-</form>
+    <button type="submit" class="secondary">
+      Sign out
+    </button>
+  </form>
 </Base>

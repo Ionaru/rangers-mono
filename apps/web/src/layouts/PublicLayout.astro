@@ -22,12 +22,12 @@ interface Props {
 
 const {
   title,
-  description =
-    "The 7th Ranger Group: a European Arma 3 milsim unit. One planned operation every Saturday, run properly and played for fun.",
+  description = "The 7th Ranger Group: a European Arma 3 milsim unit. One planned operation every Saturday, run properly and played for fun.",
   current,
   member = null,
 } = Astro.props;
 ---
+
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -42,7 +42,9 @@ const {
     <meta name="theme-color" content="#0b0e0d" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
     <header class="site-header">
       <SiteNav variant="bar" current={current} member={member} />
     </header>
@@ -61,7 +63,9 @@ const {
           <a href="/handbook/">Handbook</a>
           <a href="/briefing-generator">Briefing generator</a>
           <a href="/about">About</a>
-          <a href="https://discord.gg/vbFMQXe" rel="noopener">Discord</a>
+          <a href="https://discord.gg/vbFMQXe" rel="noopener">
+            Discord
+          </a>
           <a href="ts3server://ts.7th-ranger.com">TeamSpeak</a>
           <a href="/me">Members</a>
         </nav>

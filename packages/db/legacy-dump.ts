@@ -46,15 +46,16 @@ export function parseInsertRows(sql: string, table: string): DumpRow[] {
         // A MySQL escape. Consume both characters, and translate the ones that
         // actually mean something other than themselves.
         const next = sql[i + 1];
-        field += next === "n"
-          ? "\n"
-          : next === "r"
-          ? "\r"
-          : next === "t"
-          ? "\t"
-          : next === "0"
-          ? "\0"
-          : next;
+        field +=
+          next === "n"
+            ? "\n"
+            : next === "r"
+              ? "\r"
+              : next === "t"
+                ? "\t"
+                : next === "0"
+                  ? "\0"
+                  : next;
         i++;
         continue;
       }

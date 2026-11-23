@@ -28,10 +28,10 @@ function bytesToHex(bytes: Uint8Array): string {
 
 /** A key pair plus the hex public key Discord would hand us. */
 async function keypair() {
-  const pair = await crypto.subtle.generateKey({ name: "Ed25519" }, true, [
+  const pair = (await crypto.subtle.generateKey({ name: "Ed25519" }, true, [
     "sign",
     "verify",
-  ]) as CryptoKeyPair;
+  ])) as CryptoKeyPair;
   const raw = new Uint8Array(
     await crypto.subtle.exportKey("raw", pair.publicKey),
   );
@@ -78,7 +78,8 @@ test("a tampered body is rejected", async () => {
       signatureHex,
       timestamp: TIMESTAMP,
       body: new TextEncoder().encode(BODY + " "),
-    }), false,
+    }),
+    false,
   );
 });
 
@@ -92,7 +93,8 @@ test("a tampered timestamp is rejected", async () => {
       signatureHex,
       timestamp: "1700000001",
       body: new TextEncoder().encode(BODY),
-    }), false,
+    }),
+    false,
   );
 });
 
@@ -107,7 +109,8 @@ test("a signature from a different key is rejected", async () => {
       signatureHex,
       timestamp: TIMESTAMP,
       body: new TextEncoder().encode(BODY),
-    }), false,
+    }),
+    false,
   );
 });
 
@@ -119,7 +122,8 @@ test("a non-hex signature is rejected, not thrown", async () => {
       signatureHex: "not-hex-at-all",
       timestamp: TIMESTAMP,
       body: new TextEncoder().encode(BODY),
-    }), false,
+    }),
+    false,
   );
 });
 
@@ -131,7 +135,8 @@ test("a signature of the wrong length is rejected", async () => {
       signatureHex: "abcd",
       timestamp: TIMESTAMP,
       body: new TextEncoder().encode(BODY),
-    }), false,
+    }),
+    false,
   );
 });
 
@@ -145,7 +150,8 @@ test("a malformed public key is rejected, not thrown", async () => {
         signatureHex,
         timestamp: TIMESTAMP,
         body: new TextEncoder().encode(BODY),
-      }), false,
+      }),
+      false,
     );
   }
 });
@@ -161,7 +167,8 @@ test("an empty timestamp is rejected", async () => {
       signatureHex,
       timestamp: "",
       body: new TextEncoder().encode(BODY),
-    }), false,
+    }),
+    false,
   );
 });
 
@@ -188,10 +195,7 @@ test("parseCustomId returns null for something unroutable", () => {
 });
 
 test("selectedValues reads a string-select submission", () => {
-  assert.deepStrictEqual(
-    selectedValues({ data: { values: ["42"] } }),
-    ["42"],
-  );
+  assert.deepStrictEqual(selectedValues({ data: { values: ["42"] } }), ["42"]);
   assert.deepStrictEqual(selectedValues({ data: {} }), []);
   assert.deepStrictEqual(selectedValues({}), []);
 });
@@ -225,8 +229,7 @@ test("extractModalValues tolerates a flat component and missing data", () => {
   assert.deepStrictEqual(
     extractModalValues({
       components: [{ type: 4, custom_id: "code", value: "FLAT12" }],
-    })
-      .get("code"),
+    }).get("code"),
     "FLAT12",
   );
   assert.deepStrictEqual(extractModalValues({}).size, 0);

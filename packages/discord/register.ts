@@ -106,17 +106,17 @@ async function main(): Promise<number> {
     .map((c) => `/${c.name}`);
   if (droppedFromGuild.length > 0) {
     console.log(
-      `\n  the bulk PUT DROPS from the guild scope: ${
-        droppedFromGuild.join(", ")
-      }`,
+      `\n  the bulk PUT DROPS from the guild scope: ${droppedFromGuild.join(
+        ", ",
+      )}`,
     );
   }
 
   if (globalNow.length > 0) {
     console.log(
-      `\nNOTE: ${globalNow.length} GLOBAL command(s) exist: ${
-        names(globalNow)
-      }.` +
+      `\nNOTE: ${globalNow.length} GLOBAL command(s) exist: ${names(
+        globalNow,
+      )}.` +
         "\n  A guild PUT cannot touch them. If a stale /loa is global, re-run with" +
         "\n  --clear-global to wipe the global scope as well.",
     );
@@ -140,9 +140,9 @@ async function main(): Promise<number> {
 
   await putGuild(auth, appId, guildId, ALL_COMMANDS);
   console.log(
-    `\nRegistered ${ALL_COMMANDS.length} guild command(s): ${
-      names(ALL_COMMANDS)
-    }.`,
+    `\nRegistered ${ALL_COMMANDS.length} guild command(s): ${names(
+      ALL_COMMANDS,
+    )}.`,
   );
 
   if (clearGlobal) {

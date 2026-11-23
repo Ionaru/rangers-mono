@@ -52,7 +52,10 @@ function input(overrides: Partial<MemberSyncInput>): MemberSyncInput {
 }
 
 test("ownedSgids collects non-null sgids and nothing else", () => {
-  assert.deepStrictEqual([...owned].sort((a, b) => a - b), [64, 68, 71, 76]);
+  assert.deepStrictEqual(
+    [...owned].sort((a, b) => a - b),
+    [64, 68, 71, 76],
+  );
 });
 
 test("ownedSgids dedupes a sgid mapped twice", () => {
@@ -195,7 +198,8 @@ test("blast-radius: removals from more members than the cap halts the pass", () 
         tsUid: `uid-${i}`,
         discordRoleIds: [],
         currentSgids: [76],
-      })),
+      }),
+    ),
     input({
       memberId: "m-adder",
       tsUid: "uid-adder",
@@ -218,7 +222,8 @@ test("blast-radius: exactly the cap does not halt", () => {
       tsUid: `uid-${i}`,
       discordRoleIds: [],
       currentSgids: [76],
-    }));
+    }),
+  );
   const pass = planSyncPass(inputs, mapping, { maxRemovals: 5 });
   assert.strictEqual(pass.halted, false);
   assert.deepStrictEqual(pass.removalMemberCount, 5);
@@ -227,9 +232,7 @@ test("blast-radius: exactly the cap does not halt", () => {
 test("blast-radius counts members, not groups", () => {
   // One member losing three groups is one member: a single demotion must not
   // read as a mass removal.
-  const inputs = [
-    input({ discordRoleIds: [], currentSgids: [71, 64, 76] }),
-  ];
+  const inputs = [input({ discordRoleIds: [], currentSgids: [71, 64, 76] })];
   const pass = planSyncPass(inputs, mapping, { maxRemovals: 2 });
   assert.strictEqual(pass.halted, false);
   assert.deepStrictEqual(pass.removalMemberCount, 1);
@@ -242,7 +245,8 @@ test("additions alone never trip the guard", () => {
       tsUid: `uid-${i}`,
       discordRoleIds: [MEDIC],
       currentSgids: [],
-    }));
+    }),
+  );
   const pass = planSyncPass(inputs, mapping, { maxRemovals: 5 });
   assert.strictEqual(pass.halted, false);
   assert.deepStrictEqual(pass.changed.length, 50);
@@ -388,9 +392,10 @@ test("desiredSgids resolves mapped roles and ignores everything else", () => {
     [71, 76],
   );
   // Not ours, and mapped-but-not-mirrored: neither contributes.
-  assert.deepStrictEqual([
-    ...desiredSgids([UNMAPPED_ROLE, MISSION_MAKER], mapping, owned),
-  ], []);
+  assert.deepStrictEqual(
+    [...desiredSgids([UNMAPPED_ROLE, MISSION_MAKER], mapping, owned)],
+    [],
+  );
   assert.deepStrictEqual([...desiredSgids([], mapping, owned)], []);
 });
 
@@ -400,11 +405,14 @@ test("desiredSgids is clamped to owned, so a group this pass will not touch is n
   // it would be added back on a pass that cannot see who holds it.
   const withoutOfficer: AssignableMapping = new Map(
     entries.map(([roleId, a]) =>
-      a.tsSgid === 71 ? [roleId, { ...a, tsSgid: null }] : [roleId, a]
+      a.tsSgid === 71 ? [roleId, { ...a, tsSgid: null }] : [roleId, a],
     ),
   );
   const narrowed = ownedSgids(withoutOfficer);
-  assert.deepStrictEqual([...desiredSgids([OFFICER], withoutOfficer, narrowed)], []);
+  assert.deepStrictEqual(
+    [...desiredSgids([OFFICER], withoutOfficer, narrowed)],
+    [],
+  );
 });
 
 test("a member already holding exactly what Discord grants keeps it", () => {

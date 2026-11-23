@@ -97,19 +97,21 @@ async function main(): Promise<number> {
 
   console.log("proposed assignable mapping (sgids resolved live, by name):\n");
   console.log(
-    `  ${"kind".padEnd(6)} ${"name".padEnd(20)} ${"discord role".padEnd(20)} ${
-      "ts group".padEnd(20)
-    } sgid`,
+    `  ${"kind".padEnd(6)} ${"name".padEnd(20)} ${"discord role".padEnd(20)} ${"ts group".padEnd(
+      20,
+    )} sgid`,
   );
   for (const { entry, tsSgid } of resolved) {
     const existing = currentByRoleId.get(entry.discordRoleId);
     const changed = existing !== undefined && existing.tsSgid !== tsSgid;
     console.log(
-      `  ${entry.kind.padEnd(6)} ${entry.name.padEnd(20)} ${
-        entry.discordRoleId.padEnd(20)
-      } ${(entry.tsGroupName ?? "(none)").padEnd(20)} ${
+      `  ${entry.kind.padEnd(6)} ${entry.name.padEnd(20)} ${entry.discordRoleId.padEnd(
+        20,
+      )} ${(entry.tsGroupName ?? "(none)").padEnd(20)} ${
         tsSgid === null
-          ? (entry.tsGroupName === null ? "-" : "NO MATCH")
+          ? entry.tsGroupName === null
+            ? "-"
+            : "NO MATCH"
           : tsSgid
       }${changed ? `   (db has ${existing.tsSgid ?? "null"})` : ""}`,
     );

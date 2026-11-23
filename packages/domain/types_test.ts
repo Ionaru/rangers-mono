@@ -7,7 +7,10 @@ test("every badge has an emoji and a display name that round-trips", () => {
     const display = badgeDisplayName(badge);
     // The emoji is a prefix, the canonical name survives intact at the end.
     assert.ok(display.endsWith(badge), `${display} should end with ${badge}`);
-    assert.ok(display.length > badge.length, `${display} should carry an emoji`);
+    assert.ok(
+      display.length > badge.length,
+      `${display} should carry an emoji`,
+    );
     // And it maps back.
     assert.deepStrictEqual(badgeFromDisplayName(display), badge);
   }
