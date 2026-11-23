@@ -3,63 +3,74 @@
 #
 #   docker build -f apps/web/Dockerfile -t 7r-web .
 
-FROM denoland/deno:2.9.2 AS build
+FROM node:26.13.1-trixie-slim AS build
+
+# Node 25 and later no longer bundle corepack, so pnpm comes from npm. The
+# version is pinned here, in the root package.json `packageManager` and in
+# cd.yaml, and CI fails if they disagree.
+RUN npm install -g pnpm@12.23.0
 WORKDIR /app
 
-# The whole workspace, because `deno ci` resolves every member listed in the
-# root deno.json and will refuse to run if one is missing.
-COPY deno.json deno.lock ./
+# The workspace members @7r/web depends on, plus the web app itself. The other
+# apps are not copied: the frozen lockfile still lists apps/worker, so its
+# manifest has to be there, and only its manifest.
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/ ./packages/
-COPY apps/ ./apps/
+COPY apps/web/ ./apps/web/
+COPY apps/worker/package.json ./apps/worker/package.json
 
-# `deno ci` installs strictly from deno.lock and fails if the lockfile is stale.
+# Installs strictly from pnpm-lock.yaml and fails if it is stale, filtered to the
+# web app and what it depends on (the build needs the dev dependencies too).
 #
-# Never add `--allow-scripts` / `deno approve-scripts` here. From Phase 4 the
-# TeamSpeak client pulls ssh2 -> cpu-features, whose ignored build script wants
-# python and node-gyp. The "ignored build scripts" warning is correct behaviour:
-# the library runs pure JS with zero native addons. Silencing it means putting a
-# native toolchain in the image to build an optional addon we do not want.
-RUN deno ci
+# The store lives in a BuildKit cache mount, so it survives between builds and
+# stays out of the image.
+#
+# pnpm blocks dependency build scripts unless pnpm-workspace.yaml allows them.
+# `cpu-features` (ssh2's optional native addon, pulled in via the TeamSpeak
+# client) is deliberately not allowed: the library runs pure JS without it.
+# Never approve it, and do not add a native toolchain to build it.
+RUN --mount=type=cache,target=/pnpm-store \
+    pnpm install --frozen-lockfile --filter @7r/web... --store-dir /pnpm-store
 
-# Build with Deno, never with Node. `npx astro build` emits an artifact that
-# dies at boot on the Deno runtime ("Import 'unstorage' not a dependency")
-# unless ~276 MB of node_modules ships into the runtime image. There is no Node
-# builder stage, and adding one would manufacture that failure, not insure
-# against it.
-RUN cd apps/web && deno run -A npm:astro build
+RUN pnpm --filter @7r/web build
 
-FROM denoland/deno:2.9.2 AS runtime
+# A production-only node_modules for the runtime stage. Astro leaves a few
+# packages external in dist/server (better-auth, drizzle-orm and zod), and Node
+# resolves those from node_modules at runtime. `deploy` also copies the @7r/*
+# packages into that node_modules, which is harmless here and nowhere else: the
+# build inlines them (vite.ssr.noExternal in astro.config.mjs), so nothing under
+# node_modules is ever loaded as raw `.ts`. The worker image cannot do this.
+RUN --mount=type=cache,target=/pnpm-store \
+    pnpm --filter @7r/web deploy --prod --store-dir /pnpm-store /out
 
-# WORKDIR creates /app owned by root, and `deno cache` writes a lockfile into
-# it. Own the directory before anything is written to it.
-RUN mkdir -p /app && chown deno:deno /app
+FROM node:26.13.1-trixie-slim AS runtime
+
+# WORKDIR creates /app owned by root; own it before anything is copied in.
+RUN mkdir -p /app && chown node:node /app
 WORKDIR /app
 
-# The runtime config is NOT the root deno.json: that one declares workspace
-# members which do not exist in this stage, and its nodeModulesDir:"auto" would
-# re-materialise node_modules here. This one pins nodeModulesDir:"none" and maps
-# exactly the bare specifiers Astro left external in entry.mjs (drizzle-orm,
-# postgres, zod). Everything else, including @7r/db and @7r/config, was bundled
-# into dist by Rolldown.
-#
-# --chown, and `USER deno` before the cache step: populate DENO_DIR as the user
-# that will run the process. Cache as root and the cache is root-owned, so Deno
-# silently re-fetches everything at container start, which is exactly the cold
-# boot this step exists to prevent.
-COPY --chown=deno:deno apps/web/deno.prod.json ./deno.json
-COPY --from=build --chown=deno:deno /app/apps/web/dist ./dist
-USER deno
+# No pnpm here: nothing at runtime needs it. node_modules holds relative
+# symlinks into its own .pnpm directory, which COPY preserves.
+COPY --from=build --chown=node:node /out/node_modules ./node_modules
+COPY --from=build --chown=node:node /out/package.json ./package.json
+COPY --from=build --chown=node:node /app/apps/web/dist ./dist
+COPY --from=build --chown=node:node /app/apps/web/scripts/check-externals.ts ./scripts/check-externals.ts
+USER node
 
-# Cache the server entry at image-build time. Without this a cold start pulls
-# ~119 files from jsr.io, which means a jsr.io outage takes the container down
-# on any restart (ADR 0006). It also fails loudly right here if deno.json is
-# missing a specifier that entry.mjs needs.
-RUN deno cache dist/server/entry.mjs
+# Fail the build, not the first request, if the bundle imports a package this
+# image does not have. Astro decides what stays external, so a new dependency can
+# turn into a bare import in dist/server without anyone touching this file; it
+# would otherwise only fail when the route that loads it is first hit. This
+# replaces `deno cache` failing on a missing specifier.
+RUN node scripts/check-externals.ts dist/server
 
-# No node_modules in this stage, by design. Verify with:
-#   docker run --rm --entrypoint sh 7r-web -c 'ls -a /app'
+# The standalone adapter reads HOST and PORT at runtime. HOST is not optional:
+# without it the server binds loopback only, and neither the published port nor
+# the healthcheck can reach it.
+ENV HOST=0.0.0.0 PORT=8085 NODE_ENV=production
+
 EXPOSE 8085
 
-# --cached-only enforces what the `deno cache` above bought: every module comes
-# from the image, and a jsr.io or npm outage cannot stop this container booting.
-CMD ["run", "--cached-only", "--allow-net", "--allow-read", "--allow-env", "--allow-sys", "dist/server/entry.mjs"]
+# Node needs no permission flags, and every module is already on disk, so there
+# is no registry to reach at boot.
+CMD ["node", "dist/server/entry.mjs"]

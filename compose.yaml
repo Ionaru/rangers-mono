@@ -30,8 +30,8 @@ x-healthcheck-timing: &healthcheck-timing
   retries: 3
   start_period: 10s
 
-# One image, used twice: by the worker, and by the one-shot migrator, which is
-# that same image with the command overridden.
+# One image, used three times: by the worker, and by the one-shot migrator and
+# the legacy importer, which are that same image with the command overridden.
 #
 # Both defaults below are load-bearing, and both used to be wrong.
 #
@@ -52,6 +52,11 @@ x-worker-image: &worker-image
   build:
     context: .
     dockerfile: apps/worker/Dockerfile
+  # The node image runs no init, so Node would be PID 1: it does not reap
+  # orphaned child processes, and a signal with no handler installed is ignored
+  # rather than acted on, so `docker stop` can sit out its whole grace period
+  # before killing the container. This makes Docker inject its tini instead.
+  init: true
 
 services:
   postgres:
@@ -72,8 +77,8 @@ services:
       # failure, a bad migration, not against losing the disk. The dumps are
       # member PII, which is exactly why ADR 0011 refused to put them in git.
       - ./backups:/backups
-    # Loopback only. This exists so the local dev tasks (`deno task migrate`,
-    # `deno task web:dev`) can reach the database from outside the network; it
+    # Loopback only. This exists so the local dev tasks (`pnpm migrate`,
+    # `pnpm web:dev`) can reach the database from outside the network; it
     # is not an entry point for anything else.
     ports:
       - "127.0.0.1:5432:5432"
@@ -93,10 +98,12 @@ services:
       dockerfile: apps/web/Dockerfile
     restart: unless-stopped
     logging: *logging
+    # As the worker image: Node is PID 1 otherwise (see x-worker-image).
+    init: true
     environment:
       # The DB password and URL stay file-based secrets; every other secret
       # comes from .env below (ADR 0014). The two meet here: this .env also
-      # carries a localhost DATABASE_URL for the host-side `deno task` flows,
+      # carries a localhost DATABASE_URL for the host-side `pnpm` flows,
       # and DATABASE_URL_FILE deliberately beats it (packages/config/load.ts),
       # so the container cannot end up dialling localhost:5432 inside itself.
       DATABASE_URL_FILE: /run/secrets/database_url
@@ -109,21 +116,24 @@ services:
       - .env
     secrets:
       - database_url
-    # 8085 is baked into the build by the Deno adapter, so it is a constant here,
-    # not a knob. Bound to loopback: the host's existing nginx fronts it.
+    # The server listens on 8085 inside the container (the image sets HOST=0.0.0.0
+    # and PORT=8085), so it is a constant here, not a knob. Bound to loopback: the
+    # host's existing nginx fronts it.
     ports:
       - "127.0.0.1:8085:8085"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      # `deno eval` runs with full permissions; passing --allow-net to it is an
-      # error ("unexpected argument"), which fails the check while the app is fine.
+      # 127.0.0.1, not localhost: the server binds IPv4 only, and Node may try
+      # ::1 first. The fetch REJECTS when nothing answers and RESOLVES with a
+      # non-2xx status when the app is up but unhealthy; both must exit non-zero,
+      # so each is handled explicitly.
       test:
         - CMD
-        - deno
-        - eval
-        - "const r = await fetch('http://localhost:8085/healthz'); if (!r.ok) Deno.exit(1);"
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8085/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
       <<: *healthcheck-timing
 
   worker:
@@ -159,11 +169,12 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
+      # As web: 127.0.0.1, and both a failed fetch and a non-2xx status fail it.
       test:
         - CMD
-        - deno
-        - eval
-        - "const r = await fetch('http://localhost:8080/healthz'); if (!r.ok) Deno.exit(1);"
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
       <<: *healthcheck-timing
 
   # Migrations are a one-shot, never a boot step (ADR 0008: the legacy coupled
@@ -186,12 +197,7 @@ services:
     secrets:
       - database_url
     command:
-      - run
-      - --cached-only
-      - --allow-net
-      - --allow-env
-      - --allow-read
-      - --allow-sys
+      - node
       - packages/db/migrate.ts
     depends_on:
       postgres:
@@ -227,23 +233,13 @@ services:
     # `entrypoint`, not `command`, and that is the difference between being able
     # to dry-run and not. `docker compose run <service> <args>` REPLACES the
     # service's `command`, so with the script in `command:` a trailing --dry-run
-    # would blow the script away and run `deno --dry-run`. Arguments appended to
-    # a `run` are handed to the entrypoint instead, so putting the whole
-    # invocation here makes `... run --rm import --dry-run` mean what it says.
-    #
-    # The image's own entrypoint is repeated verbatim in front of it (/tini --
-    # docker-entrypoint.sh), because overriding the entrypoint drops it: tini is
-    # what reaps the process and forwards signals.
+    # would blow the script away and run `--dry-run` as the command. Arguments
+    # appended to a `run` are handed to the entrypoint instead, so putting the
+    # whole invocation here makes `... run --rm import --dry-run` mean what it
+    # says. (`init: true` on the worker image anchor still applies: it is what
+    # reaps the process and forwards signals, now that the entrypoint is ours.)
     entrypoint:
-      - /tini
-      - --
-      - docker-entrypoint.sh
-      - run
-      - --cached-only
-      - --allow-net
-      - --allow-env
-      - --allow-read
-      - --allow-sys
+      - node
       - packages/db/import-legacy.ts
     depends_on:
       postgres:

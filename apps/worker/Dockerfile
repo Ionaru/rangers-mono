@@ -2,48 +2,86 @@
 #
 #   docker build -f apps/worker/Dockerfile -t 7r-worker .
 #
-# This image doubles as the one-shot migrator (the `migrate` service in
-# compose.yaml overrides the command), which is why it carries
-# packages/db/drizzle/: the runtime migrator reads that directory from disk. On
-# Drizzle 1.0 it is one folder per migration (`<timestamp>_<name>/migration.sql`
-# plus its snapshot). There is no meta/_journal.json any more (ADR 0016).
+# This image doubles as the one-shot migrator and legacy importer (the `migrate`
+# and `import` services in compose.yaml override the command), which is why it
+# carries packages/db/drizzle/: the runtime migrator reads that directory from
+# disk. On Drizzle 1.0 it is one folder per migration
+# (`<timestamp>_<name>/migration.sql` plus its snapshot). There is no
+# meta/_journal.json any more (ADR 0016).
 
-FROM denoland/deno:2.9.2 AS runtime
+FROM node:26.13.1-trixie-slim AS build
 
-# WORKDIR creates /app owned by root, and `deno ci` then cannot create
+# Node 25 and later no longer bundle corepack, so pnpm comes from npm. The
+# version is pinned here, in the root package.json `packageManager` and in
+# cd.yaml, and CI fails if they disagree.
+RUN npm install -g pnpm@12.23.0
+
+# WORKDIR creates /app owned by root, and the install then cannot create
 # node_modules inside it. Own the directory before anything is written to it.
-RUN mkdir -p /app && chown deno:deno /app
+RUN mkdir -p /app && chown node:node /app
 WORKDIR /app
 
-# --chown, and `USER deno` BEFORE the install: run the install as the same user
-# that will run the process. Installing as root and then dropping to `deno`
-# leaves DENO_DIR and node_modules root-owned, and Deno then re-does the whole
-# setup at container start: it re-downloads every npm package (so a registry
-# outage becomes a boot failure) and dies on
-# `File exists (os error 17), symlink '../../packages/config'`.
-COPY --chown=deno:deno deno.json deno.lock ./
-COPY --chown=deno:deno packages/ ./packages/
-COPY --chown=deno:deno apps/ ./apps/
-USER deno
-
-# Installs strictly from deno.lock and fails if it is stale.
+# --chown, and `USER node` BEFORE the install: run the install as the same user
+# that will run the process, so nothing under /app is root-owned.
 #
-# Never add `--allow-scripts` / `deno approve-scripts`. From Phase 4 the
-# TeamSpeak client pulls ssh2 -> cpu-features, whose ignored build script wants
-# python and node-gyp. The warning is correct behaviour: the library runs pure
-# JS with zero native addons and only --allow-net.
-RUN deno ci
+# The real workspace layout, not `pnpm deploy`. `deploy` copies the workspace
+# packages into node_modules, and Node refuses to type-strip a `.ts` file whose
+# real path is under node_modules (ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING),
+# so every @7r/* import would fail at boot. Installed in place, node_modules/@7r/*
+# stay symlinks to /app/packages/*, whose real path is outside node_modules.
+#
+# apps/web is not copied beyond its package.json: the filtered install below
+# never touches it, but the frozen lockfile still lists it as a workspace member.
+COPY --chown=node:node package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY --chown=node:node packages/ ./packages/
+COPY --chown=node:node apps/worker/ ./apps/worker/
+COPY --chown=node:node apps/web/package.json ./apps/web/package.json
+USER node
 
-# Resolve and cache every module now, so a failure surfaces at build time rather
-# than at 03:00 on a restart.
-RUN deno cache apps/worker/main.ts packages/db/migrate.ts
+# Installs strictly from pnpm-lock.yaml and fails if it is stale. `--prod` leaves
+# the dev dependencies (drizzle-kit, the linters) out, and `--filter
+# @7r/worker...` limits the install to the worker and the workspace packages it
+# depends on, so Astro and Starlight stay out of this image.
+#
+# The store lives in a BuildKit cache mount, so it survives between builds and
+# stays out of the image. It is a different filesystem from /app, so pnpm copies
+# files into node_modules instead of hard-linking them: the tree is
+# self-contained, which the COPY into the runtime stage relies on.
+#
+# pnpm blocks dependency build scripts unless pnpm-workspace.yaml allows them,
+# and `cpu-features` (ssh2's optional native addon, pulled in by the TeamSpeak
+# client) is deliberately not allowed: the library runs pure JS without it.
+# Never approve it; silencing the notice means putting a native toolchain in the
+# image to build an addon we do not want.
+RUN --mount=type=cache,target=/pnpm-store,uid=1000,gid=1000 \
+    pnpm install --frozen-lockfile --prod --filter @7r/worker... --store-dir /pnpm-store
+
+FROM node:26.13.1-trixie-slim AS runtime
+
+# pnpm is not needed to run anything, so it stays in the build stage. /app is
+# copied whole: node_modules holds relative symlinks (node_modules/@7r/* into
+# packages/*, and into the .pnpm virtual store), which COPY preserves.
+RUN mkdir -p /app && chown node:node /app
+WORKDIR /app
+COPY --from=build --chown=node:node /app ./
+USER node
+
+# Load every module the container can run, now, so a module that fails to load
+# under Node (a missing dependency, a value-style import of a type-only export)
+# fails the build rather than a restart at 03:00. This replaces what `deno
+# cache` did. Nothing starts: main.ts, migrate.ts and import-legacy.ts only run
+# under `import.meta.main`, so importing them just resolves their graphs.
+RUN node --input-type=module -e "\
+for (const specifier of [\
+'./apps/worker/main.ts',\
+'./packages/db/migrate.ts',\
+'./packages/db/import-legacy.ts',\
+]) { await import(specifier); console.log('loaded', specifier); }"
+
+ENV NODE_ENV=production
 
 EXPOSE 8080
 
-# --cached-only: resolve every module from the cache baked in above, and never
-# reach the network for one. Without it Deno re-fetches npm metadata on every
-# boot, which turns a registry outage into a container that will not start.
-#
-# --allow-sys: postgres.js reads os.userInfo() when the connection string
-# carries no user.
-CMD ["run", "--cached-only", "--allow-net", "--allow-env", "--allow-read", "--allow-sys", "apps/worker/main.ts"]
+# Node needs no permission flags, and every module is already on disk, so there
+# is no registry to reach at boot.
+CMD ["node", "apps/worker/main.ts"]
