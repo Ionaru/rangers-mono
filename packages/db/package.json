@@ -5,10 +5,19 @@
   "exports": {
     ".": "./mod.ts"
   },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "up": "drizzle-kit up",
+    "migrate": "node --env-file-if-exists=../../.env migrate.ts",
+    "import:legacy": "node --env-file-if-exists=../../.env import-legacy.ts"
+  },
   "dependencies": {
     "@7r/config": "workspace:*",
     "@7r/domain": "workspace:*",
     "drizzle-orm": "1.0.0-rc.4",
     "postgres": "3.4.9"
+  },
+  "devDependencies": {
+    "drizzle-kit": "1.0.0-rc.4"
   }
 }

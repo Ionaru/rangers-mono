@@ -5,7 +5,12 @@
   "exports": {
     ".": "./mod.ts"
   },
+  "scripts": {
+    "check:phase0": "node --env-file-if-exists=../../.env phase0-check.ts",
+    "commands:register": "node --env-file-if-exists=../../.env register.ts"
+  },
   "dependencies": {
+    "@7r/config": "workspace:*",
     "@7r/domain": "workspace:*"
   }
 }

@@ -168,7 +168,7 @@ export async function runSyncPass(
     // state, not a bug. Paging every ROLE_SYNC_INTERVAL_SECONDS until someone
     // seeds would only train operators to ignore the channel.
     return aborted(
-      "assignable mapping is empty; run `deno task assignables:seed` first",
+      "assignable mapping is empty; run `pnpm assignables:seed` first",
       { page: false },
     );
   }

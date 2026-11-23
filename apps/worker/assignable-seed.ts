@@ -1,3 +1,4 @@
+import { createInterface } from "node:readline/promises";
 import { getTeamspeakConfig, loadAll, type TeamspeakConfig } from "@7r/config";
 import {
   type Assignable,
@@ -15,8 +16,8 @@ import {
 /**
  * Phase 4's seed: apply the git-tracked Assignable mapping to the database.
  *
- *   deno task assignables:seed            # prints the plan, writes nothing
- *   deno task assignables:seed -- --apply # asks for confirmation, then writes
+ *   pnpm assignables:seed            # prints the plan, writes nothing
+ *   pnpm assignables:seed --apply    # asks for confirmation, then writes
  *
  * Sgids are resolved LIVE, by TeamSpeak group name, against `servergrouplist`,
  * and never taken from the config or the legacy dump: the dump's numbers come
@@ -35,8 +36,24 @@ import {
  * `sync:preview`. Idempotent by `discordRoleId`; re-run it freely.
  */
 
+/**
+ * Ask a yes/no question at the terminal. A headless run (stdin is not a TTY:
+ * `echo |`, CI) answers "no" without reading, so nothing is ever written
+ * unattended.
+ */
+async function confirm(question: string): Promise<boolean> {
+  if (!process.stdin.isTTY) return false;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question(`${question} [y/N] `);
+    return /^y(es)?$/i.test(answer.trim());
+  } finally {
+    rl.close();
+  }
+}
+
 async function main(): Promise<number> {
-  const apply = Deno.args.includes("--apply");
+  const apply = process.argv.slice(2).includes("--apply");
 
   const [ts] = loadAll<[TeamspeakConfig]>([getTeamspeakConfig]);
   const db = getDb();
@@ -127,7 +144,7 @@ async function main(): Promise<number> {
   // needs a TTY; a headless run (echo | or CI) answers "no" and writes nothing,
   // which is the right default for a tool whose output the docs say a human
   // reviews.
-  const confirmed = confirm(
+  const confirmed = await confirm(
     `\nWrite these ${resolved.length} assignable rows?`,
   );
   if (!confirmed) {
@@ -147,7 +164,7 @@ async function main(): Promise<number> {
 
   console.log(
     `\nSeeded ${resolved.length} assignable(s) (${current.length} existed before).` +
-      `\nNext: deno task sync:preview, and review the diff before flipping SYNC_DRY_RUN.`,
+      `\nNext: pnpm sync:preview, and review the diff before flipping SYNC_DRY_RUN.`,
   );
   return 0;
 }
@@ -159,5 +176,5 @@ if (import.meta.main) {
   } finally {
     await closeDb();
   }
-  if (code > 0) Deno.exit(code);
+  if (code > 0) process.exit(code);
 }

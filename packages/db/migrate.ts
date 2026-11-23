@@ -1,4 +1,4 @@
-import { fromFileUrl } from "@std/path";
+import { fileURLToPath } from "node:url";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { getDatabaseConfig } from "@7r/config";
 import { createDb } from "./client.ts";
@@ -12,7 +12,7 @@ import { createDb } from "./client.ts";
  * generator and nothing else.
  *
  * The folder is resolved relative to this file, not to the working directory,
- * so `deno task migrate` and the migrate container behave identically. On
+ * so `pnpm migrate` and the migrate container behave identically. On
  * Drizzle 1.0 it holds one directory per migration (`<timestamp>_<name>/`, with
  * `migration.sql` and its snapshot inside); the Dockerfile copies the whole
  * thing for exactly that reason. There is no meta/_journal.json any more.
@@ -27,7 +27,7 @@ import { createDb } from "./client.ts";
 if (import.meta.main) {
   // A database and nothing else: the migrator has no use for a base URL.
   const { DATABASE_URL } = getDatabaseConfig();
-  const migrationsFolder = fromFileUrl(new URL("./drizzle", import.meta.url));
+  const migrationsFolder = fileURLToPath(new URL("./drizzle", import.meta.url));
 
   // The migrator requires a single connection.
   //

@@ -6,9 +6,9 @@
  * is no test guild, ARCHITECTURE §9), so they all need the same stub, and it
  * had started to exist twice.
  *
- * `_test_util` in the name keeps `deno test`'s own discovery from treating this
- * file as a test: it defines no `Deno.test` and would otherwise be reported as
- * a module with no tests in it.
+ * `_test_util` in the name keeps `node --test`'s own discovery (`*_test`) from
+ * treating this file as a test: it registers no tests and would otherwise be
+ * run as a test file with nothing in it.
  */
 
 export interface Stub {
@@ -22,8 +22,10 @@ export interface Stub {
  * Serve the given responses in order; the last one repeats.
  *
  * An `Error` entry rejects (a dead connection), a function entry is called per
- * request (a fresh body each time), and a `Response` is cloned so the same one
- * can be served repeatedly.
+ * request (a fresh body each time), and a `Response` is rebuilt from its text so the
+ * same one can be served repeatedly. (Not `clone()`: on Node, cancelling the body
+ * of one branch of a cloned Response never resolves while the other branch is
+ * unread, which hangs the retry loop's `body.cancel()`.)
  */
 export function stubFetch(
   responses: (Response | Error | (() => Response))[],
@@ -32,12 +34,17 @@ export function stubFetch(
   const calls: { url: string; init: RequestInit }[] = [];
   let index = 0;
 
-  globalThis.fetch = ((url: string | URL | Request, init: RequestInit = {}) => {
+  globalThis.fetch = (async (
+    url: string | URL | Request,
+    init: RequestInit = {},
+  ) => {
     calls.push({ url: String(url), init });
     const next = responses[Math.min(index, responses.length - 1)];
     index++;
-    if (next instanceof Error) return Promise.reject(next);
-    return Promise.resolve(typeof next === "function" ? next() : next.clone());
+    if (next instanceof Error) throw next;
+    if (typeof next === "function") return next();
+    const text = next.body === null ? null : await next.clone().text();
+    return new Response(text, { status: next.status, headers: next.headers });
   }) as typeof globalThis.fetch;
 
   return { calls, restore: () => (globalThis.fetch = original) };

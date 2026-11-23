@@ -1,4 +1,5 @@
-import { assert, assertThrows } from "@std/assert";
+import assert from "node:assert/strict";
+import { test } from "node:test";
 import { configureSync, getConfig, resetSync } from "@logtape/logtape";
 import { configureLogging } from "./mod.ts";
 
@@ -15,10 +16,10 @@ import { configureLogging } from "./mod.ts";
  *
  * Deliberately a single test rather than several. It walks global state
  * (LogTape's, and this module's own one-shot flag) through failure and back,
- * and splitting it would leave the halves depending on the order Deno happened
+ * and splitting it would leave the halves depending on the order the runner happened
  * to run them in.
  */
-Deno.test("a failed configure does not latch the process into silence", () => {
+test("a failed configure does not latch the process into silence", () => {
   // Occupy LogTape's global config so the next configureSync has to throw. The
   // meta logger is named with no sinks only to keep LogTape's "loggers are
   // configured" banner out of the test output.
@@ -28,14 +29,14 @@ Deno.test("a failed configure does not latch the process into silence", () => {
   });
 
   try {
-    assertThrows(() => configureLogging({ shape: "off" }));
+    assert.throws(() => configureLogging({ shape: "off" }));
   } finally {
     resetSync();
   }
 
   // The point: the failure above must not have consumed the one-shot.
   configureLogging({ shape: "off" });
-  assert(getConfig() !== null, "logging should be configured after a retry");
+  assert.ok(getConfig() !== null, "logging should be configured after a retry");
 
   // And now it really is a one-shot: a second call is a no-op, not a throw.
   configureLogging({ shape: "off" });

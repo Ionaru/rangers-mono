@@ -5,7 +5,7 @@ import { QueryProtocol, TeamSpeak } from "ts3-nodejs-library";
 /**
  * TeamSpeak preflight. Read-only, and it asks the server rather than asking you.
  *
- *   deno task ts:check
+ *   pnpm ts:check
  *
  * The worker treats a failed TeamSpeak connect at boot as fatal, so a wrong
  * `TS_VIRTUALSERVER_ID` or a bad query login does not merely break the link flow:
@@ -123,7 +123,7 @@ if (import.meta.main) {
     console.error(
       "\nIf the SSH connection itself was refused: check TS_QUERY_HOST, that the query port is the SSH one (10022, never 10011), that ServerQuery over SSH is enabled on the server, and that this box's IP is allowlisted rather than flood-banned.",
     );
-    Deno.exit(1);
+    process.exit(1);
   }
-  Deno.exit(0);
+  process.exit(0);
 }

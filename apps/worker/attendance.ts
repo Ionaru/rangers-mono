@@ -342,7 +342,7 @@ export async function runAttendancePass(
  * the same switch would buy nothing and cost the failure ADR 0007 warns about:
  * shipped, never flipped, and nobody notices for two years, which is precisely
  * how the legacy recorder died in July 2024. The wrong-channel risk is real and
- * is answered by `deno task attendance:preview` instead, which is a check run
+ * is answered by `pnpm attendance:preview` instead, which is a check run
  * before the first Saturday rather than a switch somebody has to remember.
  */
 export function startAttendanceLoop(

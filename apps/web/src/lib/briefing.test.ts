@@ -1,4 +1,5 @@
-import { assertEquals, assertLess } from "@std/assert";
+import assert from "node:assert/strict";
+import { test } from "node:test";
 import { type BriefingInput, buildBriefingSqf, cleanText } from "./briefing.ts";
 
 /**
@@ -56,41 +57,56 @@ OPFOR infantry.
 BLUFOR squad.
 "]];`;
 
-Deno.test("buildBriefingSqf reproduces the legacy SQF byte-for-byte", () => {
-  assertEquals(buildBriefingSqf(SAMPLE), EXPECTED);
+test("buildBriefingSqf reproduces the legacy SQF byte-for-byte", () => {
+  assert.deepStrictEqual(buildBriefingSqf(SAMPLE), EXPECTED);
 });
 
-Deno.test("output is trimmed: no leading or trailing whitespace", () => {
+test("output is trimmed: no leading or trailing whitespace", () => {
   const out = buildBriefingSqf(SAMPLE);
-  assertEquals(out, out.trim());
+  assert.deepStrictEqual(out, out.trim());
 });
 
-Deno.test("records are emitted in reverse reading order (Arma prepends)", () => {
+test("records are emitted in reverse reading order (Arma prepends)", () => {
   const out = buildBriefingSqf(SAMPLE);
   // Credits is written first so it renders last; Situation last so it renders first.
-  assertLess(out.indexOf('["Credits"'), out.indexOf('["Execution"'));
-  assertLess(out.indexOf('["Execution"'), out.indexOf('["Mission"'));
-  assertLess(out.indexOf('["Mission"'), out.indexOf('["Situation"'));
+  const first0 = out.indexOf('["Credits"');
+  const second0 = out.indexOf('["Execution"');
+  assert.ok(
+    first0 >= 0 && first0 < second0,
+    `expected "Credits" (${first0}) before "Execution" (${second0})`,
+  );
+  const first1 = out.indexOf('["Execution"');
+  const second1 = out.indexOf('["Mission"');
+  assert.ok(
+    first1 >= 0 && first1 < second1,
+    `expected "Execution" (${first1}) before "Mission" (${second1})`,
+  );
+  const first2 = out.indexOf('["Mission"');
+  const second2 = out.indexOf('["Situation"');
+  assert.ok(
+    first2 >= 0 && first2 < second2,
+    `expected "Mission" (${first2}) before "Situation" (${second2})`,
+  );
 });
 
-Deno.test("cleanText escapes as HTML entities, & first", () => {
-  assertEquals(cleanText("&"), "&amp;");
+test("cleanText escapes as HTML entities, & first", () => {
+  assert.deepStrictEqual(cleanText("&"), "&amp;");
   // & must be escaped before the entities we insert, or they double-escape.
-  assertEquals(cleanText("&lt;"), "&amp;lt;");
-  assertEquals(cleanText("<tag>"), "&lt;tag&gt;");
-  assertEquals(cleanText(`"q" 'a'`), "&quot;q&quot; &#039;a&#039;");
+  assert.deepStrictEqual(cleanText("&lt;"), "&amp;lt;");
+  assert.deepStrictEqual(cleanText("<tag>"), "&lt;tag&gt;");
+  assert.deepStrictEqual(cleanText(`"q" 'a'`), "&quot;q&quot; &#039;a&#039;");
 });
 
-Deno.test("cleanText is NOT SQF quote-doubling", () => {
+test("cleanText is NOT SQF quote-doubling", () => {
   // A double quote becomes an entity, never "" — that is what keeps the SQF
   // "…" literal from breaking.
-  assertEquals(cleanText(`say "hi"`), "say &quot;hi&quot;");
+  assert.deepStrictEqual(cleanText(`say "hi"`), "say &quot;hi&quot;");
 });
 
-Deno.test("cleanText expands newlines to a literal <br/> between real newlines", () => {
-  assertEquals(cleanText("a\nb"), "a\n<br/>\nb");
+test("cleanText expands newlines to a literal <br/> between real newlines", () => {
+  assert.deepStrictEqual(cleanText("a\nb"), "a\n<br/>\nb");
 });
 
-Deno.test("cleanText trims each field", () => {
-  assertEquals(cleanText("   padded   "), "padded");
+test("cleanText trims each field", () => {
+  assert.deepStrictEqual(cleanText("   padded   "), "padded");
 });

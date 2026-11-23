@@ -28,7 +28,7 @@ import {
 import { opScheduleFrom } from "./weekly-event.ts";
 
 /**
- * `deno task attendance:preview`: prove the sampler is pointed at the right
+ * `pnpm attendance:preview`: prove the sampler is pointed at the right
  * channel, before a Saturday proves it is not.
  *
  * This is the sibling of `sync:preview` and `op:preview`, and it exists because
@@ -225,5 +225,5 @@ if (import.meta.main) {
   } finally {
     await closeDb();
   }
-  if (code > 0) Deno.exit(code);
+  if (code > 0) process.exit(code);
 }

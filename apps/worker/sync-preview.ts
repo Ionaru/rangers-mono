@@ -13,7 +13,7 @@ import { connectTeamspeak } from "@7r/teamspeak";
 import { runSyncPass } from "./sync.ts";
 
 /**
- * `deno task sync:preview`: the dry-run ADR 0009 promises, and the required
+ * `pnpm sync:preview`: the dry-run ADR 0009 promises, and the required
  * gate before the first real sync (IMPLEMENTATION §6). Computes a full
  * reconcile pass and prints the diff for a human at a terminal, which is where
  * admin review happens in a system with no admin UI. It writes NOTHING, ever:
@@ -184,5 +184,5 @@ if (import.meta.main) {
   } finally {
     await closeDb();
   }
-  if (code > 0) Deno.exit(code);
+  if (code > 0) process.exit(code);
 }

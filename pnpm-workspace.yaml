@@ -1,0 +1,13 @@
+packages:
+  - packages/*
+  - apps/*
+saveExact: true
+allowBuilds:
+  # Optional native addon of ssh2 (via ts3-nodejs-library). ssh2 falls back to
+  # pure JS without it, so it stays blocked: never build it.
+  cpu-features: false
+  # Postinstall only verifies/optimises the binary; the platform package that
+  # ships it is a regular optional dependency, so esbuild works without it.
+  esbuild: false
+  # Builds an optional native crypto binding; ssh2 falls back to pure JS.
+  ssh2: false

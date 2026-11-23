@@ -113,7 +113,7 @@ const jittered = (ms: number) => Math.round(ms * (0.5 + Math.random() * 0.5));
 /**
  * A transport failure, as opposed to a bug in the caller.
  *
- * Deno raises every network-layer problem (connection reset, DNS, TLS) as a
+ * `fetch` raises every network-layer problem (connection reset, DNS, TLS) as a
  * `TypeError` from `fetch` itself, and an expired `AbortSignal.timeout` as a
  * `TimeoutError` DOMException. Neither carries a machine-readable code, so the
  * check is the class plus the fact that it came out of `fetch`. A genuine

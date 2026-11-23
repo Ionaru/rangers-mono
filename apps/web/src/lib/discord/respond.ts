@@ -34,7 +34,7 @@ export function editOriginal(
 /**
  * Return the deferred ACK now, run `work` detached.
  *
- * **The `.catch` is mandatory, not defensive.** Deno aborts the whole process on
+ * **The `.catch` is mandatory, not defensive.** Node aborts the whole process on
  * an unhandled rejection, and the web app installs no `unhandledrejection`
  * handler (only the worker does), so a handler that threw would take the server
  * down. On failure it also tries to replace the member's spinner with an apology,

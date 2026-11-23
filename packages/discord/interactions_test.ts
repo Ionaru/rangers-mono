@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertFalse } from "@std/assert";
+import assert from "node:assert/strict";
+import { test } from "node:test";
 import {
   extractModalValues,
   type InteractionData,
@@ -53,11 +54,11 @@ async function sign(
 const TIMESTAMP = "1700000000";
 const BODY = JSON.stringify({ type: 1 });
 
-Deno.test("a genuine signature verifies", async () => {
+test("a genuine signature verifies", async () => {
   const { pair, publicKeyHex } = await keypair();
   const signatureHex = await sign(pair.privateKey, TIMESTAMP, BODY);
 
-  assert(
+  assert.ok(
     await verifyInteractionSignature({
       publicKeyHex,
       signatureHex,
@@ -67,135 +68,135 @@ Deno.test("a genuine signature verifies", async () => {
   );
 });
 
-Deno.test("a tampered body is rejected", async () => {
+test("a tampered body is rejected", async () => {
   const { pair, publicKeyHex } = await keypair();
   const signatureHex = await sign(pair.privateKey, TIMESTAMP, BODY);
 
-  assertFalse(
+  assert.strictEqual(
     await verifyInteractionSignature({
       publicKeyHex,
       signatureHex,
       timestamp: TIMESTAMP,
       body: new TextEncoder().encode(BODY + " "),
-    }),
+    }), false,
   );
 });
 
-Deno.test("a tampered timestamp is rejected", async () => {
+test("a tampered timestamp is rejected", async () => {
   const { pair, publicKeyHex } = await keypair();
   const signatureHex = await sign(pair.privateKey, TIMESTAMP, BODY);
 
-  assertFalse(
+  assert.strictEqual(
     await verifyInteractionSignature({
       publicKeyHex,
       signatureHex,
       timestamp: "1700000001",
       body: new TextEncoder().encode(BODY),
-    }),
+    }), false,
   );
 });
 
-Deno.test("a signature from a different key is rejected", async () => {
+test("a signature from a different key is rejected", async () => {
   const signer = await keypair();
   const other = await keypair();
   const signatureHex = await sign(signer.pair.privateKey, TIMESTAMP, BODY);
 
-  assertFalse(
+  assert.strictEqual(
     await verifyInteractionSignature({
       publicKeyHex: other.publicKeyHex,
       signatureHex,
       timestamp: TIMESTAMP,
       body: new TextEncoder().encode(BODY),
-    }),
+    }), false,
   );
 });
 
-Deno.test("a non-hex signature is rejected, not thrown", async () => {
+test("a non-hex signature is rejected, not thrown", async () => {
   const { publicKeyHex } = await keypair();
-  assertFalse(
+  assert.strictEqual(
     await verifyInteractionSignature({
       publicKeyHex,
       signatureHex: "not-hex-at-all",
       timestamp: TIMESTAMP,
       body: new TextEncoder().encode(BODY),
-    }),
+    }), false,
   );
 });
 
-Deno.test("a signature of the wrong length is rejected", async () => {
+test("a signature of the wrong length is rejected", async () => {
   const { publicKeyHex } = await keypair();
-  assertFalse(
+  assert.strictEqual(
     await verifyInteractionSignature({
       publicKeyHex,
       signatureHex: "abcd",
       timestamp: TIMESTAMP,
       body: new TextEncoder().encode(BODY),
-    }),
+    }), false,
   );
 });
 
-Deno.test("a malformed public key is rejected, not thrown", async () => {
+test("a malformed public key is rejected, not thrown", async () => {
   const { pair } = await keypair();
   const signatureHex = await sign(pair.privateKey, TIMESTAMP, BODY);
   for (const publicKeyHex of ["", "zz", "abc", "ab".repeat(31)]) {
-    assertFalse(
+    assert.strictEqual(
       await verifyInteractionSignature({
         publicKeyHex,
         signatureHex,
         timestamp: TIMESTAMP,
         body: new TextEncoder().encode(BODY),
-      }),
+      }), false,
     );
   }
 });
 
-Deno.test("an empty timestamp is rejected", async () => {
+test("an empty timestamp is rejected", async () => {
   const { pair, publicKeyHex } = await keypair();
   const signatureHex = await sign(pair.privateKey, "", BODY);
   // Even a signature that is genuine for an empty timestamp is refused: an empty
   // timestamp is not a request Discord makes, so it is not one we honour.
-  assertFalse(
+  assert.strictEqual(
     await verifyInteractionSignature({
       publicKeyHex,
       signatureHex,
       timestamp: "",
       body: new TextEncoder().encode(BODY),
-    }),
+    }), false,
   );
 });
 
-Deno.test("parseCustomId splits namespace from action", () => {
-  assertEquals(parseCustomId("link:pick"), {
+test("parseCustomId splits namespace from action", () => {
+  assert.deepStrictEqual(parseCustomId("link:pick"), {
     namespace: "link",
     action: "pick",
   });
-  assertEquals(parseCustomId("link:enter"), {
+  assert.deepStrictEqual(parseCustomId("link:enter"), {
     namespace: "link",
     action: "enter",
   });
   // Everything after the first colon is the action, so a colon in the action survives.
-  assertEquals(parseCustomId("link:code:extra"), {
+  assert.deepStrictEqual(parseCustomId("link:code:extra"), {
     namespace: "link",
     action: "code:extra",
   });
 });
 
-Deno.test("parseCustomId returns null for something unroutable", () => {
-  assertEquals(parseCustomId("nocolon"), null);
-  assertEquals(parseCustomId(""), null);
-  assertEquals(parseCustomId(":pick"), null);
+test("parseCustomId returns null for something unroutable", () => {
+  assert.deepStrictEqual(parseCustomId("nocolon"), null);
+  assert.deepStrictEqual(parseCustomId(""), null);
+  assert.deepStrictEqual(parseCustomId(":pick"), null);
 });
 
-Deno.test("selectedValues reads a string-select submission", () => {
-  assertEquals(
+test("selectedValues reads a string-select submission", () => {
+  assert.deepStrictEqual(
     selectedValues({ data: { values: ["42"] } }),
     ["42"],
   );
-  assertEquals(selectedValues({ data: {} }), []);
-  assertEquals(selectedValues({}), []);
+  assert.deepStrictEqual(selectedValues({ data: {} }), []);
+  assert.deepStrictEqual(selectedValues({}), []);
 });
 
-Deno.test("extractModalValues finds a value nested in a Label component", () => {
+test("extractModalValues finds a value nested in a Label component", () => {
   // The shape Discord sends when a Text Input is wrapped in a Label (type 18).
   const data = {
     custom_id: "link:code",
@@ -203,10 +204,10 @@ Deno.test("extractModalValues finds a value nested in a Label component", () => 
       { type: 18, component: { type: 4, custom_id: "code", value: "ABC234" } },
     ],
   };
-  assertEquals(extractModalValues(data).get("code"), "ABC234");
+  assert.deepStrictEqual(extractModalValues(data).get("code"), "ABC234");
 });
 
-Deno.test("extractModalValues finds a value nested in an Action Row", () => {
+test("extractModalValues finds a value nested in an Action Row", () => {
   // The legacy shape, in case Discord still sends it: robust to either.
   const data = {
     custom_id: "link:code",
@@ -217,19 +218,19 @@ Deno.test("extractModalValues finds a value nested in an Action Row", () => {
       },
     ],
   };
-  assertEquals(extractModalValues(data).get("code"), "XYZ789");
+  assert.deepStrictEqual(extractModalValues(data).get("code"), "XYZ789");
 });
 
-Deno.test("extractModalValues tolerates a flat component and missing data", () => {
-  assertEquals(
+test("extractModalValues tolerates a flat component and missing data", () => {
+  assert.deepStrictEqual(
     extractModalValues({
       components: [{ type: 4, custom_id: "code", value: "FLAT12" }],
     })
       .get("code"),
     "FLAT12",
   );
-  assertEquals(extractModalValues({}).size, 0);
-  assertEquals(extractModalValues({ components: [] }).size, 0);
+  assert.deepStrictEqual(extractModalValues({}).size, 0);
+  assert.deepStrictEqual(extractModalValues({ components: [] }).size, 0);
 });
 
 // ------------------------------------------------------- command options
@@ -251,7 +252,7 @@ function claimData(
   };
 }
 
-Deno.test("a subcommand is found by its option type, not its position", () => {
+test("a subcommand is found by its option type, not its position", () => {
   const data: InteractionData = {
     name: "attendance",
     // A top-level option that is not a subcommand, sitting in front of one.
@@ -260,41 +261,41 @@ Deno.test("a subcommand is found by its option type, not its position", () => {
       { name: "claim", type: 1, options: [] },
     ],
   };
-  assertEquals(subcommandOf(data)?.name, "claim");
+  assert.deepStrictEqual(subcommandOf(data)?.name, "claim");
 });
 
-Deno.test("a command with no subcommand reports none", () => {
-  assertEquals(subcommandOf({ name: "link" }), null);
-  assertEquals(subcommandOf({ name: "link", options: [] }), null);
-  assertEquals(subcommandOf(undefined), null);
+test("a command with no subcommand reports none", () => {
+  assert.deepStrictEqual(subcommandOf({ name: "link" }), null);
+  assert.deepStrictEqual(subcommandOf({ name: "link", options: [] }), null);
+  assert.deepStrictEqual(subcommandOf(undefined), null);
 });
 
-Deno.test("a subcommand's options are read by name", () => {
+test("a subcommand's options are read by name", () => {
   const sub = subcommandOf(claimData({ ts_uid: "abc=", member: "123" }));
-  assertEquals(optionValue(sub?.options, "ts_uid"), "abc=");
-  assertEquals(optionValue(sub?.options, "member"), "123");
+  assert.deepStrictEqual(optionValue(sub?.options, "ts_uid"), "abc=");
+  assert.deepStrictEqual(optionValue(sub?.options, "member"), "123");
 });
 
-Deno.test("a user option's snowflake survives as a string", () => {
+test("a user option's snowflake survives as a string", () => {
   // The id exceeds Number range, so anything that round-trips it through a
   // number loses the last digits and claims sessions for the wrong person.
   const id = "305471712546390017";
   const sub = subcommandOf(claimData({ ts_uid: "u", member: id }));
-  assertEquals(optionValue(sub?.options, "member"), id);
+  assert.deepStrictEqual(optionValue(sub?.options, "member"), id);
 });
 
-Deno.test("an option Discord did not send reads as undefined", () => {
+test("an option Discord did not send reads as undefined", () => {
   const sub = subcommandOf(claimData({ ts_uid: "abc=" }));
-  assertEquals(optionValue(sub?.options, "member"), undefined);
+  assert.deepStrictEqual(optionValue(sub?.options, "member"), undefined);
 });
 
-Deno.test("an option array that is absent entirely reads as undefined", () => {
-  assertEquals(optionValue(undefined, "ts_uid"), undefined);
-  assertEquals(optionValue([], "ts_uid"), undefined);
+test("an option array that is absent entirely reads as undefined", () => {
+  assert.deepStrictEqual(optionValue(undefined, "ts_uid"), undefined);
+  assert.deepStrictEqual(optionValue([], "ts_uid"), undefined);
 });
 
-Deno.test("an empty option value is the same as an absent one", () => {
+test("an empty option value is the same as an absent one", () => {
   // A handler must not try to claim sessions for the empty identity.
   const sub = subcommandOf(claimData({ ts_uid: "", member: "1" }));
-  assertEquals(optionValue(sub?.options, "ts_uid"), undefined);
+  assert.deepStrictEqual(optionValue(sub?.options, "ts_uid"), undefined);
 });

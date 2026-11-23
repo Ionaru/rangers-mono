@@ -81,7 +81,7 @@ function create() {
        * Set explicitly, because the default is wrong for us.
        *
        * Better Auth marks the session cookie `Secure` only when
-       * `NODE_ENV === "production"`, and nothing sets NODE_ENV in these Deno
+       * `NODE_ENV === "production"`, and nothing sets NODE_ENV in these
        * containers, so in production the session cookie would go out over HTTPS
        * **without the Secure flag**. Deriving it from the base URL is correct in
        * both places at once: `Secure` in production, and not on

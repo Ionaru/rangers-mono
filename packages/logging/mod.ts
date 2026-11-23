@@ -13,7 +13,7 @@ import {
  *
  * Two things live here and nowhere else: the one npm dependency
  * (`@logtape/logtape`, kept to a single manifest by the "one dependency, one
- * home" rule in the root deno.json), and the policy for what a log line looks
+ * home" rule in the root package.json), and the policy for what a log line looks
  * like and which ones survive.
  *
  * Everything that logs imports `getLogger` from here and nothing else. Getting a

@@ -1,4 +1,5 @@
-import { extname, join } from "@std/path";
+import { readdir, readFile } from "node:fs/promises";
+import { extname, join } from "node:path";
 import type { OpsConfig } from "@7r/config";
 import type { Db } from "@7r/db";
 import {
@@ -567,7 +568,7 @@ async function pickWittyMessage(
 ): Promise<string | undefined> {
   if (!deps.textFile) return undefined;
   try {
-    const messages = splitMessages(await Deno.readTextFile(deps.textFile));
+    const messages = splitMessages(await readFile(deps.textFile, "utf8"));
     return pickRandom(messages, Math.random);
   } catch (error) {
     // Best-effort: a missing or unreadable file just means no witty message, not a
@@ -589,8 +590,10 @@ async function chooseImage(
     // Keep the content type from the same call that decided the file is an image,
     // so the pick carries its own type and nothing has to assert it back later.
     const candidates: ChosenImage[] = [];
-    for await (const entry of Deno.readDir(deps.imageDir)) {
-      if (!entry.isFile) continue;
+    for (
+      const entry of await readdir(deps.imageDir, { withFileTypes: true })
+    ) {
+      if (!entry.isFile()) continue;
       const contentType = contentTypeOf(entry.name);
       if (!contentType) continue;
       candidates.push({
@@ -616,7 +619,7 @@ async function pickImage(
   const chosen = await chooseImage(deps);
   if (!chosen) return undefined;
   try {
-    const bytes = await Deno.readFile(chosen.path);
+    const bytes = await readFile(chosen.path);
     return {
       filename: chosen.filename,
       contentType: chosen.contentType,

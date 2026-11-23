@@ -14,7 +14,7 @@ import {
 } from "./weekly-event.ts";
 
 /**
- * `deno task op:preview`: the dry-run gate before the weekly event goes live,
+ * `pnpm op:preview`: the dry-run gate before the weekly event goes live,
  * the sibling of `sync:preview`. It prints the coming Saturday's event (title,
  * window, prep and announce moments) and the exact messages it would post: the
  * mission-maker ping and the @everyone announcement, including the witty line and

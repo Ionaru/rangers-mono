@@ -1,20 +1,28 @@
 // @ts-check
 import { defineConfig } from "astro/config";
-import deno from "@deno/astro-adapter";
+import node from "@astrojs/node";
 import starlight from "@astrojs/starlight";
 
-// The adapter bakes `port` into the build: it is read from a virtual config
-// module generated during the build, not from the environment at runtime.
-// So 8085 is a build constant that Compose maps, not a knob an env var can
-// turn. `site` is the same kind of build constant (Starlight and Pagefind
-// need an absolute origin at build time); the apex is where the new stack
-// serves once the operator cuts nginx over (ADR 0005).
+// The listen port is not baked into the build: the standalone Node adapter
+// reads HOST and PORT from the environment at runtime (the image sets
+// HOST=0.0.0.0 and PORT=8085, and Compose maps that). `site` is a build
+// constant (Starlight and Pagefind need an absolute origin at build time); the
+// apex is where the new stack serves once the operator cuts nginx over
+// (ADR 0005).
 export default defineConfig({
   site: "https://7th-ranger.com",
   output: "server",
-  adapter: deno({ port: 8085 }),
+  adapter: node({ mode: "standalone" }),
+  vite: {
+    ssr: {
+      // The workspace packages (@7r/*) export raw `.ts`, and Node refuses to
+      // type-strip anything under node_modules, so the SSR bundle must inline
+      // them instead of importing them at runtime.
+      noExternal: [/^@7r\//],
+    },
+  },
   // Astro's built-in checkOrigin (default-on under output:"server") rebuilds
-  // url.origin from the request as Deno sees it behind nginx: plain http over
+  // url.origin from the request as Node sees it behind nginx: plain http over
   // the loopback hop, so it 403s the https Origin on scheme alone. Our own
   // assertSameOrigin (src/lib/forms.ts) compares Origin against PUBLIC_BASE_URL
   // and is called by every mutating route, so this layer is both redundant and

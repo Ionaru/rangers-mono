@@ -13,7 +13,7 @@ import { discordJson, type DiscordRestOptions } from "./rest.ts";
  * refused and the sync quietly does nothing. So this checks, rather than
  * believing.
  *
- *   deno task phase0:check
+ *   pnpm phase0:check
  *
  * Seven GETs, no writes, nothing registered, no interactions URL touched. Safe to
  * run against production, and it is meant to be: the credentials only exist on
@@ -290,7 +290,7 @@ async function main() {
       ? "all 8 found"
       : `missing: ${
         BADGE_NAMES.filter((b) => !foundBadges.includes(b)).join(", ")
-      }\n     Badges only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so until these exist, 8 of the 16 Assignables can never sync. Run \`deno task badges:backfill\` (dry-run first): it creates them below 7R_Bot, mirrors the live TeamSpeak groups, and prints the ids for docs/MIGRATION.md.`,
+      }\n     Badges only ever existed as TeamSpeak groups. ADR 0002 makes Discord authoritative for every Assignable, so until these exist, 8 of the 16 Assignables can never sync. Run \`pnpm badges:backfill\` (dry-run first): it creates them below 7R_Bot, mirrors the live TeamSpeak groups, and prints the ids for docs/MIGRATION.md.`,
   );
 
   // ---------------------------------------------------------------- surviving /loa
@@ -341,7 +341,7 @@ if (import.meta.main) {
     console.error(
       "\nIf that was a 401, the bot token is wrong. If it was a 404 on the guild, the bot is not in it.",
     );
-    Deno.exit(1);
+    process.exit(1);
   }
 
   console.log("\n7R_Bot Phase 0 preflight\n");
@@ -366,5 +366,5 @@ if (import.meta.main) {
       "\n  - the meme harvest, and whether 7R_Bot can even re-sign attachments it did not post",
   );
 
-  Deno.exit(failed === 0 ? 0 : 1);
+  process.exit(failed === 0 ? 0 : 1);
 }

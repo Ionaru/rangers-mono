@@ -25,7 +25,7 @@ export interface ListedGuildMember {
  * A 403 here is almost certainly the **GUILD_MEMBERS privileged intent**, not
  * a permission: the intent is an application toggle in the developer portal,
  * off by default, and no guild permission (Administrator included) substitutes
- * for it. `deno task phase0:check` verifies it against the live application.
+ * for it. `pnpm phase0:check` verifies it against the live application.
  */
 export async function listGuildMembers(
   options: DiscordRestOptions,

@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import assert from "node:assert/strict";
+import { test } from "node:test";
 import { z } from "zod";
 import {
   collectSchemaKeys,
@@ -8,7 +9,7 @@ import {
 } from "./env-check.ts";
 import * as schemas from "./schemas.ts";
 
-Deno.test("collectSchemaKeys classifies required/default/optional and merges", () => {
+test("collectSchemaKeys classifies required/default/optional and merges", () => {
   const fake = {
     a: z.object({
       REQUIRED: z.string().min(1),
@@ -23,14 +24,14 @@ Deno.test("collectSchemaKeys classifies required/default/optional and merges", (
   };
 
   const known = collectSchemaKeys(fake);
-  assertEquals(known.get("REQUIRED"), { required: true, default: undefined });
-  assertEquals(known.get("DEFAULTED"), { required: false, default: "x" });
-  assertEquals(known.get("OPT"), { required: false, default: undefined });
-  assertEquals(known.get("EXTRA"), { required: false, default: 5 });
-  assertEquals(known.has("notASchema"), false);
+  assert.deepStrictEqual(known.get("REQUIRED"), { required: true, default: undefined });
+  assert.deepStrictEqual(known.get("DEFAULTED"), { required: false, default: "x" });
+  assert.deepStrictEqual(known.get("OPT"), { required: false, default: undefined });
+  assert.deepStrictEqual(known.get("EXTRA"), { required: false, default: 5 });
+  assert.deepStrictEqual(known.has("notASchema"), false);
 });
 
-Deno.test("parseEnvKeys: only non-blank keys, skipping comments and blanks", () => {
+test("parseEnvKeys: only non-blank keys, skipping comments and blanks", () => {
   const text = [
     "# comment",
     "",
@@ -43,13 +44,13 @@ Deno.test("parseEnvKeys: only non-blank keys, skipping comments and blanks", () 
     "NOEQ", // no '=' -> skipped
   ].join("\n");
 
-  assertEquals(
+  assert.deepStrictEqual(
     [...parseEnvKeys(text)].sort(),
     ["DQ", "FOO", "QUOTED", "SPACED"],
   );
 });
 
-Deno.test("diffEnv: missing-required, missing-optional, unknown, and X_FILE satisfaction", () => {
+test("diffEnv: missing-required, missing-optional, unknown, and X_FILE satisfaction", () => {
   const known = new Map<string, KeySpec>([
     ["REQ", { required: true, default: undefined }],
     ["REQ_FILE_BACKED", { required: true, default: undefined }],
@@ -59,45 +60,45 @@ Deno.test("diffEnv: missing-required, missing-optional, unknown, and X_FILE sati
   const present = new Set(["ALSO_REQ", "REQ_FILE_BACKED_FILE", "STALE"]);
 
   const diff = diffEnv(known, present);
-  assertEquals(diff.missingRequired, ["REQ"]);
-  assertEquals(diff.missingOptional, [{ key: "OPT", default: "d" }]);
-  assertEquals(diff.unknown, ["STALE"]);
+  assert.deepStrictEqual(diff.missingRequired, ["REQ"]);
+  assert.deepStrictEqual(diff.missingOptional, [{ key: "OPT", default: "d" }]);
+  assert.deepStrictEqual(diff.unknown, ["STALE"]);
 });
 
-Deno.test("collectSchemaKeys reads the real schemas (zod introspection smoke test)", () => {
+test("collectSchemaKeys reads the real schemas (zod introspection smoke test)", () => {
   const known = collectSchemaKeys(schemas);
 
   // Required keys (no default, not optional).
-  assertEquals(known.get("OP_ANNOUNCE_CHANNEL_ID")?.required, true);
-  assertEquals(known.get("DISCORD_BOT_TOKEN")?.required, true);
-  assertEquals(known.get("PUBLIC_BASE_URL")?.required, true);
+  assert.deepStrictEqual(known.get("OP_ANNOUNCE_CHANNEL_ID")?.required, true);
+  assert.deepStrictEqual(known.get("DISCORD_BOT_TOKEN")?.required, true);
+  assert.deepStrictEqual(known.get("PUBLIC_BASE_URL")?.required, true);
   // Satisfied via DATABASE_URL_FILE at runtime, but the schema still requires it.
-  assertEquals(known.get("DATABASE_URL")?.required, true);
+  assert.deepStrictEqual(known.get("DATABASE_URL")?.required, true);
 
   // Defaulted keys carry their default.
-  assertEquals(known.get("LOG_LEVEL"), { required: false, default: "info" });
-  assertEquals(known.get("SYNC_DRY_RUN"), { required: false, default: true });
-  assertEquals(known.get("OP_EVENT_DRY_RUN"), {
+  assert.deepStrictEqual(known.get("LOG_LEVEL"), { required: false, default: "info" });
+  assert.deepStrictEqual(known.get("SYNC_DRY_RUN"), { required: false, default: true });
+  assert.deepStrictEqual(known.get("OP_EVENT_DRY_RUN"), {
     required: false,
     default: true,
   });
 
   // Optional-without-default.
-  assertEquals(known.get("ERROR_ALERT_DISCORD_WEBHOOK"), {
+  assert.deepStrictEqual(known.get("ERROR_ALERT_DISCORD_WEBHOOK"), {
     required: false,
     default: undefined,
   });
   // The mission-maker prep step is opt-in: required here would fail every deploy
   // that has not added the channel yet, for a step whose absence is the old
   // behaviour.
-  assertEquals(known.get("OP_PREP_CHANNEL_ID"), {
+  assert.deepStrictEqual(known.get("OP_PREP_CHANNEL_ID"), {
     required: false,
     default: undefined,
   });
-  assertEquals(known.get("OP_PREP_LEAD_DAYS"), { required: false, default: 1 });
+  assert.deepStrictEqual(known.get("OP_PREP_LEAD_DAYS"), { required: false, default: 1 });
 });
 
-Deno.test("no config key ends in _FILE (the suffix is reserved for secret files)", () => {
+test("no config key ends in _FILE (the suffix is reserved for secret files)", () => {
   // A `*_FILE` key is intercepted by resolveSecretFiles (load.ts): it reads the
   // file at that path and sets the un-suffixed key. A config key named `X_FILE`
   // therefore never reaches its schema and forces a file read at boot that fails
@@ -106,5 +107,5 @@ Deno.test("no config key ends in _FILE (the suffix is reserved for secret files)
   const offenders = [...collectSchemaKeys(schemas).keys()].filter((key) =>
     key.endsWith("_FILE")
   );
-  assertEquals(offenders, []);
+  assert.deepStrictEqual(offenders, []);
 });

@@ -1,8 +1,8 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  // Test files are Deno modules (Deno global, jsr `@std/assert`) run and
-  // type-checked by `deno test`, not by `astro check`, whose Node/Astro TS
-  // context resolves neither. Excluding them keeps `deno task check` green.
+  // Test files run under `node --test` and are type-checked by the root
+  // tsconfig.json (the first half of `pnpm check`), which has the Node types
+  // they need; `astro check` would check them in Astro's context instead.
   "exclude": ["dist", "**/*.test.ts"]
 }

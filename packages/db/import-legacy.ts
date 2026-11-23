@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { getDatabaseConfig } from "@7r/config";
 import { createDb } from "./client.ts";
 import { buildLegacyImport, type LegacyMemberImport } from "./legacy-dump.ts";
@@ -23,8 +24,8 @@ import { upsertLegacyMember } from "./queries.ts";
  * will never overwrite an identity a member has since verified for real
  * (see `upsertLegacyMember`).
  *
- *   deno task import:legacy -- --dry-run
- *   deno task import:legacy
+ *   pnpm import:legacy --dry-run
+ *   pnpm import:legacy
  *
  * Or, on the box, where the dump has to be mounted because it is deliberately
  * kept out of every image (it is 150 people's personal data):
@@ -36,13 +37,14 @@ import { upsertLegacyMember } from "./queries.ts";
 const DEFAULT_DUMP_PATH = "data/Dump20260711.sql";
 
 async function main() {
-  const dryRun = Deno.args.includes("--dry-run");
-  const pathArg = Deno.args.find((arg) => arg.startsWith("--dump="));
+  const args = process.argv.slice(2);
+  const dryRun = args.includes("--dry-run");
+  const pathArg = args.find((arg) => arg.startsWith("--dump="));
   const dumpPath = pathArg?.slice("--dump=".length) ?? DEFAULT_DUMP_PATH;
 
   let sql: string;
   try {
-    sql = await Deno.readTextFile(dumpPath);
+    sql = await readFile(dumpPath, "utf8");
   } catch (cause) {
     console.error(
       `cannot read the legacy dump at ${dumpPath}: ${
@@ -53,7 +55,7 @@ async function main() {
       "\nThe dump is git-ignored and docker-ignored on purpose: it holds 150 members'",
       "\nDiscord, TeamSpeak and Steam ids. Put it at data/ on the host, or pass --dump=<path>.",
     );
-    Deno.exit(1);
+    process.exit(1);
   }
 
   // Everything that can fail on the data itself fails here, before a single row

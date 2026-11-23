@@ -23,11 +23,12 @@ import { connectTeamspeak, keepConnected } from "@7r/teamspeak";
 import { makeAlerter } from "./alert.ts";
 import { startAttendanceLoop } from "./attendance.ts";
 import { createInternalApiHandler } from "./internal-api.ts";
+import { serve } from "./serve.ts";
 import { startSyncLoop } from "./sync.ts";
 import { opScheduleFrom, startWeeklyEventLoop } from "./weekly-event.ts";
 
 /**
- * The worker: one long-running Deno process.
+ * The worker: one long-running Node process.
  *
  * It holds the TeamSpeak ServerQuery connection, which is the reason it exists:
  * the connection is stateful and singular, so exactly one process may own it,
@@ -42,7 +43,7 @@ import { opScheduleFrom, startWeeklyEventLoop } from "./weekly-event.ts";
 /**
  * Survival rule 1: an unhandled rejection must not kill the process.
  *
- * Deno's default is to exit. This process holds the ServerQuery connection, so a
+ * Node's default is to crash on one. This process holds the ServerQuery connection, so a
  * stray rejection anywhere would drop TeamSpeak linking, and later the sync and
  * the attendance sampling with it. Log it, keep going.
  *
@@ -51,10 +52,12 @@ import { opScheduleFrom, startWeeklyEventLoop } from "./weekly-event.ts";
  * until `main()` has parsed the environment, so a rejection thrown during boot
  * would land here with every LogTape sink still absent, which is to say silently.
  * The whole point of this handler is that it fires when nothing else worked.
+ *
+ * Registering any `unhandledRejection` listener replaces Node's default crash,
+ * so the process carries on after the log line.
  */
-addEventListener("unhandledrejection", (event) => {
-  event.preventDefault();
-  console.error("[worker] unhandled rejection (continuing):", event.reason);
+process.on("unhandledRejection", (reason) => {
+  console.error("[worker] unhandled rejection (continuing):", reason);
 });
 
 const HEARTBEAT_MS = 60_000;
@@ -225,12 +228,10 @@ async function main() {
     { intervalSeconds: ops.ATTENDANCE_SAMPLE_SECONDS },
   );
 
-  const server = Deno.serve(
-    {
-      port: WORKER_INTERNAL_PORT,
-      hostname: "0.0.0.0",
-      onListen: () => {},
-    },
+  // Awaited: a listen failure (a port already in use) rejects here and reaches
+  // the fatal-startup catch below, instead of surfacing later as a stray error.
+  const server = await serve(
+    { port: WORKER_INTERNAL_PORT, hostname: "0.0.0.0" },
     createInternalApiHandler({
       db,
       teamspeak,
@@ -245,11 +246,10 @@ async function main() {
    * Survival rule 2: shut down cleanly on SIGTERM.
    *
    * Compose sends SIGTERM and waits out its kill timeout on every deploy if the
-   * process does not go. Deno's event loop stays alive while ANY of these is
+   * process does not go. Node's event loop stays alive while ANY of these is
    * outstanding, and all of them have bitten here already:
    *   - the heartbeat interval,
    *   - the HTTP server,
-   *   - the signal listeners themselves (a registered listener is a live handle),
    *   - postgres.js's idle connection pool,
    *   - and now the ServerQuery socket, which keepalives and so will never close
    *     itself.
@@ -264,8 +264,8 @@ async function main() {
     stopWeeklyEvent();
     stopAttendance();
     clearInterval(heartbeat);
-    Deno.removeSignalListener("SIGTERM", onSignal);
-    Deno.removeSignalListener("SIGINT", onSignal);
+    process.off("SIGTERM", onSignal);
+    process.off("SIGINT", onSignal);
     // forceQuit, not quit: `quit` is a round-trip to a server that may be the
     // very thing that is wedged, and we are leaving regardless. It also stops
     // the "close" handler racing us into a reconnect on the way out.
@@ -275,8 +275,8 @@ async function main() {
     await closeDb();
   };
 
-  Deno.addSignalListener("SIGTERM", onSignal);
-  Deno.addSignalListener("SIGINT", onSignal);
+  process.on("SIGTERM", onSignal);
+  process.on("SIGINT", onSignal);
 
   await server.finished;
   log.info("stopped");
@@ -298,6 +298,6 @@ if (import.meta.main) {
     await main();
   } catch (error) {
     console.error("[worker] fatal during startup:", error);
-    Deno.exit(1);
+    process.exit(1);
   }
 }

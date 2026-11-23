@@ -47,7 +47,7 @@ export function getDb(): Db {
 
 /**
  * Close the shared pool. A long-running service must call this when it shuts
- * down: postgres.js keeps idle sockets open, and an open socket keeps Deno's
+ * down: postgres.js keeps idle sockets open, and an open socket keeps the
  * event loop alive, so a worker that skips this never exits at all. Compose
  * then waits out its kill timeout on every single deploy.
  *

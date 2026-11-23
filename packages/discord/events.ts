@@ -36,7 +36,7 @@ export interface ScheduledEvent {
  * (reference#image-data).
  */
 export interface EventCoverImage {
-  /** `<ArrayBuffer>`-backed, as `Deno.readFile` returns. */
+  /** `<ArrayBuffer>`-backed, as `fs.readFile` returns. */
   bytes: Uint8Array<ArrayBuffer>;
   /** e.g. "image/png". Becomes the data URI's media type. */
   contentType: string;
@@ -45,11 +45,11 @@ export interface EventCoverImage {
 /**
  * Base64-encode raw bytes, dependency-free.
  *
- * `btoa` is a web standard present in both Deno and the Astro/Deno SSR bundle, so
+ * `btoa` is a web standard present in Node and in the Astro SSR bundle, so
  * this stays resolvable when `apps/web` imports the `@7r/discord` barrel that
- * re-exports this module. A `jsr:@std/encoding` import would not: Astro's bundler
- * reads only the npm side of the workspace and `deno task web:build` fails with
- * "Rolldown failed to resolve import" on a bare `jsr:` specifier (ADR 0006). The
+ * re-exports this module. A runtime-specific import would not: Astro's bundler
+ * reads only the npm side of the workspace and fails with "Rolldown failed to
+ * resolve import" on a specifier it cannot resolve (ADR 0006). The
  * chunking keeps a large image from overflowing `String.fromCharCode`'s argument
  * list.
  */

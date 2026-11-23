@@ -1,0 +1,12 @@
+{
+  "name": "@7r/teamspeak",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "dependencies": {
+    "@7r/logging": "workspace:*",
+    "ts3-nodejs-library": "3.5.3"
+  }
+}

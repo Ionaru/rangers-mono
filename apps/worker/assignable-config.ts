@@ -2,7 +2,7 @@ import type { AssignableKind, Badge, Rank, Role } from "@7r/domain";
 
 /**
  * The Assignable mapping: THE git-tracked config ADR 0009 promises. The
- * `assignable` table is derived from this file by `deno task assignables:seed`
+ * `assignable` table is derived from this file by `pnpm assignables:seed`
  * and is never hand-edited as a source of record; changing the mapping means a
  * PR here and a re-seed.
  *
@@ -22,7 +22,7 @@ import type { AssignableKind, Badge, Rank, Role } from "@7r/domain";
  */
 export interface AssignableConfigEntry {
   kind: AssignableKind;
-  /** Typed against the domain unions, so a typo fails `deno task check`. */
+  /** Typed against the domain unions, so a typo fails `pnpm check`. */
   name: Rank | Role | Badge;
   discordRoleId: string;
   /** The live TeamSpeak group name, or null = not mirrored to TeamSpeak. */

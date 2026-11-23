@@ -48,7 +48,7 @@ export interface GuildMember {
  * It is still a Phase 0 task (it is an application toggle, off by default, and no
  * permission substitutes for it, Administrator included), and it is still
  * required before Phase 4. It is simply not confirmed to be required *here*.
- * `deno task phase0:check` settles it against the live application rather than
+ * `pnpm phase0:check` settles it against the live application rather than
  * against anyone's reading of the docs.
  */
 export async function getGuildMember(
