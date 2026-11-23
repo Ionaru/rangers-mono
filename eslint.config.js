@@ -25,6 +25,8 @@ export default [
     // unused (a handler that keeps the shared signature but ignores its
     // argument). Keep that convention rather than scattering disables.
     rules: {
+      // deno lint flags an async function with no await in it; keep that.
+      "require-await": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {

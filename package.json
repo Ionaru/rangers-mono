@@ -5,7 +5,7 @@
   "packageManager": "pnpm@12.23.0",
   "scripts": {
     "check": "tsc -p tsconfig.json && pnpm -C apps/web run check",
-    "test": "node --test \"packages/*/*_test.ts\" \"apps/worker/*_test.ts\" \"apps/web/src/**/*.test.ts\" \"apps/web/scripts/*.test.ts\"",
+    "test": "node --test \"packages/**/*{_,.}test.ts\" \"apps/worker/**/*{_,.}test.ts\" \"apps/web/src/**/*.test.ts\" \"apps/web/scripts/**/*.test.ts\"",
     "lint": "eslint .",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",

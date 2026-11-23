@@ -12,8 +12,8 @@
 FROM node:26.13.1-trixie-slim AS build
 
 # Node 25 and later no longer bundle corepack, so pnpm comes from npm. The
-# version is pinned here, in the root package.json `packageManager` and in
-# cd.yaml, and CI fails if they disagree.
+# version is pinned here and in the root package.json `packageManager`; CI
+# (cd.yaml) fails if they disagree.
 RUN npm install -g pnpm@12.23.0
 
 # WORKDIR creates /app owned by root, and the install then cannot create
@@ -78,7 +78,6 @@ for (const specifier of [\
 './packages/db/import-legacy.ts',\
 ]) { await import(specifier); console.log('loaded', specifier); }"
 
-ENV NODE_ENV=production
 
 EXPOSE 8080
 

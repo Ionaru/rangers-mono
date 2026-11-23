@@ -6,8 +6,8 @@
 FROM node:26.13.1-trixie-slim AS build
 
 # Node 25 and later no longer bundle corepack, so pnpm comes from npm. The
-# version is pinned here, in the root package.json `packageManager` and in
-# cd.yaml, and CI fails if they disagree.
+# version is pinned here and in the root package.json `packageManager`; CI
+# (cd.yaml) fails if they disagree.
 RUN npm install -g pnpm@12.23.0
 WORKDIR /app
 
@@ -67,7 +67,13 @@ RUN node scripts/check-externals.ts dist/server
 # The standalone adapter reads HOST and PORT at runtime. HOST is not optional:
 # without it the server binds loopback only, and neither the published port nor
 # the healthcheck can reach it.
-ENV HOST=0.0.0.0 PORT=8085 NODE_ENV=production
+#
+# NODE_ENV is deliberately left unset, as it was on Deno. Better Auth reads it
+# at runtime: "production" swaps its error page for a bare redirect to
+# /?error=<code> (a failed login would land on the homepage unexplained) and
+# turns on its in-memory rate limiter. apps/web/src/lib/auth.ts sets what it
+# needs (the Secure cookie) explicitly instead.
+ENV HOST=0.0.0.0 PORT=8085
 
 EXPOSE 8085
 
