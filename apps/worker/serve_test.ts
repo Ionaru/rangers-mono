@@ -343,3 +343,126 @@ test("shutdown completes while a client holds an idle keep-alive connection", as
     await server.shutdown();
   }
 });
+
+test("a handler that ignores the body answers before the body has arrived", async () => {
+  await withServer(
+    () => new Response("no", { status: 401 }),
+    async (server) => {
+      const socket = connect({ port: server.port, host: HOST });
+      socket.setEncoding("utf8");
+      try {
+        const statusLine = await new Promise<string>((resolve, reject) => {
+          const timer = setTimeout(
+            () => reject(new Error("no response within 1000 ms")),
+            1000,
+          );
+          let received = "";
+          socket.on("error", (error) => {
+            clearTimeout(timer);
+            reject(error);
+          });
+          socket.on("data", (chunk: string) => {
+            received += chunk;
+            const end = received.indexOf("\r\n");
+            if (end !== -1) {
+              clearTimeout(timer);
+              resolve(received.slice(0, end));
+            }
+          });
+          socket.write(
+            "POST /x HTTP/1.1\r\nHost: t\r\nContent-Length: 1000000\r\n\r\n0123456789",
+          );
+        });
+        assert.ok(
+          statusLine.startsWith("HTTP/1.1 401"),
+          `unexpected status line: ${statusLine}`,
+        );
+      } finally {
+        socket.destroy();
+      }
+    },
+  );
+});
+
+test("a request target starting with // keeps its whole path", async () => {
+  const requests: Request[] = [];
+  await withServer(
+    (request) => {
+      requests.push(request);
+      return new Response("ok");
+    },
+    async (server) => {
+      const answer = await rawExchange(
+        server.port,
+        "GET //evil/healthz HTTP/1.1\r\nHost: t\r\nConnection: close\r\n\r\n",
+      );
+      assert.ok(
+        answer.startsWith("HTTP/1.1 200"),
+        `unexpected answer: ${answer}`,
+      );
+      assert.equal(requests.length, 1, "the handler was not called once");
+      const url = new URL(requests[0].url);
+      assert.equal(url.pathname, "//evil/healthz");
+      assert.equal(url.host, "t");
+    },
+  );
+});
+
+test("an absolute-form request target gets 400 without calling the handler", async () => {
+  let calls = 0;
+  await withServer(
+    () => {
+      calls++;
+      return new Response("ok");
+    },
+    async (server) => {
+      const answer = await rawExchange(
+        server.port,
+        "GET http://other/x HTTP/1.1\r\nHost: t\r\nConnection: close\r\n\r\n",
+      );
+      assert.ok(
+        answer.startsWith("HTTP/1.1 400"),
+        `unexpected answer: ${answer}`,
+      );
+      assert.equal(calls, 0, "the handler must not be invoked");
+    },
+  );
+});
+
+test("shutdown with a request in flight answers with Connection: close and finishes promptly", async () => {
+  const server = await serve({ port: 0, hostname: HOST }, async () => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return new Response("slow");
+  });
+  const socket = connect({ port: server.port, host: HOST });
+  socket.setEncoding("utf8");
+  try {
+    let received = "";
+    const closed = new Promise<void>((resolve, reject) => {
+      socket.on("error", reject);
+      socket.on("close", () => resolve());
+    });
+    socket.on("data", (chunk: string) => (received += chunk));
+    socket.write("GET /slow HTTP/1.1\r\nHost: t\r\n\r\n");
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const started = Date.now();
+    await server.shutdown();
+    const elapsed = Date.now() - started;
+    await closed;
+
+    assert.ok(
+      elapsed < 2000,
+      `shutdown took ${elapsed} ms, expected under 2000 ms`,
+    );
+    assert.ok(
+      received.startsWith("HTTP/1.1 200"),
+      `unexpected answer: ${received}`,
+    );
+    assert.match(received.toLowerCase(), /\r\nconnection: close\r\n/);
+    assert.ok(received.endsWith("slow"), `body missing: ${received}`);
+  } finally {
+    socket.destroy();
+    await server.shutdown();
+  }
+});

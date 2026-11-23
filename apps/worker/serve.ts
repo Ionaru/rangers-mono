@@ -4,6 +4,7 @@ import {
   type ServerResponse,
 } from "node:http";
 import type { AddressInfo } from "node:net";
+import { Readable } from "node:stream";
 import { getLogger, ROOT_CATEGORY } from "@7r/logging";
 
 const log = getLogger([ROOT_CATEGORY, "worker", "serve"]);
@@ -13,9 +14,12 @@ const log = getLogger([ROOT_CATEGORY, "worker", "serve"]);
  *
  * The internal API is written against the web `Request`/`Response` pair
  * (internal-api.ts), so this is only the adapter between that and Node's
- * `IncomingMessage`/`ServerResponse`. It is deliberately small: the API's
- * bodies are tiny JSON or text, so request and response bodies are buffered
- * whole. No streaming, no upgrades, no TLS (the Compose network only).
+ * `IncomingMessage`/`ServerResponse`. It is deliberately small: response
+ * bodies are buffered whole, and no upgrades, no TLS (the Compose network
+ * only). The request body is the exception: it is handed to the handler as a
+ * stream and only read if the handler asks, so a handler that rejects a
+ * request (a bad signature, say) answers before the body has arrived, as
+ * `Deno.serve` did.
  */
 
 export interface ServeOptions {
@@ -56,8 +60,16 @@ export async function serve(
   handler: Handler,
 ): Promise<Server> {
   let port = options.port;
+  let stopping: Promise<void> | undefined;
   const server = createServer((req, res) => {
-    void handle(req, res, handler, options, () => port);
+    void handle(
+      req,
+      res,
+      handler,
+      options,
+      () => port,
+      () => stopping !== undefined,
+    );
   });
 
   await new Promise<void>((resolve, reject) => {
@@ -80,7 +92,6 @@ export async function serve(
     server.once("close", () => resolve());
   });
 
-  let stopping: Promise<void> | undefined;
   const shutdown = (): Promise<void> => {
     stopping ??= (() => {
       server.close();
@@ -104,14 +115,20 @@ async function handle(
   handler: Handler,
   options: ServeOptions,
   boundPort: () => number,
+  isStopping: () => boolean,
 ): Promise<void> {
   try {
     let request: Request;
     try {
-      request = await toRequest(req, options, boundPort());
+      request = toRequest(req, options, boundPort());
     } catch (error) {
       log.warn("rejected a malformed request", { error: String(error) });
-      await send(res, new Response("bad request", { status: 400 }));
+      await send(
+        req,
+        res,
+        new Response("bad request", { status: 400 }),
+        isStopping,
+      );
       return;
     }
 
@@ -130,7 +147,7 @@ async function handle(
       response = new Response("internal error", { status: 500 });
     }
 
-    await send(res, response);
+    await send(req, res, response, isStopping);
   } catch (error) {
     // The client went away mid-request or mid-response; there is nobody left
     // to answer.
@@ -143,16 +160,25 @@ async function handle(
  * Node gives the request target (`/path?query`) and the headers separately; a
  * web `Request` wants one absolute URL, so the origin is the `Host` header the
  * client sent, or the address we are bound to when it sent none.
+ *
+ * The target is a path and never an authority: it is appended to the origin
+ * as a string, because resolving it with `new URL(target, origin)` would read
+ * a `//evil/x` target as a host. Anything that does not start with `/`
+ * (absolute-form `http://other/x`, `*`) is rejected.
  */
-async function toRequest(
+function toRequest(
   req: IncomingMessage,
   options: ServeOptions,
   port: number,
-): Promise<Request> {
+): Request {
+  const target = req.url ?? "/";
+  if (!target.startsWith("/")) {
+    throw new Error(`request target is not a path: ${target}`);
+  }
   const origin = req.headers.host
     ? `http://${req.headers.host}`
     : `http://${options.hostname}:${port}`;
-  const url = new URL(req.url ?? "/", origin).href;
+  const url = new URL(`${origin}${target}`).href;
   const method = req.method ?? "GET";
 
   const headers = new Headers();
@@ -169,20 +195,30 @@ async function toRequest(
     return new Request(url, { method, headers });
   }
 
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) chunks.push(chunk as Buffer);
   return new Request(url, {
     method,
     headers,
-    body: new Uint8Array(Buffer.concat(chunks)),
-  });
+    body: Readable.toWeb(req) as ReadableStream<Uint8Array>,
+    duplex: "half",
+  } as RequestInit);
 }
 
-async function send(res: ServerResponse, response: Response): Promise<void> {
+async function send(
+  req: IncomingMessage,
+  res: ServerResponse,
+  response: Response,
+  isStopping: () => boolean,
+): Promise<void> {
   const body = new Uint8Array(await response.arrayBuffer());
 
   const headers: string[] = [];
-  for (const [name, value] of response.headers) headers.push(name, value);
+  for (const [name, value] of response.headers) {
+    if (name !== "connection") headers.push(name, value);
+  }
+  // Close the connection after this response when the server is shutting down
+  // (so a keep-alive client cannot hold the shutdown open), and when the
+  // handler answered without reading the body: the rest of it may never come.
+  if (isStopping() || !req.complete) headers.push("connection", "close");
   if (
     !BODYLESS_STATUSES.has(response.status) &&
     !response.headers.has("content-length") &&

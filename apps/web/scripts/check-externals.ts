@@ -24,6 +24,24 @@ const STATIC_FROM =
 const SIDE_EFFECT = /\bimport\s*(["'])([^"'\n]+)\1/g;
 // `import("s")`: only a string literal; `import(x)` is ignored.
 const DYNAMIC = /\bimport\s*\(\s*(["'])([^"'\n]+)\1\s*\)/g;
+// `require("s")` and the bundler's `__require("s")`: only a string literal, and
+// only where `require` is not the tail of a longer identifier (`xrequire`) or a
+// property (`module.require`); `__require` is the one prefix allowed.
+const REQUIRE = /(?<![\w$.])(?:__)?require\s*\(\s*(["'])([^"'\n]+)\1\s*\)/g;
+
+/**
+ * Requires that are allowed to be missing at runtime: the bundler output wraps
+ * each in a try/catch, so a copy that is not installed is harmless. A string is
+ * an exact specifier, a RegExp is tested against it.
+ */
+export const OPTIONAL_REQUIRES: readonly (string | RegExp)[] = [
+  // `debug` requires it inside a try/catch to colour its output, and falls back
+  // to plain output when it is not installed.
+  "supports-color",
+  // `sharp` requires `@img/sharp-libvips-dev/<dir>` inside a try/catch to find
+  // a development libvips, which only exists on a machine that built one.
+  /^@img\/sharp-libvips-dev\//,
+];
 
 function isBare(specifier: string): boolean {
   if (
@@ -37,10 +55,10 @@ function isBare(specifier: string): boolean {
   return !isBuiltin(specifier);
 }
 
-/** The distinct bare package specifiers an ES module imports, in first-seen order. */
+/** The distinct bare package specifiers a module imports or requires, in first-seen order. */
 export function bareSpecifiers(source: string): string[] {
   const found: { index: number; specifier: string }[] = [];
-  for (const pattern of [STATIC_FROM, SIDE_EFFECT, DYNAMIC]) {
+  for (const pattern of [STATIC_FROM, SIDE_EFFECT, DYNAMIC, REQUIRE]) {
     for (const match of source.matchAll(pattern)) {
       found.push({ index: match.index, specifier: match[2] });
     }
@@ -52,6 +70,14 @@ export function bareSpecifiers(source: string): string[] {
       result.push(specifier);
   }
   return result;
+}
+
+function isOptional(specifier: string): boolean {
+  return OPTIONAL_REQUIRES.some((optional) =>
+    typeof optional === "string"
+      ? optional === specifier
+      : optional.test(specifier),
+  );
 }
 
 async function* moduleFiles(dir: string): AsyncGenerator<string> {
@@ -78,6 +104,7 @@ async function externals(dir: string): Promise<string[]> {
 export async function missingExternals(dir: string): Promise<string[]> {
   const missing: string[] = [];
   for (const specifier of await externals(dir)) {
+    if (isOptional(specifier)) continue;
     try {
       import.meta.resolve(specifier);
     } catch {

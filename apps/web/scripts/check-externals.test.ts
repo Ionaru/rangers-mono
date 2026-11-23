@@ -3,7 +3,11 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { bareSpecifiers, missingExternals } from "./check-externals.ts";
+import {
+  bareSpecifiers,
+  missingExternals,
+  OPTIONAL_REQUIRES,
+} from "./check-externals.ts";
 
 test("bareSpecifiers: default import", () => {
   assert.deepEqual(bareSpecifiers(`import x from "zod";`), ["zod"]);
@@ -165,4 +169,26 @@ test("missingExternals: nothing missing returns an empty list", async () => {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("bareSpecifiers: recognises string-literal requires, not look-alikes", () => {
+  const src = `var a = __require("cjs-a"); const b = require('cjs-b'); require( "cjs-c" ); xrequire("no"); module.require("no2"); require(x); require("./rel.js"); require("fs")`;
+  assert.deepEqual(bareSpecifiers(src), ["cjs-a", "cjs-b", "cjs-c"]);
+});
+
+test("missingExternals: skips OPTIONAL_REQUIRES entries", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "check-externals-"));
+  try {
+    await writeFile(
+      join(dir, "entry.mjs"),
+      `__require("@7r-nonexistent/cjs");\n__require("@img/sharp-libvips-dev/include");\n`,
+    );
+    assert.deepEqual(await missingExternals(dir), ["@7r-nonexistent/cjs"]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("OPTIONAL_REQUIRES is exported", () => {
+  assert.ok(Array.isArray(OPTIONAL_REQUIRES));
 });

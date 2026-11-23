@@ -47,6 +47,11 @@ async function confirm(question: string): Promise<boolean> {
   try {
     const answer = await rl.question(`${question} [y/N] `);
     return /^y(es)?$/i.test(answer.trim());
+  } catch (error) {
+    // Ctrl-D or Ctrl-C at the prompt closes the interface and rejects the
+    // question with an AbortError; that is a "no", as Deno's confirm() took EOF.
+    if (error instanceof Error && error.name === "AbortError") return false;
+    throw error;
   } finally {
     rl.close();
   }
